@@ -7,6 +7,8 @@ import type { ReactNode } from "react";
 import { clerkAppearance } from "@/lib/auth/clerk-appearance";
 import { MswProvider } from "@/mocks/MswProvider";
 import { Toaster } from "@/components/ui/toaster";
+import { QueryProvider } from "@/lib/api/query-client";
+import { ClerkApiBridge } from "@/lib/api/hooks/clerk-context";
 
 const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const isClerkConfigured = Boolean(
@@ -19,21 +21,21 @@ const isClerkConfigured = Boolean(
  *
  * Orden de wrappers (de fuera a dentro):
  *  1. ClerkProvider — sesión, organización, JWT.
- *  2. ThemeProvider (next-themes) — clase `.dark` en <html>.
- *  3. MswProvider — arranca worker MSW si flag activo (dev only).
- *  4. children — la app.
- *  5. Toaster — montado fuera del árbol para que persista cross-route.
+ *  2. ClerkApiBridge — publica `getToken` + `tenantId` al cliente API.
+ *  3. QueryProvider — TanStack Query con defaults curados.
+ *  4. ThemeProvider (next-themes) — clase `.dark` en <html>.
+ *  5. MswProvider — arranca worker MSW si flag activo (dev only).
+ *  6. children — la app.
+ *  7. Toaster — montado fuera del árbol para que persista cross-route.
  *
  * Degradación sin claves Clerk:
  *  Si `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` no está o usa el placeholder,
- *  saltamos `ClerkProvider` y devolvemos los hijos directamente. Los
- *  hooks `useAuth`/`useUser` lanzarán si se usan sin provider — por eso
- *  el layout autenticado (`app/(authenticated)/layout.tsx`) los usa solo
- *  detrás del guard `auth.protect()`, que con middleware no-op tampoco
- *  redirige. En modo demo (sin Clerk) la app sirve MSW data abierta.
+ *  saltamos `ClerkProvider` (y por tanto `ClerkApiBridge`). El hook
+ *  `useClerkApiContext` cae a su default (`getToken: noop, tenantId: null`)
+ *  y la app sirve MSW abierta.
  */
 export function Providers({ children }: { children: ReactNode }) {
-  const body = (
+  const inner = (
     <ThemeProvider
       attribute="class"
       defaultTheme="system"
@@ -52,7 +54,7 @@ export function Providers({ children }: { children: ReactNode }) {
         "[auth] Clerk publishable key ausente o placeholder; auth deshabilitada (modo demo).",
       );
     }
-    return body;
+    return <QueryProvider>{inner}</QueryProvider>;
   }
 
   return (
@@ -63,7 +65,9 @@ export function Providers({ children }: { children: ReactNode }) {
       signInUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL ?? "/sign-in"}
       signUpUrl={process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL ?? "/sign-up"}
     >
-      {body}
+      <ClerkApiBridge>
+        <QueryProvider>{inner}</QueryProvider>
+      </ClerkApiBridge>
     </ClerkProvider>
   );
 }
