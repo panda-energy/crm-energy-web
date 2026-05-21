@@ -14,6 +14,7 @@ import {
 import { SidebarNav } from "./sidebar";
 import { Breadcrumbs } from "./breadcrumbs";
 import { ThemeToggle } from "./theme-toggle";
+import { CommandPaletteTrigger } from "@/components/command-palette/command-palette-trigger";
 
 const isClerkConfigured = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
@@ -63,6 +64,7 @@ export function Topbar() {
       <Breadcrumbs />
 
       <div className="ml-auto flex items-center gap-2">
+        <CommandPaletteTrigger />
         {isClerkConfigured ? (
           <OrganizationSwitcher
             hidePersonal
