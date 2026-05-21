@@ -4,9 +4,11 @@ Frontend web de **Panda Energy** — CRM IA-first multi-tenant para comercializa
 de energía. Construido con **Next.js 15 (App Router)**, **React 19**,
 **Tailwind CSS 4**, **TanStack Query 5** y **Clerk** para auth.
 
-> **Estado:** Sprint 1 (Wave 2). Scaffold + OpenAPI stub + MSW + design tokens +
-> componentes shadcn + Clerk + layout CRM con sidebar/topbar/dark mode.
-> Sprint 1 Wave 3 añade wrapper API, toasts y Storybook.
+> **Estado:** Sprint 2 (Wave 0). Sprint 1 cerrado (scaffold + OpenAPI stub +
+> MSW + design tokens + componentes shadcn + Clerk + layout CRM + wrapper
+> API tipado + Storybook). Sprint 2 Wave 0 sincroniza el contrato con el
+> OpenAPI real publicado por el backend (16 endpoints: leads CRUD + bulk +
+> move + activities + WhatsApp + pipelines + stages).
 
 ---
 
@@ -94,21 +96,57 @@ Ver `.agents/frontend/AGENT.md` para la lista completa. Resumen operativo:
 
 ---
 
-## OpenAPI + MSW (mientras no exista backend)
+## OpenAPI + MSW
 
-El backend FastAPI vivirá en **Railway** y publicará su OpenAPI. **Mientras
-no esté disponible**, este repo:
+El backend FastAPI publica su esquema OpenAPI en
+`crm-energy-backend/contracts/openapi.snapshot.json` (snapshot versionado en
+ese repo). Este repo:
 
-1. Mantiene un **stub mínimo** en `openapi/openapi.json` (auth + leads).
-2. Genera `src/lib/api/types.ts` con `openapi-typescript`.
-3. Sirve respuestas falsas con **MSW** (`src/mocks/`).
+1. **Copia** ese snapshot a `openapi/openapi.json`. **Es la fuente de verdad
+   del contrato cliente** y, salvo error, debe ser bit-a-bit idéntico al del
+   backend.
+2. Genera `src/lib/api/types.ts` con `openapi-typescript` (commiteado para
+   que el repo arranque sin pipeline live).
+3. Sirve respuestas sintéticas con **MSW** (`src/mocks/`) cuando
+   `NEXT_PUBLIC_API_MOCKING=enabled`.
 
-Cuando el backend tenga endpoint OpenAPI público, basta con cambiar el script
-`gen:types` en `package.json` para que apunte a la URL real, por ejemplo:
+### Sincronización con backend
 
-```jsonc
-"gen:types": "openapi-typescript https://api.staging.panda.energy/openapi.json -o src/lib/api/types.ts"
+Cuando el backend actualiza su contrato (nuevo endpoint, cambio de schema,
+nuevo enum) **el frontend debe resincronizar** antes de usarlo. Hasta que
+DevOps automatice el paso desde CI, el flujo es manual:
+
+```bash
+cp ../crm-energy-backend/contracts/openapi.snapshot.json openapi/openapi.json
+pnpm gen:types
+pnpm typecheck   # detecta breaking changes en consumidores
 ```
+
+**Reglas:**
+
+- **Nunca editar `openapi/openapi.json` a mano**: se sobrescribe al
+  resincronizar y pierdes los cambios. Si necesitas un campo/endpoint nuevo,
+  abrir issue al agente Backend.
+- **`src/lib/api/types.ts` se commitea pero no se edita a mano** — lo regenera
+  `pnpm gen:types`.
+- **`src/lib/api/zod-schemas.ts`** vive aparte: son schemas Zod de
+  **boundary validation** que se mantienen manualmente sincronizados con
+  `LeadOut`, `PipelineOut`, etc. Si rompen compat con los tipos generados,
+  el typecheck del array `_compatibilityChecks` lo detecta.
+
+### Cobertura MSW vs backend real
+
+MSW **espeja el comportamiento del backend para los endpoints más usados
+del CRM** (leads CRUD + bulk + move + activities, pipelines list/get/stages,
+auth/me). No es exhaustivo: WhatsApp send y webhooks no están mockeados
+(Sprint 2 se prueban contra backend real). Para dev contra backend real:
+
+```bash
+NEXT_PUBLIC_API_MOCKING=disabled
+NEXT_PUBLIC_API_URL=http://localhost:8000   # FastAPI dev
+```
+
+Y arrancar el backend en su repo (ver `crm-energy-backend/README.md`).
 
 MSW **se queda** para tests (deterministas, no dependen de red).
 
@@ -156,7 +194,7 @@ DevOps las propaga vía **Doppler / Vercel** a staging y producción.
 ```
 crm-energy-web/
 ├── openapi/
-│   └── openapi.json           # Stub mientras no exista backend.
+│   └── openapi.json           # Copia del snapshot del backend (no editar).
 ├── public/
 │   └── mockServiceWorker.js   # Generado por `pnpm msw:init`.
 ├── src/

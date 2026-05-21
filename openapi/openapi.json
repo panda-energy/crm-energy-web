@@ -1,271 +1,2909 @@
 {
-  "openapi": "3.1.0",
-  "info": {
-    "title": "Panda Energy CRM API",
-    "version": "0.0.1-stub",
-    "description": "Stub mínimo de la API de Panda Energy. Reemplazado por el OpenAPI real publicado por el backend FastAPI cuando esté disponible. Solo cubre auth + leads para arrancar Sprint 1 del frontend."
-  },
-  "servers": [
-    {
-      "url": "{apiBase}/v1",
-      "variables": {
-        "apiBase": {
-          "default": "http://localhost:3001",
-          "description": "URL base del backend (Railway en prod/staging)."
-        }
-      }
-    }
-  ],
-  "paths": {
-    "/auth/me": {
-      "get": {
-        "operationId": "getCurrentUser",
-        "summary": "Devuelve el usuario autenticado.",
-        "tags": ["auth"],
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "headers": {
-              "x-correlation-id": { "$ref": "#/components/headers/CorrelationId" }
-            },
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/User" }
-              }
-            }
+  "components": {
+    "schemas": {
+      "ActivityCreate": {
+        "description": "User-created note / call / email logged manually.",
+        "properties": {
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
           },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "500": { "$ref": "#/components/responses/Problem" }
-        }
+          "summary": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ActivityType",
+            "description": "Activity kind; non-system kinds only (note, call, email)."
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "ActivityCreate",
+        "type": "object"
+      },
+      "ActivityOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ActivityType"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "type",
+          "summary",
+          "payload",
+          "occurred_at",
+          "created_at"
+        ],
+        "title": "ActivityOut",
+        "type": "object"
+      },
+      "ActivityType": {
+        "description": "Discriminator for ``activities.type``.",
+        "enum": [
+          "note",
+          "call",
+          "email",
+          "whatsapp_inbound",
+          "whatsapp_outbound",
+          "stage_changed",
+          "owner_changed",
+          "status_changed",
+          "lead_created",
+          "system"
+        ],
+        "title": "ActivityType",
+        "type": "string"
+      },
+      "ComponentStatus": {
+        "description": "Status of a single dependency probed by readiness.",
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional human-readable detail (error message, etc.).",
+            "title": "Detail"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Probe latency in milliseconds (omitted if not measured).",
+            "title": "Latency Ms"
+          },
+          "name": {
+            "description": "Component identifier (e.g. 'database').",
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "description": "Outcome of the probe.",
+            "enum": [
+              "ok",
+              "degraded",
+              "down",
+              "skipped"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "status"
+        ],
+        "title": "ComponentStatus",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthStatus": {
+        "description": "Response payload for the liveness endpoint.",
+        "properties": {
+          "environment": {
+            "description": "Deployment environment.",
+            "title": "Environment",
+            "type": "string"
+          },
+          "service": {
+            "description": "Logical service name.",
+            "title": "Service",
+            "type": "string"
+          },
+          "status": {
+            "const": "ok",
+            "default": "ok",
+            "description": "Always 'ok' when the process is alive.",
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "Server-side timestamp (UTC).",
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "version": {
+            "description": "Application version.",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service",
+          "version",
+          "environment",
+          "timestamp"
+        ],
+        "title": "HealthStatus",
+        "type": "object"
+      },
+      "LeadBulkAction": {
+        "description": "Payload for ``POST /v1/leads/bulk``.",
+        "properties": {
+          "add_tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 32,
+            "title": "Add Tags",
+            "type": "array"
+          },
+          "assign_owner_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "If set, updates `owner_id` for every selected lead.",
+            "title": "Assign Owner Id"
+          },
+          "ids": {
+            "description": "Lead IDs to operate on.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          },
+          "remove_tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 32,
+            "title": "Remove Tags",
+            "type": "array"
+          },
+          "set_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Coarse status assigned to every selected lead. The lead also transitions to the first stage of its pipeline whose slug matches."
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "LeadBulkAction",
+        "type": "object"
+      },
+      "LeadBulkResult": {
+        "description": "Outcome of a bulk action.",
+        "properties": {
+          "ids": {
+            "description": "The IDs effectively updated.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Ids",
+            "type": "array"
+          },
+          "matched": {
+            "description": "Number of leads found in the request scope.",
+            "title": "Matched",
+            "type": "integer"
+          },
+          "updated": {
+            "description": "Number of leads modified.",
+            "title": "Updated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "matched",
+          "updated",
+          "ids"
+        ],
+        "title": "LeadBulkResult",
+        "type": "object"
+      },
+      "LeadCreate": {
+        "description": "Payload accepted by ``POST /v1/leads``.",
+        "properties": {
+          "company": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "cups": {
+            "anyOf": [
+              {
+                "maxLength": 22,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cups"
+          },
+          "currency": {
+            "default": "EUR",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Currency",
+            "type": "string"
+          },
+          "custom_fields": {
+            "additionalProperties": true,
+            "title": "Custom Fields",
+            "type": "object"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "maxLength": 320,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "estimated_value_cents": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Value Cents"
+          },
+          "first_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Phone in any reasonable shape; stored as E.164.",
+            "title": "Phone"
+          },
+          "pipeline_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to the tenant's default pipeline when omitted.",
+            "title": "Pipeline Id"
+          },
+          "source": {
+            "$ref": "#/components/schemas/LeadSource",
+            "default": "manual"
+          },
+          "source_ref": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Ref"
+          },
+          "stage_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to the first stage of the chosen pipeline.",
+            "title": "Stage Id"
+          },
+          "tags": {
+            "items": {
+              "maxLength": 64,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 32,
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "title": "LeadCreate",
+        "type": "object"
+      },
+      "LeadMove": {
+        "description": "Payload for ``POST /v1/leads/{id}/move``.",
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional comment recorded as a `stage_changed` activity payload.",
+            "title": "Note"
+          },
+          "stage_id": {
+            "description": "Destination stage. Must belong to the lead's pipeline.",
+            "format": "uuid",
+            "title": "Stage Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage_id"
+        ],
+        "title": "LeadMove",
+        "type": "object"
+      },
+      "LeadOut": {
+        "description": "Single-lead response.",
+        "properties": {
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "cups": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cups"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "custom_fields": {
+            "additionalProperties": true,
+            "title": "Custom Fields",
+            "type": "object"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "estimated_value_cents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Value Cents"
+          },
+          "first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_contacted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Contacted At"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "phone_e164": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone E164"
+          },
+          "pipeline_id": {
+            "format": "uuid",
+            "title": "Pipeline Id",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/LeadSource"
+          },
+          "source_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Ref"
+          },
+          "stage_id": {
+            "format": "uuid",
+            "title": "Stage Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LeadStatus"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tenant_id",
+          "pipeline_id",
+          "stage_id",
+          "owner_id",
+          "first_name",
+          "last_name",
+          "email",
+          "phone_e164",
+          "company",
+          "cups",
+          "status",
+          "source",
+          "source_ref",
+          "tags",
+          "custom_fields",
+          "estimated_value_cents",
+          "currency",
+          "last_contacted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "LeadOut",
+        "type": "object"
+      },
+      "LeadSortField": {
+        "description": "Permitted columns for ``GET /v1/leads?sort=`` to keep ordering safe.",
+        "enum": [
+          "created_at",
+          "updated_at",
+          "last_contacted_at",
+          "status"
+        ],
+        "title": "LeadSortField",
+        "type": "string"
+      },
+      "LeadSource": {
+        "description": "How the lead reached the funnel.",
+        "enum": [
+          "manual",
+          "whatsapp",
+          "web_form",
+          "import",
+          "referral",
+          "agent",
+          "other"
+        ],
+        "title": "LeadSource",
+        "type": "string"
+      },
+      "LeadStatus": {
+        "description": "Coarse lifecycle bucket; derived from the lead's current stage.",
+        "enum": [
+          "new",
+          "contacted",
+          "qualified",
+          "won",
+          "lost"
+        ],
+        "title": "LeadStatus",
+        "type": "string"
+      },
+      "LeadUpdate": {
+        "description": "PATCH payload \u2014 every field is optional.",
+        "properties": {
+          "company": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "cups": {
+            "anyOf": [
+              {
+                "maxLength": 22,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cups"
+          },
+          "custom_fields": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Fields"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "maxLength": 320,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "estimated_value_cents": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Value Cents"
+          },
+          "first_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "last_contacted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Contacted At"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Reset to null with explicit ''.",
+            "title": "Phone"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_ref": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Ref"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 32,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          }
+        },
+        "title": "LeadUpdate",
+        "type": "object"
+      },
+      "MessageDirection": {
+        "enum": [
+          "inbound",
+          "outbound"
+        ],
+        "title": "MessageDirection",
+        "type": "string"
+      },
+      "MessageStatus": {
+        "description": "Outbound + inbound shared lifecycle.",
+        "enum": [
+          "received",
+          "accepted",
+          "sent",
+          "delivered",
+          "read",
+          "failed"
+        ],
+        "title": "MessageStatus",
+        "type": "string"
+      },
+      "Page_LeadOut_": {
+        "properties": {
+          "items": {
+            "description": "Items on this page.",
+            "items": {
+              "$ref": "#/components/schemas/LeadOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "description": "Maximum items returned per page.",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "Offset of this page in the result set.",
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of matching rows.",
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[LeadOut]",
+        "type": "object"
+      },
+      "PipelineCreate": {
+        "properties": {
+          "is_default": {
+            "default": false,
+            "title": "Is Default",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "stages": {
+            "description": "Stages to create alongside the pipeline. If empty the API does NOT seed defaults.",
+            "items": {
+              "$ref": "#/components/schemas/PipelineStageIn"
+            },
+            "maxItems": 20,
+            "title": "Stages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "PipelineCreate",
+        "type": "object"
+      },
+      "PipelineOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_default": {
+            "title": "Is Default",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "stages": {
+            "items": {
+              "$ref": "#/components/schemas/PipelineStageOut"
+            },
+            "title": "Stages",
+            "type": "array"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tenant_id",
+          "name",
+          "slug",
+          "is_default",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PipelineOut",
+        "type": "object"
+      },
+      "PipelineStageIn": {
+        "properties": {
+          "is_lost": {
+            "default": false,
+            "title": "Is Lost",
+            "type": "boolean"
+          },
+          "is_won": {
+            "default": false,
+            "title": "Is Won",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "position": {
+            "default": 0,
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "PipelineStageIn",
+        "type": "object"
+      },
+      "PipelineStageOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_lost": {
+            "title": "Is Lost",
+            "type": "boolean"
+          },
+          "is_won": {
+            "title": "Is Won",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "pipeline_id": {
+            "format": "uuid",
+            "title": "Pipeline Id",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "pipeline_id",
+          "name",
+          "slug",
+          "position",
+          "is_won",
+          "is_lost",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PipelineStageOut",
+        "type": "object"
+      },
+      "PipelineStageReplace": {
+        "description": "Payload for ``PUT /v1/pipelines/{id}/stages`` \u2014 replaces all stages.",
+        "properties": {
+          "stages": {
+            "description": "Complete stage list. Positions normalized server-side.",
+            "items": {
+              "$ref": "#/components/schemas/PipelineStageIn"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Stages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "stages"
+        ],
+        "title": "PipelineStageReplace",
+        "type": "object"
+      },
+      "PipelineUpdate": {
+        "properties": {
+          "is_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Default"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "PipelineUpdate",
+        "type": "object"
+      },
+      "ReadinessStatus": {
+        "description": "Response payload for the readiness endpoint.",
+        "properties": {
+          "checks": {
+            "description": "Per-dependency probe results.",
+            "items": {
+              "$ref": "#/components/schemas/ComponentStatus"
+            },
+            "title": "Checks",
+            "type": "array"
+          },
+          "environment": {
+            "description": "Deployment environment.",
+            "title": "Environment",
+            "type": "string"
+          },
+          "service": {
+            "description": "Logical service name.",
+            "title": "Service",
+            "type": "string"
+          },
+          "status": {
+            "description": "Aggregate readiness verdict.",
+            "enum": [
+              "ready",
+              "degraded",
+              "not_ready"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "Server-side timestamp (UTC).",
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "version": {
+            "description": "Application version.",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "service",
+          "version",
+          "environment",
+          "timestamp",
+          "checks"
+        ],
+        "title": "ReadinessStatus",
+        "type": "object"
+      },
+      "SortDirection": {
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "title": "SortDirection",
+        "type": "string"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "WhatsAppMessageOut": {
+        "description": "Persisted WhatsApp message returned by the API.",
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "delivered_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivered At"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/MessageDirection"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "from_phone_e164": {
+            "title": "From Phone E164",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "lead_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Id"
+          },
+          "provider_message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Message Id"
+          },
+          "read_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read At"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MessageStatus"
+          },
+          "template_language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Language"
+          },
+          "template_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Name"
+          },
+          "to_phone_e164": {
+            "title": "To Phone E164",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "direction",
+          "status",
+          "provider_message_id",
+          "from_phone_e164",
+          "to_phone_e164",
+          "kind",
+          "template_name",
+          "template_language",
+          "body",
+          "error_code",
+          "error_message",
+          "sent_at",
+          "delivered_at",
+          "read_at",
+          "created_at"
+        ],
+        "title": "WhatsAppMessageOut",
+        "type": "object"
+      },
+      "WhatsAppTemplateComponent": {
+        "additionalProperties": false,
+        "description": "Component slot inside a pre-approved template message.",
+        "properties": {
+          "parameters": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Parameters",
+            "type": "array"
+          },
+          "type": {
+            "description": "header | body | button | footer",
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "WhatsAppTemplateComponent",
+        "type": "object"
+      },
+      "WhatsAppTemplateSend": {
+        "description": "Payload for ``POST /v1/leads/{id}/whatsapp/send``.\n\nThe Meta Cloud API only accepts pre-approved templates for first-touch\noutbound messages, which is the only flow we support in Sprint 2.",
+        "properties": {
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/WhatsAppTemplateComponent"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "language": {
+            "description": "e.g. 'es_ES', 'en_US'.",
+            "maxLength": 16,
+            "minLength": 2,
+            "title": "Language",
+            "type": "string"
+          },
+          "template_name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Template Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "template_name",
+          "language"
+        ],
+        "title": "WhatsAppTemplateSend",
+        "type": "object"
       }
     },
-    "/leads": {
+    "securitySchemes": {
+      "ClerkBearer": {
+        "bearerFormat": "JWT",
+        "description": "Clerk-issued session JWT. Verified server-side against the Clerk JWKS. `org_id` claim resolves to an internal tenant.",
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "HTTPBearer": {
+        "bearerFormat": "JWT",
+        "description": "Clerk session token. Verified by ClerkAuthMiddleware.",
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "SvixSignature": {
+        "description": "Webhook signature header set by svix. See https://docs.svix.com/receiving/verifying-payloads/how for the verification protocol.",
+        "in": "header",
+        "name": "svix-signature",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "email": "engineering@panda.local",
+      "name": "Panda Energy Engineering"
+    },
+    "description": "Multi-tenant CRM backend for European energy retailers.\n\n## Authentication\n\nAll `/v1/*` endpoints require a Clerk session JWT in the\n`Authorization: Bearer <token>` header. The token's `org_id` claim is\nresolved server-side to an internal `tenant_id` UUID; every database\nquery is then filtered transparently by PostgreSQL Row-Level Security.\n\n## Webhooks\n\n`/webhooks/clerk` accepts svix-signed Clerk events. Signatures are\nverified with `CLERK_WEBHOOK_SECRET`; unsigned or replayed payloads\nare rejected with HTTP 400.\n\n## Idempotency\n\nEndpoints that trigger ATR messages or payments will require an\n`Idempotency-Key` header. They are introduced from Sprint 4 onward.\n",
+    "license": {
+      "name": "Proprietary"
+    },
+    "summary": "Multi-tenant CRM backend for European energy retailers.",
+    "title": "Panda Energy CRM API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/healthz": {
       "get": {
-        "operationId": "listLeads",
-        "summary": "Lista leads paginados del tenant del usuario.",
-        "tags": ["leads"],
-        "security": [{ "bearerAuth": [] }],
+        "description": "Returns 200 OK as long as the FastAPI process is running. Does not contact the database or any downstream dependency. Use `/readyz` for readiness checks.",
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatus"
+                }
+              }
+            },
+            "description": "Service is alive."
+          }
+        },
+        "summary": "Liveness probe",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/readyz": {
+      "get": {
+        "description": "Returns 200 when every critical dependency (database, cache) is reachable. Returns 503 otherwise so load balancers stop routing traffic to this instance.",
+        "operationId": "readyz_readyz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessStatus"
+                }
+              }
+            },
+            "description": "All probed dependencies are healthy."
+          },
+          "503": {
+            "description": "At least one critical dependency is down."
+          }
+        },
+        "summary": "Readiness probe",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/v1/leads": {
+      "get": {
+        "description": "Returns a paginated list of leads scoped to the caller's tenant. Filters are AND-ed; the `q` parameter performs a case-insensitive match against name, email, phone and company.",
+        "operationId": "list_leads_v1_leads_get",
         "parameters": [
           {
-            "name": "page",
+            "description": "Filter by coarse status.",
             "in": "query",
-            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+            "name": "statuses",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/LeadStatus"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by coarse status.",
+              "title": "Statuses"
+            }
           },
           {
-            "name": "pageSize",
+            "description": "Filter by lead source.",
             "in": "query",
-            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 25 }
+            "name": "sources",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/LeadSource"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by lead source.",
+              "title": "Sources"
+            }
           },
           {
-            "name": "status",
+            "description": "Filter by assigned owner.",
             "in": "query",
-            "schema": { "$ref": "#/components/schemas/LeadStatus" }
+            "name": "owner_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by assigned owner.",
+              "title": "Owner Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pipeline_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pipeline Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "stage_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stage Id"
+            }
+          },
+          {
+            "description": "Match leads having ANY of these tags.",
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Match leads having ANY of these tags.",
+              "title": "Tag"
+            }
+          },
+          {
+            "in": "query",
+            "name": "created_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Created From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "created_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Created To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LeadSortField",
+              "default": "created_at"
+            }
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection",
+              "default": "desc"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "OK",
-            "headers": {
-              "x-correlation-id": { "$ref": "#/components/headers/CorrelationId" }
-            },
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/LeadPage" }
+                "schema": {
+                  "$ref": "#/components/schemas/Page_LeadOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List leads",
+        "tags": [
+          "leads"
+        ]
+      },
+      "post": {
+        "description": "Creates a new lead inside the caller's tenant. Defaults to the tenant's default pipeline and that pipeline's first stage when `pipeline_id` / `stage_id` are omitted.",
+        "operationId": "create_lead_v1_leads_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeadCreate"
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "500": { "$ref": "#/components/responses/Problem" }
-        }
-      },
-      "post": {
-        "operationId": "createLead",
-        "summary": "Crea un lead. Soporta Idempotency-Key.",
-        "tags": ["leads"],
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "required": false,
-            "description": "UUID generado por el cliente para deduplicar reintentos. Si se repite, el backend devuelve la misma respuesta sin crear duplicado.",
-            "schema": { "type": "string", "format": "uuid" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/LeadCreate" }
-            }
-          }
+          "required": true
         },
         "responses": {
           "201": {
-            "description": "Creado",
-            "headers": {
-              "x-correlation-id": { "$ref": "#/components/headers/CorrelationId" }
-            },
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Lead" }
+                "schema": {
+                  "$ref": "#/components/schemas/LeadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create lead",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
+    "/v1/leads/bulk": {
+      "post": {
+        "description": "Apply the same change to many leads: reassign owner, switch coarse status, add or remove tags. Idempotent in the sense that re-running produces the same final state.",
+        "operationId": "bulk_update_leads_v1_leads_bulk_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeadBulkAction"
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "409": { "$ref": "#/components/responses/Problem" },
-          "500": { "$ref": "#/components/responses/Problem" }
-        }
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadBulkResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Bulk update leads",
+        "tags": [
+          "leads"
+        ]
       }
     },
-    "/leads/{leadId}": {
-      "get": {
-        "operationId": "getLead",
-        "summary": "Devuelve un lead por id.",
-        "tags": ["leads"],
-        "security": [{ "bearerAuth": [] }],
+    "/v1/leads/{lead_id}": {
+      "delete": {
+        "operationId": "delete_lead_v1_leads__lead_id__delete",
         "parameters": [
           {
-            "name": "leadId",
             "in": "path",
+            "name": "lead_id",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Soft-delete lead",
+        "tags": [
+          "leads"
+        ]
+      },
+      "get": {
+        "operationId": "get_lead_v1_leads__lead_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "OK",
-            "headers": {
-              "x-correlation-id": { "$ref": "#/components/headers/CorrelationId" }
-            },
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Lead" }
+                "schema": {
+                  "$ref": "#/components/schemas/LeadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get lead by ID",
+        "tags": [
+          "leads"
+        ]
+      },
+      "patch": {
+        "description": "Partial update; omitted fields stay unchanged.",
+        "operationId": "update_lead_v1_leads__lead_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeadUpdate"
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "404": { "$ref": "#/components/responses/Problem" },
-          "500": { "$ref": "#/components/responses/Problem" }
-        }
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update lead",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
+    "/v1/leads/{lead_id}/activities": {
+      "get": {
+        "operationId": "list_activities_v1_leads__lead_id__activities_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 10000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityOut"
+                  },
+                  "title": "Response List Activities V1 Leads  Lead Id  Activities Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List activities for a lead",
+        "tags": [
+          "leads"
+        ]
+      },
+      "post": {
+        "description": "Adds a manually-logged activity (note/call/email). System activities (stage_changed, status_changed, whatsapp_*\u2026) are created by the API itself.",
+        "operationId": "create_activity_v1_leads__lead_id__activities_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivityCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Add manual activity to a lead",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
+    "/v1/leads/{lead_id}/move": {
+      "post": {
+        "description": "Moves the lead to a stage inside its current pipeline. The transition is recorded as a `stage_changed` activity (and an additional `status_changed` activity when the coarse status flips). 4xx if the target stage belongs to another pipeline.",
+        "operationId": "move_lead_v1_leads__lead_id__move_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeadMove"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Move lead to another stage",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
+    "/v1/leads/{lead_id}/whatsapp/send": {
+      "post": {
+        "description": "Sends a pre-approved template via the Meta Cloud API. The `Idempotency-Key` header is required so retries do not re-fire the outbound message; the same key + body returns the original response for 24h. Returns 503 when WhatsApp credentials are not provisioned.",
+        "operationId": "send_whatsapp_template_v1_leads__lead_id__whatsapp_send_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Required. Caller-generated UUID/string scoped to this endpoint.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Required. Caller-generated UUID/string scoped to this endpoint.",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsAppTemplateSend"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhatsAppMessageOut"
+                }
+              }
+            },
+            "description": "Template accepted by WhatsApp."
+          },
+          "400": {
+            "description": "Validation error / lead lacks a phone number."
+          },
+          "409": {
+            "description": "Idempotency-Key reused with a different request body."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "description": "WhatsApp credentials not configured."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Send a WhatsApp template message to a lead",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
+    "/v1/pipelines": {
+      "get": {
+        "operationId": "list_pipelines_v1_pipelines_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PipelineOut"
+                  },
+                  "title": "Response List Pipelines V1 Pipelines Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List pipelines",
+        "tags": [
+          "pipelines"
+        ]
+      },
+      "post": {
+        "description": "Create a new pipeline. Optionally pass `stages` to seed them in the same call; otherwise an empty pipeline is created. If `is_default` is true, the previously-default pipeline (if any) is demoted.",
+        "operationId": "create_pipeline_v1_pipelines_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create pipeline",
+        "tags": [
+          "pipelines"
+        ]
+      }
+    },
+    "/v1/pipelines/{pipeline_id}": {
+      "get": {
+        "operationId": "get_pipeline_v1_pipelines__pipeline_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pipeline_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pipeline Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get pipeline by ID",
+        "tags": [
+          "pipelines"
+        ]
+      },
+      "patch": {
+        "operationId": "update_pipeline_v1_pipelines__pipeline_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pipeline_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pipeline Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update pipeline",
+        "tags": [
+          "pipelines"
+        ]
+      }
+    },
+    "/v1/pipelines/{pipeline_id}/stages": {
+      "get": {
+        "operationId": "list_stages_v1_pipelines__pipeline_id__stages_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pipeline_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pipeline Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PipelineStageOut"
+                  },
+                  "title": "Response List Stages V1 Pipelines  Pipeline Id  Stages Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List stages of a pipeline",
+        "tags": [
+          "pipelines"
+        ]
+      },
+      "put": {
+        "description": "Replaces the pipeline's stages with the provided list. Positions are normalised to multiples of 10 in the order received. Fails if any lead still references a removed stage \u2014 migrate those leads first.",
+        "operationId": "replace_stages_v1_pipelines__pipeline_id__stages_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pipeline_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Pipeline Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineStageReplace"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PipelineStageOut"
+                  },
+                  "title": "Response Replace Stages V1 Pipelines  Pipeline Id  Stages Put",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Replace all stages of a pipeline",
+        "tags": [
+          "pipelines"
+        ]
+      }
+    },
+    "/webhooks/clerk": {
+      "post": {
+        "description": "Receives organization / user / membership lifecycle events from Clerk and keeps the internal `tenants` and `users` tables in sync. Signature is verified with svix; the request body must be the raw bytes Clerk signed. Returns 204 No Content on success, 400 on missing/invalid signature, 503 when the webhook secret is not configured on the server.",
+        "operationId": "clerk_webhook_webhooks_clerk_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "svix-id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Svix-Id"
+            }
+          },
+          {
+            "in": "header",
+            "name": "svix-timestamp",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Svix-Timestamp"
+            }
+          },
+          {
+            "in": "header",
+            "name": "svix-signature",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Svix-Signature"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clerk webhook",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/webhooks/whatsapp": {
+      "get": {
+        "description": "Meta's subscription handshake. Returns `hub.challenge` verbatim when the verify token matches the configured `WHATSAPP_VERIFY_TOKEN`.",
+        "operationId": "whatsapp_verify_webhooks_whatsapp_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "hub.mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Hub.Mode"
+            }
+          },
+          {
+            "in": "query",
+            "name": "hub.challenge",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Hub.Challenge"
+            }
+          },
+          {
+            "in": "query",
+            "name": "hub.verify_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Hub.Verify Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "WhatsApp webhook verification (Meta)",
+        "tags": [
+          "webhooks"
+        ]
+      },
+      "post": {
+        "description": "Receives message + delivery-status events from Meta. The payload is verified with HMAC-SHA256 against `WHATSAPP_APP_SECRET` (header `X-Hub-Signature-256`). Tenant routing uses `phone_number_id` against `tenants.settings.whatsapp.phone_number_id`. Returns 204 on success (also on unmatched phone_number_id \u2014 Meta will retry otherwise).",
+        "operationId": "whatsapp_webhook_webhooks_whatsapp_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Hub-Signature-256",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Hub-Signature-256"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "WhatsApp webhook events",
+        "tags": [
+          "webhooks"
+        ]
       }
     }
   },
-  "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "JWT de Clerk verificado por el backend."
-      }
+  "servers": [
+    {
+      "description": "Local development",
+      "url": "http://localhost:8000"
     },
-    "headers": {
-      "CorrelationId": {
-        "description": "Identificador de correlación que enlaza la request con sus logs/spans en el backend.",
-        "schema": { "type": "string" }
-      }
+    {
+      "description": "Dev (Railway)",
+      "url": "https://api-dev.panda.local"
     },
-    "responses": {
-      "Problem": {
-        "description": "Error en formato RFC 7807.",
-        "headers": {
-          "x-correlation-id": { "$ref": "#/components/headers/CorrelationId" }
-        },
-        "content": {
-          "application/problem+json": {
-            "schema": { "$ref": "#/components/schemas/Problem" }
-          }
-        }
-      }
+    {
+      "description": "Staging (Railway)",
+      "url": "https://api-staging.panda.local"
     },
-    "schemas": {
-      "Problem": {
-        "type": "object",
-        "description": "RFC 7807 Problem Details.",
-        "required": ["type", "title", "status"],
-        "properties": {
-          "type": { "type": "string", "format": "uri", "default": "about:blank" },
-          "title": { "type": "string" },
-          "status": { "type": "integer" },
-          "detail": { "type": "string" },
-          "instance": { "type": "string" },
-          "correlationId": { "type": "string" }
-        }
-      },
-      "Role": {
-        "type": "string",
-        "enum": ["admin", "sales", "support"]
-      },
-      "User": {
-        "type": "object",
-        "required": ["id", "tenantId", "email", "name", "role"],
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "tenantId": { "type": "string", "format": "uuid" },
-          "email": { "type": "string", "format": "email" },
-          "name": { "type": "string" },
-          "role": { "$ref": "#/components/schemas/Role" }
-        }
-      },
-      "LeadStatus": {
-        "type": "string",
-        "enum": ["new", "qualified", "contacted", "won", "lost"]
-      },
-      "Lead": {
-        "type": "object",
-        "required": [
-          "id",
-          "tenantId",
-          "name",
-          "email",
-          "phone",
-          "status",
-          "source",
-          "ownerId",
-          "createdAt",
-          "updatedAt"
-        ],
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "tenantId": { "type": "string", "format": "uuid" },
-          "name": { "type": "string" },
-          "email": { "type": "string", "format": "email" },
-          "phone": { "type": "string" },
-          "status": { "$ref": "#/components/schemas/LeadStatus" },
-          "source": { "type": "string" },
-          "ownerId": { "type": "string", "format": "uuid" },
-          "createdAt": { "type": "string", "format": "date-time" },
-          "updatedAt": { "type": "string", "format": "date-time" }
-        }
-      },
-      "LeadCreate": {
-        "type": "object",
-        "description": "Payload para crear un lead. tenantId, ownerId, createdAt, updatedAt los asigna el backend.",
-        "required": ["name", "email", "phone", "status", "source"],
-        "properties": {
-          "name": { "type": "string", "minLength": 1 },
-          "email": { "type": "string", "format": "email" },
-          "phone": { "type": "string", "minLength": 1 },
-          "status": { "$ref": "#/components/schemas/LeadStatus" },
-          "source": { "type": "string", "minLength": 1 }
-        }
-      },
-      "LeadPage": {
-        "type": "object",
-        "required": ["items", "total", "page", "pageSize"],
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Lead" }
-          },
-          "total": { "type": "integer", "minimum": 0 },
-          "page": { "type": "integer", "minimum": 1 },
-          "pageSize": { "type": "integer", "minimum": 1 }
-        }
-      }
+    {
+      "description": "Production (Railway)",
+      "url": "https://api.panda.local"
     }
-  }
+  ],
+  "tags": [
+    {
+      "description": "Liveness and readiness probes. `/healthz` does not contact downstream dependencies; `/readyz` does.",
+      "name": "health"
+    },
+    {
+      "description": "CRUD on leads (prospects). Tenant-scoped; supports filters, search, sort, bulk actions, stage moves, activity timeline and outbound WhatsApp template sends.",
+      "name": "leads"
+    },
+    {
+      "description": "Manage tenant-defined sales funnels and their stages. A 'Default' pipeline with 5 stages is seeded automatically when a tenant is provisioned.",
+      "name": "pipelines"
+    },
+    {
+      "description": "Signed inbound webhooks from external services (Clerk, WhatsApp).",
+      "name": "webhooks"
+    }
+  ]
 }

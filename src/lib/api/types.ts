@@ -4,15 +4,18 @@
  */
 
 export interface paths {
-    "/auth/me": {
+    "/healthz": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Devuelve el usuario autenticado. */
-        get: operations["getCurrentUser"];
+        /**
+         * Liveness probe
+         * @description Returns 200 OK as long as the FastAPI process is running. Does not contact the database or any downstream dependency. Use `/readyz` for readiness checks.
+         */
+        get: operations["healthz_healthz_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -21,35 +24,251 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/leads": {
+    "/readyz": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Lista leads paginados del tenant del usuario. */
-        get: operations["listLeads"];
+        /**
+         * Readiness probe
+         * @description Returns 200 when every critical dependency (database, cache) is reachable. Returns 503 otherwise so load balancers stop routing traffic to this instance.
+         */
+        get: operations["readyz_readyz_get"];
         put?: never;
-        /** Crea un lead. Soporta Idempotency-Key. */
-        post: operations["createLead"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/leads/{leadId}": {
+    "/v1/leads": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Devuelve un lead por id. */
-        get: operations["getLead"];
+        /**
+         * List leads
+         * @description Returns a paginated list of leads scoped to the caller's tenant. Filters are AND-ed; the `q` parameter performs a case-insensitive match against name, email, phone and company.
+         */
+        get: operations["list_leads_v1_leads_get"];
+        put?: never;
+        /**
+         * Create lead
+         * @description Creates a new lead inside the caller's tenant. Defaults to the tenant's default pipeline and that pipeline's first stage when `pipeline_id` / `stage_id` are omitted.
+         */
+        post: operations["create_lead_v1_leads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/leads/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk update leads
+         * @description Apply the same change to many leads: reassign owner, switch coarse status, add or remove tags. Idempotent in the sense that re-running produces the same final state.
+         */
+        post: operations["bulk_update_leads_v1_leads_bulk_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/leads/{lead_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get lead by ID */
+        get: operations["get_lead_v1_leads__lead_id__get"];
         put?: never;
         post?: never;
+        /** Soft-delete lead */
+        delete: operations["delete_lead_v1_leads__lead_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update lead
+         * @description Partial update; omitted fields stay unchanged.
+         */
+        patch: operations["update_lead_v1_leads__lead_id__patch"];
+        trace?: never;
+    };
+    "/v1/leads/{lead_id}/activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List activities for a lead */
+        get: operations["list_activities_v1_leads__lead_id__activities_get"];
+        put?: never;
+        /**
+         * Add manual activity to a lead
+         * @description Adds a manually-logged activity (note/call/email). System activities (stage_changed, status_changed, whatsapp_*…) are created by the API itself.
+         */
+        post: operations["create_activity_v1_leads__lead_id__activities_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/leads/{lead_id}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Move lead to another stage
+         * @description Moves the lead to a stage inside its current pipeline. The transition is recorded as a `stage_changed` activity (and an additional `status_changed` activity when the coarse status flips). 4xx if the target stage belongs to another pipeline.
+         */
+        post: operations["move_lead_v1_leads__lead_id__move_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/leads/{lead_id}/whatsapp/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a WhatsApp template message to a lead
+         * @description Sends a pre-approved template via the Meta Cloud API. The `Idempotency-Key` header is required so retries do not re-fire the outbound message; the same key + body returns the original response for 24h. Returns 503 when WhatsApp credentials are not provisioned.
+         */
+        post: operations["send_whatsapp_template_v1_leads__lead_id__whatsapp_send_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/pipelines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List pipelines */
+        get: operations["list_pipelines_v1_pipelines_get"];
+        put?: never;
+        /**
+         * Create pipeline
+         * @description Create a new pipeline. Optionally pass `stages` to seed them in the same call; otherwise an empty pipeline is created. If `is_default` is true, the previously-default pipeline (if any) is demoted.
+         */
+        post: operations["create_pipeline_v1_pipelines_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/pipelines/{pipeline_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get pipeline by ID */
+        get: operations["get_pipeline_v1_pipelines__pipeline_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update pipeline */
+        patch: operations["update_pipeline_v1_pipelines__pipeline_id__patch"];
+        trace?: never;
+    };
+    "/v1/pipelines/{pipeline_id}/stages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List stages of a pipeline */
+        get: operations["list_stages_v1_pipelines__pipeline_id__stages_get"];
+        /**
+         * Replace all stages of a pipeline
+         * @description Replaces the pipeline's stages with the provided list. Positions are normalised to multiples of 10 in the order received. Fails if any lead still references a removed stage — migrate those leads first.
+         */
+        put: operations["replace_stages_v1_pipelines__pipeline_id__stages_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/clerk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clerk webhook
+         * @description Receives organization / user / membership lifecycle events from Clerk and keeps the internal `tenants` and `users` tables in sync. Signature is verified with svix; the request body must be the raw bytes Clerk signed. Returns 204 No Content on success, 400 on missing/invalid signature, 503 when the webhook secret is not configured on the server.
+         */
+        post: operations["clerk_webhook_webhooks_clerk_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/whatsapp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * WhatsApp webhook verification (Meta)
+         * @description Meta's subscription handshake. Returns `hub.challenge` verbatim when the verify token matches the configured `WHATSAPP_VERIFY_TOKEN`.
+         */
+        get: operations["whatsapp_verify_webhooks_whatsapp_get"];
+        put?: never;
+        /**
+         * WhatsApp webhook events
+         * @description Receives message + delivery-status events from Meta. The payload is verified with HMAC-SHA256 against `WHATSAPP_APP_SECRET` (header `X-Hub-Signature-256`). Tenant routing uses `phone_number_id` against `tenants.settings.whatsapp.phone_number_id`. Returns 204 on success (also on unmatched phone_number_id — Meta will retry otherwise).
+         */
+        post: operations["whatsapp_webhook_webhooks_whatsapp_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -60,90 +279,648 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @description RFC 7807 Problem Details. */
-        Problem: {
+        /**
+         * ActivityCreate
+         * @description User-created note / call / email logged manually.
+         */
+        ActivityCreate: {
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
+            /** Summary */
+            summary?: string | null;
+            /** @description Activity kind; non-system kinds only (note, call, email). */
+            type: components["schemas"]["ActivityType"];
+        };
+        /** ActivityOut */
+        ActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
             /**
-             * Format: uri
-             * @default about:blank
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+            /** Summary */
+            summary: string | null;
+            type: components["schemas"]["ActivityType"];
+        };
+        /**
+         * ActivityType
+         * @description Discriminator for ``activities.type``.
+         * @enum {string}
+         */
+        ActivityType: "note" | "call" | "email" | "whatsapp_inbound" | "whatsapp_outbound" | "stage_changed" | "owner_changed" | "status_changed" | "lead_created" | "system";
+        /**
+         * ComponentStatus
+         * @description Status of a single dependency probed by readiness.
+         */
+        ComponentStatus: {
+            /**
+             * Detail
+             * @description Optional human-readable detail (error message, etc.).
+             */
+            detail?: string | null;
+            /**
+             * Latency Ms
+             * @description Probe latency in milliseconds (omitted if not measured).
+             */
+            latency_ms?: number | null;
+            /**
+             * Name
+             * @description Component identifier (e.g. 'database').
+             */
+            name: string;
+            /**
+             * Status
+             * @description Outcome of the probe.
+             * @enum {string}
+             */
+            status: "ok" | "degraded" | "down" | "skipped";
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * HealthStatus
+         * @description Response payload for the liveness endpoint.
+         */
+        HealthStatus: {
+            /**
+             * Environment
+             * @description Deployment environment.
+             */
+            environment: string;
+            /**
+             * Service
+             * @description Logical service name.
+             */
+            service: string;
+            /**
+             * Status
+             * @description Always 'ok' when the process is alive.
+             * @default ok
+             * @constant
+             */
+            status: "ok";
+            /**
+             * Timestamp
+             * Format: date-time
+             * @description Server-side timestamp (UTC).
+             */
+            timestamp: string;
+            /**
+             * Version
+             * @description Application version.
+             */
+            version: string;
+        };
+        /**
+         * LeadBulkAction
+         * @description Payload for ``POST /v1/leads/bulk``.
+         */
+        LeadBulkAction: {
+            /** Add Tags */
+            add_tags?: string[];
+            /**
+             * Assign Owner Id
+             * @description If set, updates `owner_id` for every selected lead.
+             */
+            assign_owner_id?: string | null;
+            /**
+             * Ids
+             * @description Lead IDs to operate on.
+             */
+            ids: string[];
+            /** Remove Tags */
+            remove_tags?: string[];
+            /** @description Coarse status assigned to every selected lead. The lead also transitions to the first stage of its pipeline whose slug matches. */
+            set_status?: components["schemas"]["LeadStatus"] | null;
+        };
+        /**
+         * LeadBulkResult
+         * @description Outcome of a bulk action.
+         */
+        LeadBulkResult: {
+            /**
+             * Ids
+             * @description The IDs effectively updated.
+             */
+            ids: string[];
+            /**
+             * Matched
+             * @description Number of leads found in the request scope.
+             */
+            matched: number;
+            /**
+             * Updated
+             * @description Number of leads modified.
+             */
+            updated: number;
+        };
+        /**
+         * LeadCreate
+         * @description Payload accepted by ``POST /v1/leads``.
+         */
+        LeadCreate: {
+            /** Company */
+            company?: string | null;
+            /** Cups */
+            cups?: string | null;
+            /**
+             * Currency
+             * @default EUR
+             */
+            currency: string;
+            /** Custom Fields */
+            custom_fields?: {
+                [key: string]: unknown;
+            };
+            /** Email */
+            email?: string | null;
+            /** Estimated Value Cents */
+            estimated_value_cents?: number | null;
+            /** First Name */
+            first_name?: string | null;
+            /** Last Name */
+            last_name?: string | null;
+            /** Owner Id */
+            owner_id?: string | null;
+            /**
+             * Phone
+             * @description Phone in any reasonable shape; stored as E.164.
+             */
+            phone?: string | null;
+            /**
+             * Pipeline Id
+             * @description Defaults to the tenant's default pipeline when omitted.
+             */
+            pipeline_id?: string | null;
+            /** @default manual */
+            source: components["schemas"]["LeadSource"];
+            /** Source Ref */
+            source_ref?: string | null;
+            /**
+             * Stage Id
+             * @description Defaults to the first stage of the chosen pipeline.
+             */
+            stage_id?: string | null;
+            /** Tags */
+            tags?: string[];
+        };
+        /**
+         * LeadMove
+         * @description Payload for ``POST /v1/leads/{id}/move``.
+         */
+        LeadMove: {
+            /**
+             * Note
+             * @description Optional comment recorded as a `stage_changed` activity payload.
+             */
+            note?: string | null;
+            /**
+             * Stage Id
+             * Format: uuid
+             * @description Destination stage. Must belong to the lead's pipeline.
+             */
+            stage_id: string;
+        };
+        /**
+         * LeadOut
+         * @description Single-lead response.
+         */
+        LeadOut: {
+            /** Company */
+            company: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Cups */
+            cups: string | null;
+            /** Currency */
+            currency: string;
+            /** Custom Fields */
+            custom_fields: {
+                [key: string]: unknown;
+            };
+            /** Email */
+            email: string | null;
+            /** Estimated Value Cents */
+            estimated_value_cents: number | null;
+            /** First Name */
+            first_name: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Last Contacted At */
+            last_contacted_at: string | null;
+            /** Last Name */
+            last_name: string | null;
+            /** Owner Id */
+            owner_id: string | null;
+            /** Phone E164 */
+            phone_e164: string | null;
+            /**
+             * Pipeline Id
+             * Format: uuid
+             */
+            pipeline_id: string;
+            source: components["schemas"]["LeadSource"];
+            /** Source Ref */
+            source_ref: string | null;
+            /**
+             * Stage Id
+             * Format: uuid
+             */
+            stage_id: string;
+            status: components["schemas"]["LeadStatus"];
+            /** Tags */
+            tags: string[];
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * LeadSortField
+         * @description Permitted columns for ``GET /v1/leads?sort=`` to keep ordering safe.
+         * @enum {string}
+         */
+        LeadSortField: "created_at" | "updated_at" | "last_contacted_at" | "status";
+        /**
+         * LeadSource
+         * @description How the lead reached the funnel.
+         * @enum {string}
+         */
+        LeadSource: "manual" | "whatsapp" | "web_form" | "import" | "referral" | "agent" | "other";
+        /**
+         * LeadStatus
+         * @description Coarse lifecycle bucket; derived from the lead's current stage.
+         * @enum {string}
+         */
+        LeadStatus: "new" | "contacted" | "qualified" | "won" | "lost";
+        /**
+         * LeadUpdate
+         * @description PATCH payload — every field is optional.
+         */
+        LeadUpdate: {
+            /** Company */
+            company?: string | null;
+            /** Cups */
+            cups?: string | null;
+            /** Custom Fields */
+            custom_fields?: {
+                [key: string]: unknown;
+            } | null;
+            /** Email */
+            email?: string | null;
+            /** Estimated Value Cents */
+            estimated_value_cents?: number | null;
+            /** First Name */
+            first_name?: string | null;
+            /** Last Contacted At */
+            last_contacted_at?: string | null;
+            /** Last Name */
+            last_name?: string | null;
+            /** Owner Id */
+            owner_id?: string | null;
+            /**
+             * Phone
+             * @description Reset to null with explicit ''.
+             */
+            phone?: string | null;
+            source?: components["schemas"]["LeadSource"] | null;
+            /** Source Ref */
+            source_ref?: string | null;
+            /** Tags */
+            tags?: string[] | null;
+        };
+        /**
+         * MessageDirection
+         * @enum {string}
+         */
+        MessageDirection: "inbound" | "outbound";
+        /**
+         * MessageStatus
+         * @description Outbound + inbound shared lifecycle.
+         * @enum {string}
+         */
+        MessageStatus: "received" | "accepted" | "sent" | "delivered" | "read" | "failed";
+        /** Page[LeadOut] */
+        Page_LeadOut_: {
+            /**
+             * Items
+             * @description Items on this page.
+             */
+            items: components["schemas"]["LeadOut"][];
+            /**
+             * Limit
+             * @description Maximum items returned per page.
+             */
+            limit: number;
+            /**
+             * Offset
+             * @description Offset of this page in the result set.
+             */
+            offset: number;
+            /**
+             * Total
+             * @description Total number of matching rows.
+             */
+            total: number;
+        };
+        /** PipelineCreate */
+        PipelineCreate: {
+            /**
+             * Is Default
+             * @default false
+             */
+            is_default: boolean;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug?: string | null;
+            /**
+             * Stages
+             * @description Stages to create alongside the pipeline. If empty the API does NOT seed defaults.
+             */
+            stages?: components["schemas"]["PipelineStageIn"][];
+        };
+        /** PipelineOut */
+        PipelineOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Default */
+            is_default: boolean;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Stages */
+            stages?: components["schemas"]["PipelineStageOut"][];
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** PipelineStageIn */
+        PipelineStageIn: {
+            /**
+             * Is Lost
+             * @default false
+             */
+            is_lost: boolean;
+            /**
+             * Is Won
+             * @default false
+             */
+            is_won: boolean;
+            /** Name */
+            name: string;
+            /**
+             * Position
+             * @default 0
+             */
+            position: number;
+            /** Slug */
+            slug?: string | null;
+        };
+        /** PipelineStageOut */
+        PipelineStageOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Lost */
+            is_lost: boolean;
+            /** Is Won */
+            is_won: boolean;
+            /** Name */
+            name: string;
+            /**
+             * Pipeline Id
+             * Format: uuid
+             */
+            pipeline_id: string;
+            /** Position */
+            position: number;
+            /** Slug */
+            slug: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * PipelineStageReplace
+         * @description Payload for ``PUT /v1/pipelines/{id}/stages`` — replaces all stages.
+         */
+        PipelineStageReplace: {
+            /**
+             * Stages
+             * @description Complete stage list. Positions normalized server-side.
+             */
+            stages: components["schemas"]["PipelineStageIn"][];
+        };
+        /** PipelineUpdate */
+        PipelineUpdate: {
+            /** Is Default */
+            is_default?: boolean | null;
+            /** Name */
+            name?: string | null;
+        };
+        /**
+         * ReadinessStatus
+         * @description Response payload for the readiness endpoint.
+         */
+        ReadinessStatus: {
+            /**
+             * Checks
+             * @description Per-dependency probe results.
+             */
+            checks: components["schemas"]["ComponentStatus"][];
+            /**
+             * Environment
+             * @description Deployment environment.
+             */
+            environment: string;
+            /**
+             * Service
+             * @description Logical service name.
+             */
+            service: string;
+            /**
+             * Status
+             * @description Aggregate readiness verdict.
+             * @enum {string}
+             */
+            status: "ready" | "degraded" | "not_ready";
+            /**
+             * Timestamp
+             * Format: date-time
+             * @description Server-side timestamp (UTC).
+             */
+            timestamp: string;
+            /**
+             * Version
+             * @description Application version.
+             */
+            version: string;
+        };
+        /**
+         * SortDirection
+         * @enum {string}
+         */
+        SortDirection: "asc" | "desc";
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+        };
+        /**
+         * WhatsAppMessageOut
+         * @description Persisted WhatsApp message returned by the API.
+         */
+        WhatsAppMessageOut: {
+            /** Body */
+            body: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Delivered At */
+            delivered_at: string | null;
+            direction: components["schemas"]["MessageDirection"];
+            /** Error Code */
+            error_code: string | null;
+            /** Error Message */
+            error_message: string | null;
+            /** From Phone E164 */
+            from_phone_e164: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Lead Id */
+            lead_id: string | null;
+            /** Provider Message Id */
+            provider_message_id: string | null;
+            /** Read At */
+            read_at: string | null;
+            /** Sent At */
+            sent_at: string | null;
+            status: components["schemas"]["MessageStatus"];
+            /** Template Language */
+            template_language: string | null;
+            /** Template Name */
+            template_name: string | null;
+            /** To Phone E164 */
+            to_phone_e164: string;
+        };
+        /**
+         * WhatsAppTemplateComponent
+         * @description Component slot inside a pre-approved template message.
+         */
+        WhatsAppTemplateComponent: {
+            /** Parameters */
+            parameters?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Type
+             * @description header | body | button | footer
              */
             type: string;
-            title: string;
-            status: number;
-            detail?: string;
-            instance?: string;
-            correlationId?: string;
         };
-        /** @enum {string} */
-        Role: "admin" | "sales" | "support";
-        User: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            tenantId: string;
-            /** Format: email */
-            email: string;
-            name: string;
-            role: components["schemas"]["Role"];
-        };
-        /** @enum {string} */
-        LeadStatus: "new" | "qualified" | "contacted" | "won" | "lost";
-        Lead: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            tenantId: string;
-            name: string;
-            /** Format: email */
-            email: string;
-            phone: string;
-            status: components["schemas"]["LeadStatus"];
-            source: string;
-            /** Format: uuid */
-            ownerId: string;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        /** @description Payload para crear un lead. tenantId, ownerId, createdAt, updatedAt los asigna el backend. */
-        LeadCreate: {
-            name: string;
-            /** Format: email */
-            email: string;
-            phone: string;
-            status: components["schemas"]["LeadStatus"];
-            source: string;
-        };
-        LeadPage: {
-            items: components["schemas"]["Lead"][];
-            total: number;
-            page: number;
-            pageSize: number;
+        /**
+         * WhatsAppTemplateSend
+         * @description Payload for ``POST /v1/leads/{id}/whatsapp/send``.
+         *
+         *     The Meta Cloud API only accepts pre-approved templates for first-touch
+         *     outbound messages, which is the only flow we support in Sprint 2.
+         */
+        WhatsAppTemplateSend: {
+            /** Components */
+            components?: components["schemas"]["WhatsAppTemplateComponent"][];
+            /**
+             * Language
+             * @description e.g. 'es_ES', 'en_US'.
+             */
+            language: string;
+            /** Template Name */
+            template_name: string;
         };
     };
-    responses: {
-        /** @description Error en formato RFC 7807. */
-        Problem: {
-            headers: {
-                "x-correlation-id": components["headers"]["CorrelationId"];
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-    };
+    responses: never;
     parameters: never;
     requestBodies: never;
-    headers: {
-        /** @description Identificador de correlación que enlaza la request con sus logs/spans en el backend. */
-        CorrelationId: string;
-    };
+    headers: never;
     pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getCurrentUser: {
+    healthz_healthz_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -152,26 +929,64 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description Service is alive. */
             200: {
                 headers: {
-                    "x-correlation-id": components["headers"]["CorrelationId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["User"];
+                    "application/json": components["schemas"]["HealthStatus"];
                 };
             };
-            401: components["responses"]["Problem"];
-            500: components["responses"]["Problem"];
         };
     };
-    listLeads: {
+    readyz_readyz_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All probed dependencies are healthy. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadinessStatus"];
+                };
+            };
+            /** @description At least one critical dependency is down. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_leads_v1_leads_get: {
         parameters: {
             query?: {
-                page?: number;
-                pageSize?: number;
-                status?: components["schemas"]["LeadStatus"];
+                /** @description Filter by coarse status. */
+                statuses?: components["schemas"]["LeadStatus"][] | null;
+                /** @description Filter by lead source. */
+                sources?: components["schemas"]["LeadSource"][] | null;
+                /** @description Filter by assigned owner. */
+                owner_id?: string[] | null;
+                pipeline_id?: string[] | null;
+                stage_id?: string[] | null;
+                /** @description Match leads having ANY of these tags. */
+                tag?: string[] | null;
+                created_from?: string | null;
+                created_to?: string | null;
+                q?: string | null;
+                sort?: components["schemas"]["LeadSortField"];
+                direction?: components["schemas"]["SortDirection"];
+                limit?: number;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -179,27 +994,30 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description Successful Response */
             200: {
                 headers: {
-                    "x-correlation-id": components["headers"]["CorrelationId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LeadPage"];
+                    "application/json": components["schemas"]["Page_LeadOut_"];
                 };
             };
-            401: components["responses"]["Problem"];
-            500: components["responses"]["Problem"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    createLead: {
+    create_lead_v1_leads_post: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description UUID generado por el cliente para deduplicar reintentos. Si se repite, el backend devuelve la misma respuesta sin crear duplicado. */
-                "Idempotency-Key"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -209,46 +1027,591 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Creado */
+            /** @description Successful Response */
             201: {
                 headers: {
-                    "x-correlation-id": components["headers"]["CorrelationId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Lead"];
+                    "application/json": components["schemas"]["LeadOut"];
                 };
             };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            409: components["responses"]["Problem"];
-            500: components["responses"]["Problem"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    getLead: {
+    bulk_update_leads_v1_leads_bulk_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeadBulkAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadBulkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_lead_v1_leads__lead_id__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                leadId: string;
+                lead_id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description Successful Response */
             200: {
                 headers: {
-                    "x-correlation-id": components["headers"]["CorrelationId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Lead"];
+                    "application/json": components["schemas"]["LeadOut"];
                 };
             };
-            401: components["responses"]["Problem"];
-            404: components["responses"]["Problem"];
-            500: components["responses"]["Problem"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_lead_v1_leads__lead_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lead_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_lead_v1_leads__lead_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lead_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeadUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_activities_v1_leads__lead_id__activities_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                lead_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_activity_v1_leads__lead_id__activities_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lead_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    move_lead_v1_leads__lead_id__move_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lead_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeadMove"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_whatsapp_template_v1_leads__lead_id__whatsapp_send_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required. Caller-generated UUID/string scoped to this endpoint. */
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                lead_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WhatsAppTemplateSend"];
+            };
+        };
+        responses: {
+            /** @description Template accepted by WhatsApp. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WhatsAppMessageOut"];
+                };
+            };
+            /** @description Validation error / lead lacks a phone number. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency-Key reused with a different request body. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description WhatsApp credentials not configured. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_pipelines_v1_pipelines_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineOut"][];
+                };
+            };
+        };
+    };
+    create_pipeline_v1_pipelines_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PipelineCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_pipeline_v1_pipelines__pipeline_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pipeline_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_pipeline_v1_pipelines__pipeline_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pipeline_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PipelineUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_stages_v1_pipelines__pipeline_id__stages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pipeline_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineStageOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replace_stages_v1_pipelines__pipeline_id__stages_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pipeline_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PipelineStageReplace"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineStageOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clerk_webhook_webhooks_clerk_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "svix-id"?: string | null;
+                "svix-timestamp"?: string | null;
+                "svix-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    whatsapp_verify_webhooks_whatsapp_get: {
+        parameters: {
+            query?: {
+                "hub.mode"?: string | null;
+                "hub.challenge"?: string | null;
+                "hub.verify_token"?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    whatsapp_webhook_webhooks_whatsapp_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Hub-Signature-256"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
 }
