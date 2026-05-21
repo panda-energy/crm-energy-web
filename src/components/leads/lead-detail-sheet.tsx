@@ -31,12 +31,14 @@ import { DetailPanelSkeleton } from "@/components/skeletons/detail-panel-skeleto
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "@/lib/ui/toast";
 import {
-  useDeleteLead,
   useLead,
   useLeadActivities,
-  useUpdateLead,
   type Lead,
 } from "@/lib/api/hooks/use-leads";
+import {
+  useOptimisticDeleteLead,
+  useOptimisticUpdateLead,
+} from "@/lib/api/hooks/use-leads-optimistic";
 import { usePipelineStages, usePipelines } from "@/lib/api/hooks/use-pipelines";
 import {
   composeInitials,
@@ -139,8 +141,8 @@ function LeadDetailBody({
   lead: Lead;
   onClose: () => void;
 }) {
-  const updateLead = useUpdateLead(lead.id);
-  const deleteLead = useDeleteLead(lead.id);
+  const updateLead = useOptimisticUpdateLead(lead.id);
+  const deleteLead = useOptimisticDeleteLead(lead.id);
 
   const pipelinesQuery = usePipelines();
   const stagesQuery = usePipelineStages(lead.pipeline_id);
@@ -155,12 +157,17 @@ function LeadDetailBody({
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  /** Helper: PATCH con un solo campo + manejo de errores en toast. */
+  /**
+   * Helper: PATCH parcial con optimistic + undo 6s en mutaciones
+   * reversibles. El optimistic ya rollback-ea en error (lo hace el hook).
+   * Aquí decidimos QUÉ mutaciones llevan undo (status/owner/tags/source).
+   */
   const patchField = async (
-    patch: Parameters<typeof updateLead.mutateAsync>[0],
+    patch: Parameters<typeof updateLead.mutateAsync>[0]["patch"],
+    options: { undoMessage?: string } = {},
   ) => {
     try {
-      await updateLead.mutateAsync(patch);
+      await updateLead.mutateAsync({ patch, undoMessage: options.undoMessage });
     } catch (err) {
       // Re-lanzar para que InlineEditField revierta + muestre error inline.
       throw err instanceof Error ? err : new Error("Error al guardar");
@@ -170,11 +177,11 @@ function LeadDetailBody({
   const handleDelete = async () => {
     setDeleteConfirmOpen(false);
     try {
-      await deleteLead.mutateAsync(undefined);
-      toast.success("Lead eliminado", {
-        description: composeLeadName(lead),
-        // reason: backend aún no expone restore endpoint — undo deshabilitado
-        // como deuda explícita. Cuando exista, sustituir por toast.action.
+      await deleteLead.mutateAsync({
+        undoMessage: `Lead eliminado: ${composeLeadName(lead)}`,
+        // reason: deshabilitado hasta que backend exponga
+        // POST /v1/leads/{id}/restore. Cuando esté, pasar `restoreEnabled: true`.
+        restoreEnabled: false,
       });
       onClose();
     } catch (err) {
@@ -284,7 +291,10 @@ function LeadDetailBody({
               value={lead.source}
               displayValue={LEAD_SOURCE_LABELS[lead.source]}
               onSubmit={(v) =>
-                patchField({ source: v as Lead["source"] })
+                patchField(
+                  { source: v as Lead["source"] },
+                  { undoMessage: "Origen actualizado" },
+                )
               }
               renderEditor={({ value, setValue, submit, cancel }) => (
                 <Select
@@ -350,7 +360,10 @@ function LeadDetailBody({
                 )
               }
               onSubmit={(v) =>
-                patchField({ owner_id: v.trim() || null })
+                patchField(
+                  { owner_id: v.trim() || null },
+                  { undoMessage: "Propietario actualizado" },
+                )
               }
             />
             <InlineEditField
@@ -391,8 +404,11 @@ function LeadDetailBody({
               <TagsInput
                 value={lead.tags}
                 onChange={(next) => {
-                  void patchField({ tags: next }).catch(() => {
-                    /* el InlineEditField no aplica aquí — error toast desde patchField. */
+                  void patchField(
+                    { tags: next },
+                    { undoMessage: "Etiquetas actualizadas" },
+                  ).catch(() => {
+                    /* error toast lo maneja el hook optimistic. */
                   });
                 }}
                 ariaLabel="Etiquetas del lead"
