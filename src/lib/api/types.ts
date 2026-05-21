@@ -44,6 +44,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the authenticated user
+         * @description Returns the internal user row that backs the Clerk session in the `Authorization` header, plus the tenant's `default_pipeline_id` for convenience. Returns 404 if the Clerk user has no internal row yet (the Clerk webhook is responsible for provisioning it).
+         */
+        get: operations["get_me_v1_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/leads": {
         parameters: {
             query?: never;
@@ -151,6 +171,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/leads/{lead_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore a soft-deleted lead
+         * @description Reverses a previous soft-delete by clearing `deleted_at`. Idempotent: returns 204 even when the lead was never deleted or was already restored. 404 only when the lead does not exist at all in the tenant. An activity of type `restored` is appended to the timeline whenever a delete is actually reversed.
+         */
+        post: operations["restore_lead_v1_leads__lead_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/leads/{lead_id}/whatsapp/send": {
         parameters: {
             query?: never;
@@ -162,7 +202,7 @@ export interface paths {
         put?: never;
         /**
          * Send a WhatsApp template message to a lead
-         * @description Sends a pre-approved template via the Meta Cloud API. The `Idempotency-Key` header is required so retries do not re-fire the outbound message; the same key + body returns the original response for 24h. Returns 503 when WhatsApp credentials are not provisioned.
+         * @description Sends a pre-approved template via the Meta Cloud API. The `Idempotency-Key` header is required so retries do not re-fire the outbound message; the same key + body returns the original response for 24h with status 200 (initial accept is 202). Returns 503 when WhatsApp credentials are not provisioned.
          */
         post: operations["send_whatsapp_template_v1_leads__lead_id__whatsapp_send_post"];
         delete?: never;
@@ -224,6 +264,26 @@ export interface paths {
          * @description Replaces the pipeline's stages with the provided list. Positions are normalised to multiples of 10 in the order received. Fails if any lead still references a removed stage — migrate those leads first.
          */
         put: operations["replace_stages_v1_pipelines__pipeline_id__stages_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List users in the tenant
+         * @description Returns a paginated list of active users in the caller's tenant. Use to populate owner pickers and assignment dropdowns. `q` performs case-insensitive partial match against email and the composed first/last name. `role` filters by application role.
+         */
+        get: operations["list_users_v1_users_get"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -293,8 +353,17 @@ export interface components {
             /** @description Activity kind; non-system kinds only (note, call, email). */
             type: components["schemas"]["ActivityType"];
         };
-        /** ActivityOut */
-        ActivityOut: {
+        /**
+         * ActivityType
+         * @description Discriminator for ``activities.type``.
+         *
+         *     New members must be added to the Postgres ``activity_type`` enum via an
+         *     Alembic migration before they can be persisted.
+         * @enum {string}
+         */
+        ActivityType: "note" | "call" | "email" | "whatsapp_inbound" | "whatsapp_outbound" | "stage_changed" | "owner_changed" | "status_changed" | "lead_created" | "restored" | "bulk_action" | "system";
+        /** BulkActionActivityOut */
+        BulkActionActivityOut: {
             /** Actor User Id */
             actor_user_id: string | null;
             /**
@@ -317,20 +386,85 @@ export interface components {
              * Format: date-time
              */
             occurred_at: string;
-            /** Payload */
-            payload: {
-                [key: string]: unknown;
-            };
+            payload: components["schemas"]["BulkActionPayload"];
             /** Summary */
             summary: string | null;
-            type: components["schemas"]["ActivityType"];
+            /**
+             * Type
+             * @default bulk_action
+             * @constant
+             */
+            type: "bulk_action";
         };
         /**
-         * ActivityType
-         * @description Discriminator for ``activities.type``.
-         * @enum {string}
+         * BulkActionPayload
+         * @description Payload for `type: "bulk_action"` activities.
          */
-        ActivityType: "note" | "call" | "email" | "whatsapp_inbound" | "whatsapp_outbound" | "stage_changed" | "owner_changed" | "status_changed" | "lead_created" | "system";
+        BulkActionPayload: {
+            /**
+             * Action
+             * @description Bulk action identifier (e.g. 'delete', 'assign').
+             */
+            action: string;
+            /** Params */
+            params?: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
+        };
+        /** CallActivityOut */
+        CallActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            payload: components["schemas"]["CallPayload"];
+            /** Summary */
+            summary: string | null;
+            /**
+             * Type
+             * @default call
+             * @constant
+             */
+            type: "call";
+        };
+        /**
+         * CallPayload
+         * @description Payload for `type: "call"` activities.
+         */
+        CallPayload: {
+            /**
+             * Duration Sec
+             * @description Call duration in seconds.
+             */
+            duration_sec?: number | null;
+            /**
+             * Outcome
+             * @description Free-text outcome (e.g. 'voicemail', 'no answer', 'closed').
+             */
+            outcome?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
         /**
          * ComponentStatus
          * @description Status of a single dependency probed by readiness.
@@ -357,6 +491,52 @@ export interface components {
              * @enum {string}
              */
             status: "ok" | "degraded" | "down" | "skipped";
+        };
+        /** EmailActivityOut */
+        EmailActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            payload: components["schemas"]["EmailPayload"];
+            /** Summary */
+            summary: string | null;
+            /**
+             * Type
+             * @default email
+             * @constant
+             */
+            type: "email";
+        };
+        /**
+         * EmailPayload
+         * @description Payload for `type: "email"` activities.
+         */
+        EmailPayload: {
+            /** Body */
+            body?: string | null;
+            /** Subject */
+            subject?: string | null;
+        } & {
+            [key: string]: unknown;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -400,8 +580,20 @@ export interface components {
         /**
          * LeadBulkAction
          * @description Payload for ``POST /v1/leads/bulk``.
+         *
+         *     Set ``action`` to ``"update"`` (default) to mutate fields in-place, or
+         *     ``"delete"`` to soft-delete every selected lead. When ``action=="delete"``
+         *     the mutation fields (`assign_owner_id`, `set_status`, `add_tags`,
+         *     `remove_tags`) are ignored. Use ``POST /v1/leads/{id}/restore`` to
+         *     reverse a soft-delete.
          */
         LeadBulkAction: {
+            /**
+             * Action
+             * @description `update` (default) applies the field mutations; `delete` soft-deletes every selected lead. Soft-deleted rows can be restored via `POST /v1/leads/{id}/restore`.
+             * @default update
+             */
+            action: string;
             /** Add Tags */
             add_tags?: string[];
             /**
@@ -470,7 +662,8 @@ export interface components {
             owner_id?: string | null;
             /**
              * Phone
-             * @description Phone in any reasonable shape; stored as E.164.
+             * Format: phone-e164
+             * @description Phone number. Accepted shapes: strict E.164 (`+34600999111`), digits without `+` (`34600999111`), with grouping characters (spaces, dashes or parentheses), or the `00` international prefix (`0034600999111`). Server normalises to strict E.164 (`+<country><subscriber>`, 7-15 digits total). Invalid inputs return 422.
              */
             phone?: string | null;
             /**
@@ -490,6 +683,54 @@ export interface components {
             /** Tags */
             tags?: string[];
         };
+        /** LeadCreatedActivityOut */
+        LeadCreatedActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            payload: components["schemas"]["LeadCreatedPayload"];
+            /** Summary */
+            summary: string | null;
+            /**
+             * Type
+             * @default lead_created
+             * @constant
+             */
+            type: "lead_created";
+        };
+        /**
+         * LeadCreatedPayload
+         * @description Payload for `type: "lead_created"` activities.
+         */
+        LeadCreatedPayload: {
+            /** Pipeline Id */
+            pipeline_id?: string | null;
+            /** Source */
+            source?: string | null;
+            /** Stage Id */
+            stage_id?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
         /**
          * LeadMove
          * @description Payload for ``POST /v1/leads/{id}/move``.
@@ -500,6 +741,11 @@ export interface components {
              * @description Optional comment recorded as a `stage_changed` activity payload.
              */
             note?: string | null;
+            /**
+             * Position
+             * @description Optional zero-based index inside the destination stage. When present, the lead is inserted at this position and following leads are shifted by +1. Omit (or send `null`) to append at the end of the stage — the previous behaviour. Out-of-range values are clamped to `[0, len(stage_leads)]`.
+             */
+            position?: number | null;
             /**
              * Stage Id
              * Format: uuid
@@ -551,6 +797,11 @@ export interface components {
              * Format: uuid
              */
             pipeline_id: string;
+            /**
+             * Position
+             * @description Ordering inside the current stage. `null` means 'at the end' (legacy default). Updated by `POST /v1/leads/{id}/move` with an explicit `position`.
+             */
+            position?: number | null;
             source: components["schemas"]["LeadSource"];
             /** Source Ref */
             source_ref: string | null;
@@ -618,7 +869,8 @@ export interface components {
             owner_id?: string | null;
             /**
              * Phone
-             * @description Reset to null with explicit ''.
+             * Format: phone-e164
+             * @description Phone number. Accepted shapes: strict E.164 (`+34600999111`), digits without `+` (`34600999111`), with grouping characters (spaces, dashes or parentheses), or the `00` international prefix (`0034600999111`). Server normalises to strict E.164 (`+<country><subscriber>`, 7-15 digits total). Invalid inputs return 422. Send an empty string (`""`) or JSON `null` to clear the stored phone explicitly; omit the key to leave it unchanged.
              */
             phone?: string | null;
             source?: components["schemas"]["LeadSource"] | null;
@@ -626,6 +878,63 @@ export interface components {
             source_ref?: string | null;
             /** Tags */
             tags?: string[] | null;
+        };
+        /**
+         * MeOut
+         * @description ``GET /v1/auth/me`` response.
+         *
+         *     Extends :class:`UserOut` with the tenant's default pipeline id so the
+         *     frontend can route new-lead URLs without an extra `/v1/pipelines` round
+         *     trip.
+         */
+        MeOut: {
+            /**
+             * Clerk User Id
+             * @description Clerk identity id (e.g. `user_2abc…`). Stable across sessions.
+             */
+            clerk_user_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Default Pipeline Id
+             * @description Pipeline id flagged `is_default=true` for the tenant; null when no pipeline has been provisioned yet (pre-seed window).
+             */
+            default_pipeline_id?: string | null;
+            /**
+             * Email
+             * @description Primary email reported by Clerk.
+             */
+            email: string;
+            /** First Name */
+            first_name?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             * @description Internal user UUID.
+             */
+            id: string;
+            /** Image Url */
+            image_url?: string | null;
+            /** Last Name */
+            last_name?: string | null;
+            /** Last Seen At */
+            last_seen_at?: string | null;
+            /**
+             * Name
+             * @description Composed display name (`first_name last_name`); null when both are empty.
+             */
+            name?: string | null;
+            /** @description Application-level role within the tenant. */
+            role: components["schemas"]["UserRole"];
+            /**
+             * Tenant Id
+             * Format: uuid
+             * @description Owning tenant.
+             */
+            tenant_id: string;
         };
         /**
          * MessageDirection
@@ -638,11 +947,104 @@ export interface components {
          * @enum {string}
          */
         MessageStatus: "received" | "accepted" | "sent" | "delivered" | "read" | "failed";
+        /** NoteActivityOut */
+        NoteActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            payload: components["schemas"]["NotePayload"];
+            /** Summary */
+            summary: string | null;
+            /**
+             * Type
+             * @default note
+             * @constant
+             */
+            type: "note";
+        };
+        /**
+         * NotePayload
+         * @description Payload for `type: "note"` activities.
+         */
+        NotePayload: {
+            /**
+             * Body
+             * @description Free-text note body. Optional; legacy notes may store text in `summary`.
+             */
+            body?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** OwnerChangedActivityOut */
+        OwnerChangedActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            payload: components["schemas"]["OwnerChangedPayload"];
+            /** Summary */
+            summary: string | null;
+            /**
+             * Type
+             * @default owner_changed
+             * @constant
+             */
+            type: "owner_changed";
+        };
+        /**
+         * OwnerChangedPayload
+         * @description Payload for `type: "owner_changed"` activities.
+         */
+        OwnerChangedPayload: {
+            /** From Owner Id */
+            from_owner_id?: string | null;
+            /** To Owner Id */
+            to_owner_id?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
         /** Page[LeadOut] */
         Page_LeadOut_: {
             /**
              * Items
-             * @description Items on this page.
+             * @description Items on this page. `len(items) <= limit` always. When `offset + limit > total`, `items` is truncated to the rows that still exist past `offset`.
              */
             items: components["schemas"]["LeadOut"][];
             /**
@@ -657,7 +1059,7 @@ export interface components {
             offset: number;
             /**
              * Total
-             * @description Total number of matching rows.
+             * @description Total number of rows matching the **filtered** query (i.e. after `q`, `statuses`, `tag`, etc. are applied) — NOT the global count of rows in the table. Pagination math: `hasMore = offset + len(items) < total`.
              */
             total: number;
         };
@@ -696,8 +1098,11 @@ export interface components {
             name: string;
             /** Slug */
             slug: string;
-            /** Stages */
-            stages?: components["schemas"]["PipelineStageOut"][];
+            /**
+             * Stages
+             * @description Stages belonging to this pipeline, ordered by `position`. Always present; an empty list means the pipeline has no stages.
+             */
+            stages: components["schemas"]["PipelineStageOut"][];
             /**
              * Tenant Id
              * Format: uuid
@@ -711,6 +1116,11 @@ export interface components {
         };
         /** PipelineStageIn */
         PipelineStageIn: {
+            /**
+             * Entry Criteria
+             * @description Optional array of entry criteria for the stage. Each item is either a string (shorthand for a registered criterion id) or an object `{type: string, params: object}`. Consumed by Sprint 3 auto-stage agents; Sprint 2 frontend treats it as a read-only badge.
+             */
+            entry_criteria?: unknown[] | null;
             /**
              * Is Lost
              * @default false
@@ -738,6 +1148,11 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Entry Criteria
+             * @description Optional array of entry criteria for the stage. Each item is either a string (shorthand for a registered criterion id) or an object `{type: string, params: object}`. Consumed by Sprint 3 auto-stage agents; Sprint 2 frontend treats it as a read-only badge.
+             */
+            entry_criteria?: unknown[] | null;
             /**
              * Id
              * Format: uuid
@@ -820,11 +1235,298 @@ export interface components {
              */
             version: string;
         };
+        /** RestoredActivityOut */
+        RestoredActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            payload: components["schemas"]["RestoredPayload"];
+            /** Summary */
+            summary: string | null;
+            /**
+             * Type
+             * @default restored
+             * @constant
+             */
+            type: "restored";
+        };
+        /**
+         * RestoredPayload
+         * @description Payload for `type: "restored"` activities.
+         */
+        RestoredPayload: {
+            /**
+             * Restored From
+             * @description The `deleted_at` timestamp the row was restored from.
+             */
+            restored_from?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
         /**
          * SortDirection
          * @enum {string}
          */
         SortDirection: "asc" | "desc";
+        /** StageChangedActivityOut */
+        StageChangedActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            payload: components["schemas"]["StageChangedPayload"];
+            /** Summary */
+            summary: string | null;
+            /**
+             * Type
+             * @default stage_changed
+             * @constant
+             */
+            type: "stage_changed";
+        };
+        /**
+         * StageChangedPayload
+         * @description Payload for `type: "stage_changed"` activities.
+         */
+        StageChangedPayload: {
+            /** From Stage Id */
+            from_stage_id?: string | null;
+            /** From Stage Name */
+            from_stage_name?: string | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * To Stage Id
+             * Format: uuid
+             * @description Destination stage id (always present).
+             */
+            to_stage_id: string;
+            /** To Stage Name */
+            to_stage_name?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** StatusChangedActivityOut */
+        StatusChangedActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            payload: components["schemas"]["StatusChangedPayload"];
+            /** Summary */
+            summary: string | null;
+            /**
+             * Type
+             * @default status_changed
+             * @constant
+             */
+            type: "status_changed";
+        };
+        /**
+         * StatusChangedPayload
+         * @description Payload for `type: "status_changed"` activities.
+         */
+        StatusChangedPayload: {
+            /** From Status */
+            from_status?: string | null;
+            /**
+             * To Status
+             * @description Resulting status (always present).
+             */
+            to_status: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /** SystemActivityOut */
+        SystemActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            payload: components["schemas"]["SystemPayload"];
+            /** Summary */
+            summary: string | null;
+            /**
+             * Type
+             * @default system
+             * @constant
+             */
+            type: "system";
+        };
+        /**
+         * SystemPayload
+         * @description Payload for `type: "system"` activities (free-form audit entries).
+         */
+        SystemPayload: {
+            [key: string]: unknown;
+        };
+        /**
+         * UnknownActivityOut
+         * @description Backward-compat variant for activity types not in the current vocabulary.
+         *
+         *     The frontend should treat `type == "unknown"` as "render generic timeline
+         *     entry" — the raw row payload is preserved untouched for forward inspection.
+         */
+        UnknownActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
+            /** Summary */
+            summary: string | null;
+            /**
+             * Type
+             * @default unknown
+             * @constant
+             */
+            type: "unknown";
+        };
+        /**
+         * UserListItem
+         * @description Slimmer payload returned by ``GET /v1/users``.
+         */
+        UserListItem: {
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Name
+             * @description Composed display name; null when both first/last are empty.
+             */
+            name?: string | null;
+            role: components["schemas"]["UserRole"];
+        };
+        /**
+         * UserListPage
+         * @description Paginated envelope for ``GET /v1/users``.
+         */
+        UserListPage: {
+            /**
+             * Items
+             * @description Users on this page.
+             */
+            items: components["schemas"]["UserListItem"][];
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /**
+             * Total
+             * @description Total users matching the filtered query (after `q`, `role`, etc.). Same semantics as `Page.total` — filtered count, not global.
+             */
+            total: number;
+        };
+        /**
+         * UserRole
+         * @description Application-level role. Mapped from Clerk org_role at sync time.
+         * @enum {string}
+         */
+        UserRole: "admin" | "sales" | "agent" | "viewer";
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -833,6 +1535,60 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** WhatsAppInboundActivityOut */
+        WhatsAppInboundActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            payload: components["schemas"]["WhatsAppInboundPayload"];
+            /** Summary */
+            summary: string | null;
+            /**
+             * Type
+             * @default whatsapp_inbound
+             * @constant
+             */
+            type: "whatsapp_inbound";
+        };
+        /**
+         * WhatsAppInboundPayload
+         * @description Payload for `type: "whatsapp_inbound"` activities.
+         */
+        WhatsAppInboundPayload: {
+            /** Template Name */
+            template_name?: string | null;
+            /**
+             * Text
+             * @description Inbound text body, if any.
+             */
+            text?: string | null;
+            /**
+             * Wamid
+             * @description WhatsApp `wamid` (provider message id).
+             */
+            wamid?: string | null;
+        } & {
+            [key: string]: unknown;
         };
         /**
          * WhatsAppMessageOut
@@ -877,6 +1633,57 @@ export interface components {
             template_name: string | null;
             /** To Phone E164 */
             to_phone_e164: string;
+        };
+        /** WhatsAppOutboundActivityOut */
+        WhatsAppOutboundActivityOut: {
+            /** Actor User Id */
+            actor_user_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            payload: components["schemas"]["WhatsAppOutboundPayload"];
+            /** Summary */
+            summary: string | null;
+            /**
+             * Type
+             * @default whatsapp_outbound
+             * @constant
+             */
+            type: "whatsapp_outbound";
+        };
+        /**
+         * WhatsAppOutboundPayload
+         * @description Payload for `type: "whatsapp_outbound"` activities.
+         */
+        WhatsAppOutboundPayload: {
+            /** Template Name */
+            template_name?: string | null;
+            /** Text */
+            text?: string | null;
+            /**
+             * Wamid
+             * @description WhatsApp `wamid` (provider message id) of the outbound message.
+             */
+            wamid?: string | null;
+        } & {
+            [key: string]: unknown;
         };
         /**
          * WhatsAppTemplateComponent
@@ -960,6 +1767,33 @@ export interface operations {
             };
             /** @description At least one critical dependency is down. */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_me_v1_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Internal user profile + tenant default pipeline. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
+                };
+            };
+            /** @description Clerk user has no internal record yet. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1195,7 +2029,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ActivityOut"][];
+                    "application/json": (components["schemas"]["NoteActivityOut"] | components["schemas"]["CallActivityOut"] | components["schemas"]["EmailActivityOut"] | components["schemas"]["WhatsAppInboundActivityOut"] | components["schemas"]["WhatsAppOutboundActivityOut"] | components["schemas"]["StageChangedActivityOut"] | components["schemas"]["StatusChangedActivityOut"] | components["schemas"]["OwnerChangedActivityOut"] | components["schemas"]["LeadCreatedActivityOut"] | components["schemas"]["RestoredActivityOut"] | components["schemas"]["BulkActionActivityOut"] | components["schemas"]["SystemActivityOut"] | components["schemas"]["UnknownActivityOut"])[];
                 };
             };
             /** @description Validation Error */
@@ -1230,7 +2064,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ActivityOut"];
+                    "application/json": components["schemas"]["NoteActivityOut"] | components["schemas"]["CallActivityOut"] | components["schemas"]["EmailActivityOut"] | components["schemas"]["WhatsAppInboundActivityOut"] | components["schemas"]["WhatsAppOutboundActivityOut"] | components["schemas"]["StageChangedActivityOut"] | components["schemas"]["StatusChangedActivityOut"] | components["schemas"]["OwnerChangedActivityOut"] | components["schemas"]["LeadCreatedActivityOut"] | components["schemas"]["RestoredActivityOut"] | components["schemas"]["BulkActionActivityOut"] | components["schemas"]["SystemActivityOut"] | components["schemas"]["UnknownActivityOut"];
                 };
             };
             /** @description Validation Error */
@@ -1279,12 +2113,41 @@ export interface operations {
             };
         };
     };
+    restore_lead_v1_leads__lead_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lead_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     send_whatsapp_template_v1_leads__lead_id__whatsapp_send_post: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Required. Caller-generated UUID/string scoped to this endpoint. */
-                "Idempotency-Key"?: string | null;
+            header: {
+                /** @description Caller-generated UUID/string scoped to this endpoint. Required: missing header returns 400. Re-sending the same key with the same body within 24h returns 200 + the original response without re-firing the send. */
+                "Idempotency-Key": string;
             };
             path: {
                 lead_id: string;
@@ -1297,6 +2160,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Cached response. Returned when the same `Idempotency-Key` + request body is retried within the 24h TTL. Body is identical to the original 202 payload. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WhatsAppMessageOut"];
+                };
+            };
             /** @description Template accepted by WhatsApp. */
             202: {
                 headers: {
@@ -1306,7 +2178,7 @@ export interface operations {
                     "application/json": components["schemas"]["WhatsAppMessageOut"];
                 };
             };
-            /** @description Validation error / lead lacks a phone number. */
+            /** @description Validation error, lead lacks a phone number, or the `Idempotency-Key` header is missing. */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -1510,6 +2382,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PipelineStageOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_users_v1_users_get: {
+        parameters: {
+            query?: {
+                /** @description Free-text match on email/name. */
+                q?: string | null;
+                /** @description Restrict to one or more application roles. */
+                role?: components["schemas"]["UserRole"][] | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserListPage"];
                 };
             };
             /** @description Validation Error */

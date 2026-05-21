@@ -32,7 +32,26 @@
         "title": "ActivityCreate",
         "type": "object"
       },
-      "ActivityOut": {
+      "ActivityType": {
+        "description": "Discriminator for ``activities.type``.\n\nNew members must be added to the Postgres ``activity_type`` enum via an\nAlembic migration before they can be persisted.",
+        "enum": [
+          "note",
+          "call",
+          "email",
+          "whatsapp_inbound",
+          "whatsapp_outbound",
+          "stage_changed",
+          "owner_changed",
+          "status_changed",
+          "lead_created",
+          "restored",
+          "bulk_action",
+          "system"
+        ],
+        "title": "ActivityType",
+        "type": "string"
+      },
+      "BulkActionActivityOut": {
         "properties": {
           "actor_user_id": {
             "anyOf": [
@@ -67,9 +86,7 @@
             "type": "string"
           },
           "payload": {
-            "additionalProperties": true,
-            "title": "Payload",
-            "type": "object"
+            "$ref": "#/components/schemas/BulkActionPayload"
           },
           "summary": {
             "anyOf": [
@@ -83,38 +100,144 @@
             "title": "Summary"
           },
           "type": {
-            "$ref": "#/components/schemas/ActivityType"
+            "const": "bulk_action",
+            "default": "bulk_action",
+            "title": "Type",
+            "type": "string"
           }
         },
         "required": [
           "id",
           "lead_id",
           "actor_user_id",
-          "type",
           "summary",
-          "payload",
           "occurred_at",
-          "created_at"
+          "created_at",
+          "payload"
         ],
-        "title": "ActivityOut",
+        "title": "BulkActionActivityOut",
         "type": "object"
       },
-      "ActivityType": {
-        "description": "Discriminator for ``activities.type``.",
-        "enum": [
-          "note",
-          "call",
-          "email",
-          "whatsapp_inbound",
-          "whatsapp_outbound",
-          "stage_changed",
-          "owner_changed",
-          "status_changed",
-          "lead_created",
-          "system"
+      "BulkActionPayload": {
+        "additionalProperties": true,
+        "description": "Payload for `type: \"bulk_action\"` activities.",
+        "properties": {
+          "action": {
+            "description": "Bulk action identifier (e.g. 'delete', 'assign').",
+            "title": "Action",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          }
+        },
+        "required": [
+          "action"
         ],
-        "title": "ActivityType",
-        "type": "string"
+        "title": "BulkActionPayload",
+        "type": "object"
+      },
+      "CallActivityOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/CallPayload"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "const": "call",
+            "default": "call",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "summary",
+          "occurred_at",
+          "created_at",
+          "payload"
+        ],
+        "title": "CallActivityOut",
+        "type": "object"
+      },
+      "CallPayload": {
+        "additionalProperties": true,
+        "description": "Payload for `type: \"call\"` activities.",
+        "properties": {
+          "duration_sec": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Call duration in seconds.",
+            "title": "Duration Sec"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Free-text outcome (e.g. 'voicemail', 'no answer', 'closed').",
+            "title": "Outcome"
+          }
+        },
+        "title": "CallPayload",
+        "type": "object"
       },
       "ComponentStatus": {
         "description": "Status of a single dependency probed by readiness.",
@@ -165,6 +288,103 @@
           "status"
         ],
         "title": "ComponentStatus",
+        "type": "object"
+      },
+      "EmailActivityOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/EmailPayload"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "const": "email",
+            "default": "email",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "summary",
+          "occurred_at",
+          "created_at",
+          "payload"
+        ],
+        "title": "EmailActivityOut",
+        "type": "object"
+      },
+      "EmailPayload": {
+        "additionalProperties": true,
+        "description": "Payload for `type: \"email\"` activities.",
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          }
+        },
+        "title": "EmailPayload",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -222,8 +442,15 @@
         "type": "object"
       },
       "LeadBulkAction": {
-        "description": "Payload for ``POST /v1/leads/bulk``.",
+        "description": "Payload for ``POST /v1/leads/bulk``.\n\nSet ``action`` to ``\"update\"`` (default) to mutate fields in-place, or\n``\"delete\"`` to soft-delete every selected lead. When ``action==\"delete\"``\nthe mutation fields (`assign_owner_id`, `set_status`, `add_tags`,\n`remove_tags`) are ignored. Use ``POST /v1/leads/{id}/restore`` to\nreverse a soft-delete.",
         "properties": {
+          "action": {
+            "default": "update",
+            "description": "`update` (default) applies the field mutations; `delete` soft-deletes every selected lead. Soft-deleted rows can be restored via `POST /v1/leads/{id}/restore`.",
+            "pattern": "^(update|delete)$",
+            "title": "Action",
+            "type": "string"
+          },
           "add_tags": {
             "items": {
               "type": "string"
@@ -421,7 +648,9 @@
                 "type": "null"
               }
             ],
-            "description": "Phone in any reasonable shape; stored as E.164.",
+            "description": "Phone number. Accepted shapes: strict E.164 (`+34600999111`), digits without `+` (`34600999111`), with grouping characters (spaces, dashes or parentheses), or the `00` international prefix (`0034600999111`). Server normalises to strict E.164 (`+<country><subscriber>`, 7-15 digits total). Invalid inputs return 422.",
+            "format": "phone-e164",
+            "pattern": "^\\+?[1-9]\\d{1,14}$",
             "title": "Phone"
           },
           "pipeline_id": {
@@ -480,6 +709,116 @@
         "title": "LeadCreate",
         "type": "object"
       },
+      "LeadCreatedActivityOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/LeadCreatedPayload"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "const": "lead_created",
+            "default": "lead_created",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "summary",
+          "occurred_at",
+          "created_at",
+          "payload"
+        ],
+        "title": "LeadCreatedActivityOut",
+        "type": "object"
+      },
+      "LeadCreatedPayload": {
+        "additionalProperties": true,
+        "description": "Payload for `type: \"lead_created\"` activities.",
+        "properties": {
+          "pipeline_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pipeline Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "stage_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Id"
+          }
+        },
+        "title": "LeadCreatedPayload",
+        "type": "object"
+      },
       "LeadMove": {
         "description": "Payload for ``POST /v1/leads/{id}/move``.",
         "properties": {
@@ -495,6 +834,20 @@
             ],
             "description": "Optional comment recorded as a `stage_changed` activity payload.",
             "title": "Note"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "maximum": 1000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional zero-based index inside the destination stage. When present, the lead is inserted at this position and following leads are shifted by +1. Omit (or send `null`) to append at the end of the stage \u2014 the previous behaviour. Out-of-range values are clamped to `[0, len(stage_leads)]`.",
+            "title": "Position"
           },
           "stage_id": {
             "description": "Destination stage. Must belong to the lead's pipeline.",
@@ -636,6 +989,18 @@
             "format": "uuid",
             "title": "Pipeline Id",
             "type": "string"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Ordering inside the current stage. `null` means 'at the end' (legacy default). Updated by `POST /v1/leads/{id}/move` with an explicit `position`.",
+            "title": "Position"
           },
           "source": {
             "$ref": "#/components/schemas/LeadSource"
@@ -860,7 +1225,8 @@
                 "type": "null"
               }
             ],
-            "description": "Reset to null with explicit ''.",
+            "description": "Phone number. Accepted shapes: strict E.164 (`+34600999111`), digits without `+` (`34600999111`), with grouping characters (spaces, dashes or parentheses), or the `00` international prefix (`0034600999111`). Server normalises to strict E.164 (`+<country><subscriber>`, 7-15 digits total). Invalid inputs return 422. Send an empty string (`\"\"`) or JSON `null` to clear the stored phone explicitly; omit the key to leave it unchanged.",
+            "format": "phone-e164",
             "title": "Phone"
           },
           "source": {
@@ -904,6 +1270,122 @@
         "title": "LeadUpdate",
         "type": "object"
       },
+      "MeOut": {
+        "description": "``GET /v1/auth/me`` response.\n\nExtends :class:`UserOut` with the tenant's default pipeline id so the\nfrontend can route new-lead URLs without an extra `/v1/pipelines` round\ntrip.",
+        "properties": {
+          "clerk_user_id": {
+            "description": "Clerk identity id (e.g. `user_2abc\u2026`). Stable across sessions.",
+            "title": "Clerk User Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "default_pipeline_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pipeline id flagged `is_default=true` for the tenant; null when no pipeline has been provisioned yet (pre-seed window).",
+            "title": "Default Pipeline Id"
+          },
+          "email": {
+            "description": "Primary email reported by Clerk.",
+            "title": "Email",
+            "type": "string"
+          },
+          "first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "id": {
+            "description": "Internal user UUID.",
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          },
+          "last_seen_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen At"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Composed display name (`first_name last_name`); null when both are empty.",
+            "title": "Name"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole",
+            "description": "Application-level role within the tenant."
+          },
+          "tenant_id": {
+            "description": "Owning tenant.",
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tenant_id",
+          "clerk_user_id",
+          "email",
+          "role",
+          "created_at"
+        ],
+        "title": "MeOut",
+        "type": "object"
+      },
       "MessageDirection": {
         "enum": [
           "inbound",
@@ -925,10 +1407,196 @@
         "title": "MessageStatus",
         "type": "string"
       },
+      "NoteActivityOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/NotePayload"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "const": "note",
+            "default": "note",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "summary",
+          "occurred_at",
+          "created_at",
+          "payload"
+        ],
+        "title": "NoteActivityOut",
+        "type": "object"
+      },
+      "NotePayload": {
+        "additionalProperties": true,
+        "description": "Payload for `type: \"note\"` activities.",
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Free-text note body. Optional; legacy notes may store text in `summary`.",
+            "title": "Body"
+          }
+        },
+        "title": "NotePayload",
+        "type": "object"
+      },
+      "OwnerChangedActivityOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/OwnerChangedPayload"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "const": "owner_changed",
+            "default": "owner_changed",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "summary",
+          "occurred_at",
+          "created_at",
+          "payload"
+        ],
+        "title": "OwnerChangedActivityOut",
+        "type": "object"
+      },
+      "OwnerChangedPayload": {
+        "additionalProperties": true,
+        "description": "Payload for `type: \"owner_changed\"` activities.",
+        "properties": {
+          "from_owner_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Owner Id"
+          },
+          "to_owner_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Owner Id"
+          }
+        },
+        "title": "OwnerChangedPayload",
+        "type": "object"
+      },
       "Page_LeadOut_": {
         "properties": {
           "items": {
-            "description": "Items on this page.",
+            "description": "Items on this page. `len(items) <= limit` always. When `offset + limit > total`, `items` is truncated to the rows that still exist past `offset`.",
             "items": {
               "$ref": "#/components/schemas/LeadOut"
             },
@@ -949,7 +1617,7 @@
             "type": "integer"
           },
           "total": {
-            "description": "Total number of matching rows.",
+            "description": "Total number of rows matching the **filtered** query (i.e. after `q`, `statuses`, `tag`, etc. are applied) \u2014 NOT the global count of rows in the table. Pagination math: `hasMore = offset + len(items) < total`.",
             "minimum": 0.0,
             "title": "Total",
             "type": "integer"
@@ -1030,6 +1698,7 @@
             "type": "string"
           },
           "stages": {
+            "description": "Stages belonging to this pipeline, ordered by `position`. Always present; an empty list means the pipeline has no stages.",
             "items": {
               "$ref": "#/components/schemas/PipelineStageOut"
             },
@@ -1054,13 +1723,28 @@
           "slug",
           "is_default",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "stages"
         ],
         "title": "PipelineOut",
         "type": "object"
       },
       "PipelineStageIn": {
         "properties": {
+          "entry_criteria": {
+            "anyOf": [
+              {
+                "items": {},
+                "maxItems": 64,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional array of entry criteria for the stage. Each item is either a string (shorthand for a registered criterion id) or an object `{type: string, params: object}`. Consumed by Sprint 3 auto-stage agents; Sprint 2 frontend treats it as a read-only badge.",
+            "title": "Entry Criteria"
+          },
           "is_lost": {
             "default": false,
             "title": "Is Lost",
@@ -1109,6 +1793,19 @@
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "entry_criteria": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional array of entry criteria for the stage. Each item is either a string (shorthand for a registered criterion id) or an object `{type: string, params: object}`. Consumed by Sprint 3 auto-stage agents; Sprint 2 frontend treats it as a read-only badge.",
+            "title": "Entry Criteria"
           },
           "id": {
             "format": "uuid",
@@ -1264,12 +1961,551 @@
         "title": "ReadinessStatus",
         "type": "object"
       },
+      "RestoredActivityOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/RestoredPayload"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "const": "restored",
+            "default": "restored",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "summary",
+          "occurred_at",
+          "created_at",
+          "payload"
+        ],
+        "title": "RestoredActivityOut",
+        "type": "object"
+      },
+      "RestoredPayload": {
+        "additionalProperties": true,
+        "description": "Payload for `type: \"restored\"` activities.",
+        "properties": {
+          "restored_from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The `deleted_at` timestamp the row was restored from.",
+            "title": "Restored From"
+          }
+        },
+        "title": "RestoredPayload",
+        "type": "object"
+      },
       "SortDirection": {
         "enum": [
           "asc",
           "desc"
         ],
         "title": "SortDirection",
+        "type": "string"
+      },
+      "StageChangedActivityOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/StageChangedPayload"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "const": "stage_changed",
+            "default": "stage_changed",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "summary",
+          "occurred_at",
+          "created_at",
+          "payload"
+        ],
+        "title": "StageChangedActivityOut",
+        "type": "object"
+      },
+      "StageChangedPayload": {
+        "additionalProperties": true,
+        "description": "Payload for `type: \"stage_changed\"` activities.",
+        "properties": {
+          "from_stage_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Stage Id"
+          },
+          "from_stage_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Stage Name"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "to_stage_id": {
+            "description": "Destination stage id (always present).",
+            "format": "uuid",
+            "title": "To Stage Id",
+            "type": "string"
+          },
+          "to_stage_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Stage Name"
+          }
+        },
+        "required": [
+          "to_stage_id"
+        ],
+        "title": "StageChangedPayload",
+        "type": "object"
+      },
+      "StatusChangedActivityOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/StatusChangedPayload"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "const": "status_changed",
+            "default": "status_changed",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "summary",
+          "occurred_at",
+          "created_at",
+          "payload"
+        ],
+        "title": "StatusChangedActivityOut",
+        "type": "object"
+      },
+      "StatusChangedPayload": {
+        "additionalProperties": true,
+        "description": "Payload for `type: \"status_changed\"` activities.",
+        "properties": {
+          "from_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Status"
+          },
+          "to_status": {
+            "description": "Resulting status (always present).",
+            "title": "To Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "to_status"
+        ],
+        "title": "StatusChangedPayload",
+        "type": "object"
+      },
+      "SystemActivityOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/SystemPayload"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "const": "system",
+            "default": "system",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "summary",
+          "occurred_at",
+          "created_at",
+          "payload"
+        ],
+        "title": "SystemActivityOut",
+        "type": "object"
+      },
+      "SystemPayload": {
+        "additionalProperties": true,
+        "description": "Payload for `type: \"system\"` activities (free-form audit entries).",
+        "properties": {},
+        "title": "SystemPayload",
+        "type": "object"
+      },
+      "UnknownActivityOut": {
+        "description": "Backward-compat variant for activity types not in the current vocabulary.\n\nThe frontend should treat `type == \"unknown\"` as \"render generic timeline\nentry\" \u2014 the raw row payload is preserved untouched for forward inspection.",
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "const": "unknown",
+            "default": "unknown",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "summary",
+          "occurred_at",
+          "created_at"
+        ],
+        "title": "UnknownActivityOut",
+        "type": "object"
+      },
+      "UserListItem": {
+        "description": "Slimmer payload returned by ``GET /v1/users``.",
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Composed display name; null when both first/last are empty.",
+            "title": "Name"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role"
+        ],
+        "title": "UserListItem",
+        "type": "object"
+      },
+      "UserListPage": {
+        "description": "Paginated envelope for ``GET /v1/users``.",
+        "properties": {
+          "items": {
+            "description": "Users on this page.",
+            "items": {
+              "$ref": "#/components/schemas/UserListItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "default": 50,
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total users matching the filtered query (after `q`, `role`, etc.). Same semantics as `Page.total` \u2014 filtered count, not global.",
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "UserListPage",
+        "type": "object"
+      },
+      "UserRole": {
+        "description": "Application-level role. Mapped from Clerk org_role at sync time.",
+        "enum": [
+          "admin",
+          "sales",
+          "agent",
+          "viewer"
+        ],
+        "title": "UserRole",
         "type": "string"
       },
       "ValidationError": {
@@ -1303,6 +2539,116 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "WhatsAppInboundActivityOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/WhatsAppInboundPayload"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "const": "whatsapp_inbound",
+            "default": "whatsapp_inbound",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "summary",
+          "occurred_at",
+          "created_at",
+          "payload"
+        ],
+        "title": "WhatsAppInboundActivityOut",
+        "type": "object"
+      },
+      "WhatsAppInboundPayload": {
+        "additionalProperties": true,
+        "description": "Payload for `type: \"whatsapp_inbound\"` activities.",
+        "properties": {
+          "template_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Name"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Inbound text body, if any.",
+            "title": "Text"
+          },
+          "wamid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "WhatsApp `wamid` (provider message id).",
+            "title": "Wamid"
+          }
+        },
+        "title": "WhatsAppInboundPayload",
         "type": "object"
       },
       "WhatsAppMessageOut": {
@@ -1473,6 +2819,115 @@
         "title": "WhatsAppMessageOut",
         "type": "object"
       },
+      "WhatsAppOutboundActivityOut": {
+        "properties": {
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/WhatsAppOutboundPayload"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "type": {
+            "const": "whatsapp_outbound",
+            "default": "whatsapp_outbound",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lead_id",
+          "actor_user_id",
+          "summary",
+          "occurred_at",
+          "created_at",
+          "payload"
+        ],
+        "title": "WhatsAppOutboundActivityOut",
+        "type": "object"
+      },
+      "WhatsAppOutboundPayload": {
+        "additionalProperties": true,
+        "description": "Payload for `type: \"whatsapp_outbound\"` activities.",
+        "properties": {
+          "template_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Name"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "wamid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "WhatsApp `wamid` (provider message id) of the outbound message.",
+            "title": "Wamid"
+          }
+        },
+        "title": "WhatsAppOutboundPayload",
+        "type": "object"
+      },
       "WhatsAppTemplateComponent": {
         "additionalProperties": false,
         "description": "Component slot inside a pre-approved template message.",
@@ -1611,6 +3066,36 @@
         "summary": "Readiness probe",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/v1/auth/me": {
+      "get": {
+        "description": "Returns the internal user row that backs the Clerk session in the `Authorization` header, plus the tenant's `default_pipeline_id` for convenience. Returns 404 if the Clerk user has no internal row yet (the Clerk webhook is responsible for provisioning it).",
+        "operationId": "get_me_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            },
+            "description": "Internal user profile + tenant default pipeline."
+          },
+          "404": {
+            "description": "Clerk user has no internal record yet."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get the authenticated user",
+        "tags": [
+          "auth"
         ]
       }
     },
@@ -2153,7 +3638,47 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/ActivityOut"
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/NoteActivityOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/CallActivityOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/EmailActivityOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/WhatsAppInboundActivityOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/WhatsAppOutboundActivityOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/StageChangedActivityOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/StatusChangedActivityOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/OwnerChangedActivityOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/LeadCreatedActivityOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/RestoredActivityOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/BulkActionActivityOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/SystemActivityOut"
+                      },
+                      {
+                        "$ref": "#/components/schemas/UnknownActivityOut"
+                      }
+                    ]
                   },
                   "title": "Response List Activities V1 Leads  Lead Id  Activities Get",
                   "type": "array"
@@ -2213,7 +3738,48 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ActivityOut"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/NoteActivityOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CallActivityOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/EmailActivityOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/WhatsAppInboundActivityOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/WhatsAppOutboundActivityOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/StageChangedActivityOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/StatusChangedActivityOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/OwnerChangedActivityOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LeadCreatedActivityOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RestoredActivityOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/BulkActionActivityOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SystemActivityOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UnknownActivityOut"
+                    }
+                  ],
+                  "title": "Response Create Activity V1 Leads  Lead Id  Activities Post"
                 }
               }
             },
@@ -2300,9 +3866,51 @@
         ]
       }
     },
+    "/v1/leads/{lead_id}/restore": {
+      "post": {
+        "description": "Reverses a previous soft-delete by clearing `deleted_at`. Idempotent: returns 204 even when the lead was never deleted or was already restored. 404 only when the lead does not exist at all in the tenant. An activity of type `restored` is appended to the timeline whenever a delete is actually reversed.",
+        "operationId": "restore_lead_v1_leads__lead_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Restore a soft-deleted lead",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
     "/v1/leads/{lead_id}/whatsapp/send": {
       "post": {
-        "description": "Sends a pre-approved template via the Meta Cloud API. The `Idempotency-Key` header is required so retries do not re-fire the outbound message; the same key + body returns the original response for 24h. Returns 503 when WhatsApp credentials are not provisioned.",
+        "description": "Sends a pre-approved template via the Meta Cloud API. The `Idempotency-Key` header is required so retries do not re-fire the outbound message; the same key + body returns the original response for 24h with status 200 (initial accept is 202). Returns 503 when WhatsApp credentials are not provisioned.",
         "operationId": "send_whatsapp_template_v1_leads__lead_id__whatsapp_send_post",
         "parameters": [
           {
@@ -2316,21 +3924,14 @@
             }
           },
           {
-            "description": "Required. Caller-generated UUID/string scoped to this endpoint.",
+            "description": "Caller-generated UUID/string scoped to this endpoint. Required: missing header returns 400. Re-sending the same key with the same body within 24h returns 200 + the original response without re-firing the send.",
             "in": "header",
             "name": "Idempotency-Key",
-            "required": false,
+            "required": true,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Required. Caller-generated UUID/string scoped to this endpoint.",
-              "title": "Idempotency-Key"
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
             }
           }
         ],
@@ -2345,6 +3946,16 @@
           "required": true
         },
         "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhatsAppMessageOut"
+                }
+              }
+            },
+            "description": "Cached response. Returned when the same `Idempotency-Key` + request body is retried within the 24h TTL. Body is identical to the original 202 payload."
+          },
           "202": {
             "content": {
               "application/json": {
@@ -2356,7 +3967,7 @@
             "description": "Template accepted by WhatsApp."
           },
           "400": {
-            "description": "Validation error / lead lacks a phone number."
+            "description": "Validation error, lead lacks a phone number, or the `Idempotency-Key` header is missing."
           },
           "409": {
             "description": "Idempotency-Key reused with a different request body."
@@ -2678,6 +4289,110 @@
         ]
       }
     },
+    "/v1/users": {
+      "get": {
+        "description": "Returns a paginated list of active users in the caller's tenant. Use to populate owner pickers and assignment dropdowns. `q` performs case-insensitive partial match against email and the composed first/last name. `role` filters by application role.",
+        "operationId": "list_users_v1_users_get",
+        "parameters": [
+          {
+            "description": "Free-text match on email/name.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Free-text match on email/name.",
+              "title": "Q"
+            }
+          },
+          {
+            "description": "Restrict to one or more application roles.",
+            "in": "query",
+            "name": "role",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/UserRole"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict to one or more application roles.",
+              "title": "Role"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List users in the tenant",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/webhooks/clerk": {
       "post": {
         "description": "Receives organization / user / membership lifecycle events from Clerk and keeps the internal `tenants` and `users` tables in sync. Signature is verified with svix; the request body must be the raw bytes Clerk signed. Returns 204 No Content on success, 400 on missing/invalid signature, 503 when the webhook secret is not configured on the server.",
@@ -2892,6 +4607,14 @@
     {
       "description": "Liveness and readiness probes. `/healthz` does not contact downstream dependencies; `/readyz` does.",
       "name": "health"
+    },
+    {
+      "description": "Endpoints that introspect the authenticated session (`/v1/auth/me`). Sign-in / sign-out flows live in Clerk.",
+      "name": "auth"
+    },
+    {
+      "description": "Read-only directory of users inside the caller's tenant. Mutations (invite, update, delete) come with the admin UI.",
+      "name": "users"
     },
     {
       "description": "CRUD on leads (prospects). Tenant-scoped; supports filters, search, sort, bulk actions, stage moves, activity timeline and outbound WhatsApp template sends.",
