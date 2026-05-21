@@ -4,8 +4,9 @@ Frontend web de **Panda Energy** — CRM IA-first multi-tenant para comercializa
 de energía. Construido con **Next.js 15 (App Router)**, **React 19**,
 **Tailwind CSS 4**, **TanStack Query 5** y **Clerk** para auth.
 
-> **Estado:** Sprint 1 (Wave 1). Scaffold + OpenAPI stub + MSW + design tokens.
-> Sprint 2 añade auth Clerk + layout + componentes base.
+> **Estado:** Sprint 1 (Wave 2). Scaffold + OpenAPI stub + MSW + design tokens +
+> componentes shadcn + Clerk + layout CRM con sidebar/topbar/dark mode.
+> Sprint 1 Wave 3 añade wrapper API, toasts y Storybook.
 
 ---
 
@@ -31,9 +32,18 @@ de energía. Construido con **Next.js 15 (App Router)**, **React 19**,
 4. `pnpm msw:init public/` — instala el service worker en `public/` (se hace
    una sola vez; el archivo queda commiteado).
 5. `pnpm dev` → http://localhost:3000.
-   - Landing: `/`.
-   - Visualizador de tokens (temporal Sprint 1): `/dev/tokens`.
+   - Landing pública: `/`.
+   - Sign in / sign up (Clerk): `/sign-in`, `/sign-up`.
+   - Dashboard CRM autenticado: `/dashboard`.
 6. `pnpm test` y `pnpm typecheck` deben pasar en verde.
+
+### Modo demo (sin claves Clerk)
+
+Si dejas `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_replace_me` en
+`.env.local`, la auth se desactiva y el middleware se vuelve no-op. La app
+sirve datos sintéticos via MSW. Las páginas `/sign-in` y `/sign-up`
+renderizan los componentes Clerk pero NO completarán el flow — solo te
+muestran un error en consola. Útil para arrancar sin registrarse.
 
 Si el setup tarda **> 45 min**, repórtalo como blocker P0.
 

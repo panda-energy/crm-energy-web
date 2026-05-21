@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MswProvider } from "@/mocks/MswProvider";
+import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body>
-        <MswProvider>{children}</MswProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
