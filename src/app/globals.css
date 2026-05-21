@@ -1,0 +1,187 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Panda Energy — design tokens (CSS variables) + Tailwind v4 theme bridge.
+ *
+ * Filosofía:
+ *  - Todos los valores semánticos vienen de variables CSS aquí declaradas.
+ *  - JSX referencia clases Tailwind tipadas (`bg-surface`, `text-brand`).
+ *  - Dark mode con estrategia `.dark` (class strategy).
+ *  - Cualquier cambio de paleta = aquí, nunca en JSX.
+ *
+ * Contraste:
+ *  - Cuerpo y texto sobre fondos: probado >= 4.5:1 (WCAG 2.2 AA).
+ *  - Botones primarios: contraste sobre foreground inverso.
+ *
+ * Inspiración visual: Linear / Attio (neutro frío + acento brand).
+ * ──────────────────────────────────────────────────────────────────────── */
+
+@import "tailwindcss";
+
+/* @theme inline exporta las variables al motor de utilities de Tailwind v4.
+ * Significa que `bg-surface`, `text-brand-foreground`, etc. existen como
+ * utilities reales gracias a estos tokens. */
+@theme inline {
+  /* ── Colores: brand ─────────────────────────────────────────────────── */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-muted: var(--brand-muted);
+
+  /* ── Colores: secundario ────────────────────────────────────────────── */
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  /* ── Colores: superficies ───────────────────────────────────────────── */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* ── Colores: semánticos ────────────────────────────────────────────── */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* ── Tipografía ─────────────────────────────────────────────────────── */
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+
+  /* Escala tipográfica (rem). Body = 16px = 1rem. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 2.5rem;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1;
+
+  /* ── Radii ──────────────────────────────────────────────────────────── */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* ── Sombras (Linear-style: bordes sutiles + capas) ─────────────────── */
+  --shadow-1:
+    0 1px 0 0 rgb(0 0 0 / 0.04), 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-2:
+    0 1px 0 0 rgb(0 0 0 / 0.05), 0 2px 6px -1px rgb(0 0 0 / 0.06);
+  --shadow-3:
+    0 2px 4px -1px rgb(0 0 0 / 0.06), 0 8px 16px -2px rgb(0 0 0 / 0.08);
+  --shadow-4:
+    0 4px 8px -2px rgb(0 0 0 / 0.08), 0 16px 32px -4px rgb(0 0 0 / 0.12);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Light theme (default)
+ * ──────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Brand: verde-energía con buen contraste sobre blanco. */
+  --brand: oklch(0.62 0.16 152);
+  --brand-foreground: oklch(0.99 0 0);
+  --brand-muted: oklch(0.94 0.05 152);
+
+  --secondary: oklch(0.52 0.13 264);
+  --secondary-foreground: oklch(0.99 0 0);
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.15 0.02 264);
+  --surface: oklch(0.985 0 0);
+  --surface-foreground: oklch(0.15 0.02 264);
+  --muted: oklch(0.96 0.005 264);
+  --muted-foreground: oklch(0.45 0.02 264);
+  --border: oklch(0.92 0.005 264);
+  --input: oklch(0.92 0.005 264);
+  --ring: oklch(0.62 0.16 152);
+
+  --success: oklch(0.65 0.15 152);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.78 0.16 78);
+  --warning-foreground: oklch(0.15 0.02 78);
+  --danger: oklch(0.6 0.22 28);
+  --danger-foreground: oklch(0.99 0 0);
+  --info: oklch(0.62 0.15 235);
+  --info-foreground: oklch(0.99 0 0);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Dark theme — `.dark` class on <html>.
+ * ──────────────────────────────────────────────────────────────────────── */
+.dark {
+  --brand: oklch(0.72 0.16 152);
+  --brand-foreground: oklch(0.12 0.02 152);
+  --brand-muted: oklch(0.28 0.06 152);
+
+  --secondary: oklch(0.68 0.14 264);
+  --secondary-foreground: oklch(0.12 0.02 264);
+
+  --background: oklch(0.16 0.02 264);
+  --foreground: oklch(0.96 0.005 264);
+  --surface: oklch(0.2 0.02 264);
+  --surface-foreground: oklch(0.96 0.005 264);
+  --muted: oklch(0.24 0.02 264);
+  --muted-foreground: oklch(0.7 0.02 264);
+  --border: oklch(0.28 0.02 264);
+  --input: oklch(0.28 0.02 264);
+  --ring: oklch(0.72 0.16 152);
+
+  --success: oklch(0.72 0.15 152);
+  --success-foreground: oklch(0.12 0.02 152);
+  --warning: oklch(0.82 0.16 78);
+  --warning-foreground: oklch(0.18 0.04 78);
+  --danger: oklch(0.7 0.2 28);
+  --danger-foreground: oklch(0.12 0.02 28);
+  --info: oklch(0.72 0.15 235);
+  --info-foreground: oklch(0.12 0.02 235);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Reset / base
+ * ──────────────────────────────────────────────────────────────────────── */
+* {
+  border-color: var(--color-border);
+}
+
+html {
+  color-scheme: light dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Focus ring accesible (WCAG 2.2 AA). */
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}

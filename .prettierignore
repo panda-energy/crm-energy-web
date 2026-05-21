@@ -1,0 +1,8 @@
+.next/
+node_modules/
+coverage/
+storybook-static/
+pnpm-lock.yaml
+src/lib/api/types.ts
+public/mockServiceWorker.js
+design-tokens.json
