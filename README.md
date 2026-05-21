@@ -66,6 +66,8 @@ Si el setup tarda **> 45 min**, repórtalo como blocker P0.
 | `pnpm msw:init` | Reinstala `public/mockServiceWorker.js`. |
 | `pnpm format` | Prettier write. |
 | `pnpm format:check` | Prettier check (CI). |
+| `pnpm storybook` | Storybook dev server, puerto 6006. |
+| `pnpm build-storybook` | Storybook estático → `storybook-static/`. |
 
 ---
 
@@ -196,6 +198,29 @@ crm-energy-web/
 
 ---
 
+## Storybook
+
+Storybook 9 con framework `@storybook/nextjs-vite` (Vite builder, ~3× más
+rápido que webpack5 en arranque y HMR). Decisión técnica: subimos a
+Storybook 9 en lugar de la 8 inicialmente prevista porque `@storybook/nextjs`
+8.x rompe contra el webpack interno empaquetado por Next 15 + React 19
+(`TypeError: Cannot read properties of undefined (reading 'tap')`).
+Storybook 9 es la primera línea estable con peers compatibles con Next 15.
+
+- Config: `.storybook/main.ts` + `.storybook/preview.tsx`.
+- Stories: `src/**/*.stories.tsx`. Cada componente del DS tiene su story
+  con estados default/loading/error/empty/disabled/variants según aplique.
+- Addons: `addon-docs` (autodocs MDX + controls), `addon-a11y`
+  (auditoría WCAG), `addon-themes` (toggle dark/light).
+
+### Visual regression baseline (Chromatic)
+
+El baseline visual lo activa **DevOps** publicando el proyecto en Chromatic
+y enganchando el workflow en `crm-energy-infra`. Esta repo entrega las
+stories y el `pnpm build-storybook` verde; DevOps añade el token de
+Chromatic, el addon `@chromatic-com/storybook` y el step de CI. Hasta
+entonces, el baseline visual no se ejecuta automáticamente.
+
 ## Para DevOps
 
 Cuando configures CI:
@@ -207,6 +232,7 @@ pnpm typecheck
 pnpm lint
 pnpm test
 pnpm build
+pnpm build-storybook
 ```
 
 Variables de entorno que necesitarán Doppler/Vercel: ver tabla arriba.
