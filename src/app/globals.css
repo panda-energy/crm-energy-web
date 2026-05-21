@@ -16,6 +16,10 @@
 
 @import "tailwindcss";
 
+/* Modo oscuro por clase (`.dark` en <html>). En Tailwind v4 esta directiva
+ * activa la variante `dark:` cuando el ancestro tenga la clase. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* @theme inline exporta las variables al motor de utilities de Tailwind v4.
  * Significa que `bg-surface`, `text-brand-foreground`, etc. existen como
  * utilities reales gracias a estos tokens. */
@@ -94,6 +98,89 @@
     0 2px 4px -1px rgb(0 0 0 / 0.06), 0 8px 16px -2px rgb(0 0 0 / 0.08);
   --shadow-4:
     0 4px 8px -2px rgb(0 0 0 / 0.08), 0 16px 32px -4px rgb(0 0 0 / 0.12);
+
+  /* ── Animaciones para Radix (Dialog/Select/Sheet) ───────────────────── */
+  /* Tailwind v4 + shadcn: en lugar del plugin v3 `tailwindcss-animate`,
+   * usamos keyframes nativas y dos utilities (`animate-in`, `animate-out`)
+   * expuestas más abajo. Cada componente Radix marca `data-[state=open]`
+   * y compone fade/zoom/slide directamente desde estas keyframes. */
+  --animate-in-fade: enter-fade 180ms ease-out;
+  --animate-out-fade: exit-fade 180ms ease-in;
+  --animate-in-scale: enter-scale 180ms ease-out;
+  --animate-out-scale: exit-scale 180ms ease-in;
+  --animate-slide-in-right: slide-in-right 240ms ease-out;
+  --animate-slide-out-right: slide-out-right 240ms ease-in;
+  --animate-slide-in-bottom: slide-in-bottom 240ms ease-out;
+  --animate-slide-out-bottom: slide-out-bottom 240ms ease-in;
+
+  @keyframes enter-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes exit-fade {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes enter-scale {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  @keyframes exit-scale {
+    from {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.96);
+    }
+  }
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  @keyframes slide-out-right {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes slide-in-bottom {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  @keyframes slide-out-bottom {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(100%);
+    }
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

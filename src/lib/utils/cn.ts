@@ -1,10 +1,15 @@
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 /**
- * Concatena className strings, ignorando falsies.
+ * Concatena clases Tailwind con `clsx` y resuelve conflictos con `tailwind-merge`.
  *
- * No usa `clsx` ni `tailwind-merge` todavía (Sprint 2 los añadirá cuando los
- * componentes shadcn lo requieran). Pero la API es compatible para que la
- * migración sea trivial.
+ * Esta es la utilidad estándar de shadcn/ui — todos los componentes copiados al
+ * repo (`src/components/ui/*.tsx`) la importan. Si dos clases entran en conflicto
+ * (p.ej. `px-2 px-4`), `tailwind-merge` se queda con la última. Esto es lo que
+ * permite que un caller sobreescriba estilos vía la prop `className` sin
+ * recurrir a `!important` ni `cx` artesanal.
  */
-export function cn(...classes: Array<string | false | null | undefined>): string {
-  return classes.filter(Boolean).join(" ");
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
 }
