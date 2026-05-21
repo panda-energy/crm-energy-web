@@ -1,0 +1,16 @@
+# pnpm v11 settings.
+# Este repo NO es un workspace multi-paquete; el archivo existe sólo para
+# alojar los settings de pnpm que antes vivían en package.json#pnpm.
+
+allowBuilds:
+  '@clerk/shared': true
+  esbuild: true
+  msw: true
+  sharp: true
+  unrs-resolver: true
+onlyBuiltDependencies:
+  - "@clerk/shared"
+  - esbuild
+  - msw
+  - sharp
+  - unrs-resolver

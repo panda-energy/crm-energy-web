@@ -46,6 +46,7 @@ pnpm-debug.log*
 
 # typescript
 *.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # storybook
 storybook-static/

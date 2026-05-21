@@ -5,8 +5,8 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   // Estrategia de dark mode requerida por backlog (regla dura #10).
-  // En Tailwind v4 esto se controla con `darkMode: ['class']` desde JS.
-  darkMode: ["class"],
+  // En Tailwind v4 el formato es `["class", "<selector>"]`.
+  darkMode: ["class", ".dark"],
   // Tailwind v4 detecta contenido automáticamente desde el árbol del proyecto,
   // pero lo declaramos explícito por compatibilidad con IDE/intellisense.
   content: [

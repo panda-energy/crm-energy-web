@@ -1,0 +1,191 @@
+# crm-energy-web
+
+Frontend web de **Panda Energy** — CRM IA-first multi-tenant para comercializadoras
+de energía. Construido con **Next.js 15 (App Router)**, **React 19**,
+**Tailwind CSS 4**, **TanStack Query 5** y **Clerk** para auth.
+
+> **Estado:** Sprint 1 (Wave 1). Scaffold + OpenAPI stub + MSW + design tokens.
+> Sprint 2 añade auth Clerk + layout + componentes base.
+
+---
+
+## Onboarding desarrollador frontend
+
+### Requisitos
+
+- Node.js **>= 20.11** (probado con 24.15.0).
+- **pnpm 11.1.3** (declarado en `packageManager`). Si no lo tienes, corepack
+  lo descargará automáticamente; si no hay corepack:
+  `npm install -g pnpm@11.1.3`.
+
+### Pasos
+
+1. `pnpm install`.
+2. Copia `.env.local.example` → `.env.local` y rellena los placeholders.
+   - Para arrancar sin backend basta con dejar Clerk vacío (auth se activa en
+     Sprint 2) y mantener `NEXT_PUBLIC_API_MOCKING=enabled`.
+3. `pnpm gen:types` — regenera `src/lib/api/types.ts` desde
+   `openapi/openapi.json`. El archivo está commiteado para que el repo
+   arranque sin backend live, pero **siempre** regenérelo después de cambiar
+   el OpenAPI (o cuando el backend publique una versión nueva).
+4. `pnpm msw:init public/` — instala el service worker en `public/` (se hace
+   una sola vez; el archivo queda commiteado).
+5. `pnpm dev` → http://localhost:3000.
+   - Landing: `/`.
+   - Visualizador de tokens (temporal Sprint 1): `/dev/tokens`.
+6. `pnpm test` y `pnpm typecheck` deben pasar en verde.
+
+Si el setup tarda **> 45 min**, repórtalo como blocker P0.
+
+---
+
+## Scripts
+
+| Script | Qué hace |
+|---|---|
+| `pnpm dev` | Next dev server, puerto 3000. |
+| `pnpm build` | Build de producción. |
+| `pnpm start` | Sirve el build (no se usa en dev). |
+| `pnpm typecheck` | `tsc --noEmit` en modo strict. |
+| `pnpm lint` | ESLint. |
+| `pnpm test` | Vitest (unit + smoke MSW). |
+| `pnpm test:watch` | Vitest en modo watch. |
+| `pnpm gen:types` | Regenera tipos desde `openapi/openapi.json`. |
+| `pnpm msw:init` | Reinstala `public/mockServiceWorker.js`. |
+| `pnpm format` | Prettier write. |
+| `pnpm format:check` | Prettier check (CI). |
+
+---
+
+## Convenciones técnicas (no negociables)
+
+Ver `.agents/frontend/AGENT.md` para la lista completa. Resumen operativo:
+
+- **TypeScript strict.** Cero `any`, cero `as unknown as` sin justificación
+  `// reason:`.
+- **Tipos del backend** salen exclusivamente de `src/lib/api/types.ts`, que
+  se **genera** con `pnpm gen:types`. **No editar a mano.**
+- **TanStack Query** para server state. **Zustand** para UI state. No Redux,
+  no `useEffect` para fetch.
+- **App Router**, Server Components donde aplique. Server Actions solo para
+  mutaciones simples; flujos complejos por TanStack Query.
+- **shadcn/ui copiado al repo** en `src/components/ui/`, **no es dependencia**
+  de `package.json`. La CLI (`pnpm dlx shadcn@latest add ...`) se ejecuta a
+  demanda; los archivos generados quedan commiteados.
+- **Tokens, no colores hardcoded.** Todas las clases Tailwind referencian
+  variables CSS definidas en `src/app/globals.css` (`bg-brand`, `text-danger`,
+  etc.). Si necesitas un token nuevo, añádelo al CSS + a `design-tokens.json`.
+- **WCAG 2.2 AA** en todo lo que se mergea. Probado con teclado y axe.
+- Componentes con **>300 líneas → partir**.
+
+---
+
+## OpenAPI + MSW (mientras no exista backend)
+
+El backend FastAPI vivirá en **Railway** y publicará su OpenAPI. **Mientras
+no esté disponible**, este repo:
+
+1. Mantiene un **stub mínimo** en `openapi/openapi.json` (auth + leads).
+2. Genera `src/lib/api/types.ts` con `openapi-typescript`.
+3. Sirve respuestas falsas con **MSW** (`src/mocks/`).
+
+Cuando el backend tenga endpoint OpenAPI público, basta con cambiar el script
+`gen:types` en `package.json` para que apunte a la URL real, por ejemplo:
+
+```jsonc
+"gen:types": "openapi-typescript https://api.staging.panda.energy/openapi.json -o src/lib/api/types.ts"
+```
+
+MSW **se queda** para tests (deterministas, no dependen de red).
+
+### Activar/desactivar MSW
+
+- En dev: `NEXT_PUBLIC_API_MOCKING=enabled` arranca el worker. Cualquier otro
+  valor (o ausencia) lo deja apagado.
+- En tests Vitest: siempre activo, vía `tests/setup.ts`.
+- En producción: nunca se carga (el import es dinámico y condicional).
+
+---
+
+## Variables de entorno
+
+Ver `.env.local.example`. Las que introduce este sprint:
+
+| Variable | Quién la usa | Notas |
+|---|---|---|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Web (cliente) | Sprint 2 activa Clerk. |
+| `CLERK_SECRET_KEY` | Web (server) | Sprint 2 activa Clerk. |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` etc. | Web | Defaults documentados. |
+| `NEXT_PUBLIC_API_URL` | Web | URL del backend (Railway). |
+| `NEXT_PUBLIC_API_MOCKING` | Web | `enabled` → arranca MSW. |
+
+DevOps las propaga vía **Doppler / Vercel** a staging y producción.
+
+---
+
+## Notas de compatibilidad / blockers conocidos
+
+- **Tailwind CSS 4 estable (4.0.0)** — config principal vive en
+  `src/app/globals.css` (`@theme inline`). El `tailwind.config.ts` queda
+  reducido a `darkMode: ['class']` y `content` para IDE.
+- **Next 15 + React 19** — versiones pinneadas (`next 15.1.3`, `react 19.0.0`).
+  Si Vercel reporta incompatibilidades con dependencias añadidas en Sprint 2
+  (Clerk, Storybook), se documentará aquí.
+- **shadcn CLI** — todavía no se ha corrido (`components.json` ya
+  configurado). Cuando Sprint 2 importe componentes shadcn (`Input`, `Select`,
+  `Dialog`…), se hará con `pnpm dlx shadcn@latest add <componente>`.
+
+---
+
+## Estructura del repo
+
+```
+crm-energy-web/
+├── openapi/
+│   └── openapi.json           # Stub mientras no exista backend.
+├── public/
+│   └── mockServiceWorker.js   # Generado por `pnpm msw:init`.
+├── src/
+│   ├── app/                   # App Router.
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── globals.css        # Tokens + Tailwind v4.
+│   │   └── dev/tokens/        # Visualizador temporal.
+│   ├── components/
+│   │   └── ui/                # shadcn/ui copiado al repo.
+│   ├── lib/
+│   │   ├── api/types.ts       # Generado — NO editar.
+│   │   └── utils/cn.ts
+│   └── mocks/
+│       ├── handlers.ts
+│       ├── browser.ts
+│       ├── server.ts
+│       ├── MswProvider.tsx
+│       └── fixtures/leads.ts
+├── tests/
+│   ├── setup.ts
+│   └── msw-smoke.test.ts
+├── components.json            # Config shadcn.
+├── tailwind.config.ts
+├── postcss.config.mjs
+├── next.config.ts
+├── tsconfig.json
+└── package.json
+```
+
+---
+
+## Para DevOps
+
+Cuando configures CI:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm gen:types
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+```
+
+Variables de entorno que necesitarán Doppler/Vercel: ver tabla arriba.
