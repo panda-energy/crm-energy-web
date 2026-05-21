@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { clerkAppearance } from "@/lib/auth/clerk-appearance";
 import { MswProvider } from "@/mocks/MswProvider";
 import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryProvider } from "@/lib/api/query-client";
 import { ClerkApiBridge } from "@/lib/api/hooks/clerk-context";
 
@@ -42,8 +43,12 @@ export function Providers({ children }: { children: ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <MswProvider>{children}</MswProvider>
-      <Toaster />
+      {/* TooltipProvider: una única instancia global cubre todos los
+          <Tooltip> del árbol. Delay corto (200ms) — Linear-style. */}
+      <TooltipProvider delayDuration={200} skipDelayDuration={0}>
+        <MswProvider>{children}</MswProvider>
+        <Toaster />
+      </TooltipProvider>
     </ThemeProvider>
   );
 

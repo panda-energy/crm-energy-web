@@ -15,6 +15,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Lead } from "@/lib/api/hooks/use-leads";
 import type { PipelineStage } from "@/lib/api/hooks/use-pipelines";
 import {
@@ -306,14 +311,7 @@ export function LeadsTable({
   const renderSortIndicator = (field: string) => {
     const isSortable = SORTABLE_FIELDS.includes(field as LeadSortField);
     if (!isSortable) {
-      return (
-        <ArrowUpDown
-          className="size-3 opacity-25"
-          aria-hidden
-          // reason: title nativo es suficiente como hint en MVP — Tooltip
-          // shadcn lo añadiremos en Wave 2.
-        />
-      );
+      return <ArrowUpDown className="size-3 opacity-25" aria-hidden />;
     }
     if (sort !== field) {
       return <ArrowUpDown className="size-3 opacity-50" aria-hidden />;
@@ -389,17 +387,13 @@ export function LeadsTable({
                           header.column.columnDef.header,
                           header.getContext(),
                         )
-                      ) : (
+                      ) : isSortable ? (
                         <button
                           type="button"
-                          disabled={!isSortable}
                           onClick={() => handleSort(field)}
-                          title={isSortable ? undefined : TOOLTIP_NO_SORT}
                           className={cn(
                             "inline-flex items-center gap-1.5",
-                            isSortable
-                              ? "cursor-pointer hover:text-foreground"
-                              : "cursor-default",
+                            "cursor-pointer hover:text-foreground",
                             "focus-visible:outline-none focus-visible:underline",
                           )}
                         >
@@ -409,6 +403,27 @@ export function LeadsTable({
                           )}
                           {renderSortIndicator(field)}
                         </button>
+                      ) : (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              disabled
+                              className={cn(
+                                "inline-flex items-center gap-1.5",
+                                "cursor-default opacity-90",
+                                "focus-visible:outline-none focus-visible:underline",
+                              )}
+                            >
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                              {renderSortIndicator(field)}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>{TOOLTIP_NO_SORT}</TooltipContent>
+                        </Tooltip>
                       )}
                     </th>
                   );

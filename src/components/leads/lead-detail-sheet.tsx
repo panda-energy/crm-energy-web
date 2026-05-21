@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MessageCircle, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,11 +59,11 @@ import { TagsInput } from "./tags-input";
  * Sheet de detalle de Lead con tabs Info / Actividades / Notas (F-2.4).
  *
  * Routing:
- *  - Vive en `/leads/[leadId]`. Al cerrar, navega back con
- *    `router.push('/leads')` preservando el searchParams via que el
- *    backend ya lo tiene en `searchParams` cuando refrescamos pagina.
- *    Para MVP `push('/leads')` es suficiente; mejoras de "preserve
- *    filters" pueden venir en Wave 2.
+ *  - Vive en `/leads/[leadId]`. Al cerrar preservamos los `searchParams`
+ *    activos para que el usuario no pierda filtros, paginación ni sort
+ *    aplicados antes de abrir el detalle (Wave 2 — F-2.6 dejó la base
+ *    de selección persistente; cerrar y reabrir el detalle no debe
+ *    "limpiar" filtros).
  *
  * Patrones:
  *  - InlineEditField → useUpdateLead.mutateAsync con sólo el campo
@@ -82,12 +82,17 @@ export interface LeadDetailSheetProps {
 
 export function LeadDetailSheet({ leadId }: LeadDetailSheetProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const leadQuery = useLead(leadId);
   const lead = leadQuery.data;
 
-  const closeSheet = () => {
-    router.push("/leads");
-  };
+  const closeSheet = useCallback(() => {
+    // reason: preservamos los searchParams (filtros/orden/paginación) que
+    // venían activos en /leads cuando se abrió el detalle. `router.push`
+    // sin querystring perdería el contexto de la lista.
+    const qs = searchParams.toString();
+    router.push(qs ? `/leads?${qs}` : "/leads");
+  }, [router, searchParams]);
 
   return (
     <Sheet
