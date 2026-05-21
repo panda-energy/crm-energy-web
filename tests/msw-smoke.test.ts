@@ -78,6 +78,50 @@ describe("MSW smoke — Sprint 2", () => {
     expect(def?.stages.find((s) => s.slug === "lost")?.is_lost).toBe(true);
   });
 
+  it("acepta POST /v1/leads/bulk con las 4 acciones combinadas y devuelve matched/updated/ids", async () => {
+    // Cogemos 2 IDs reales del fixture para evitar acoplar el test a UUIDs
+    // mágicos: leemos la lista, escogemos los 2 primeros.
+    const list = (await (await fetch(`${API_URL}/v1/leads?limit=5`)).json()) as {
+      items: Array<{ id: string; status: string; tags: string[] }>;
+    };
+    const ids = list.items.slice(0, 2).map((l) => l.id);
+
+    // assign_owner + set_status + add_tags + remove_tags en una sola call.
+    const response = await fetch(`${API_URL}/v1/leads/bulk`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "idempotency-key": crypto.randomUUID(),
+      },
+      body: JSON.stringify({
+        ids,
+        assign_owner_id: "99999999-9999-9999-9999-999999999999",
+        set_status: "contacted",
+        add_tags: ["wave2-bulk"],
+        remove_tags: ["pyme"],
+      }),
+    });
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      matched: number;
+      updated: number;
+      ids: string[];
+    };
+    expect(body.matched).toBe(2);
+    expect(body.updated).toBe(2);
+    expect(body.ids.sort()).toEqual([...ids].sort());
+
+    // Verifica que el cambio quedó aplicado (status + tag añadido).
+    const after = (await (await fetch(`${API_URL}/v1/leads/${ids[0]}`)).json()) as {
+      status: string;
+      tags: string[];
+      owner_id: string | null;
+    };
+    expect(after.status).toBe("contacted");
+    expect(after.tags).toContain("wave2-bulk");
+    expect(after.owner_id).toBe("99999999-9999-9999-9999-999999999999");
+  });
+
   it("intercepta GET /v1/leads/{id} y devuelve 404 Problem cuando no existe", async () => {
     const response = await fetch(
       `${API_URL}/v1/leads/00000000-0000-0000-0000-000000000000`,

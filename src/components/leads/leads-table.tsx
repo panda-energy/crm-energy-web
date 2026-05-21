@@ -10,7 +10,7 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,11 +86,36 @@ export function LeadsTable({
   const router = useRouter();
 
   const selectedIds = useLeadsUiStore((s) => s.selectedIds);
+  const selectionAnchor = useLeadsUiStore((s) => s.selectionAnchor);
   const toggleSelection = useLeadsUiStore((s) => s.toggleSelection);
   const selectMany = useLeadsUiStore((s) => s.selectMany);
   const unselectMany = useLeadsUiStore((s) => s.unselectMany);
+  const setAnchor = useLeadsUiStore((s) => s.setAnchor);
 
   const allVisibleIds = useMemo(() => data.map((d) => d.id), [data]);
+
+  /**
+   * Handler para el checkbox de fila. Soporta shift+click para selección
+   * de rango usando el `selectionAnchor` (último clicado).
+   */
+  const handleRowSelection = useCallback(
+    (id: string, shift: boolean) => {
+      if (shift && selectionAnchor && selectionAnchor !== id) {
+        const a = allVisibleIds.indexOf(selectionAnchor);
+        const b = allVisibleIds.indexOf(id);
+        if (a >= 0 && b >= 0) {
+          const start = Math.min(a, b);
+          const end = Math.max(a, b);
+          const range = allVisibleIds.slice(start, end + 1);
+          selectMany(range);
+          setAnchor(id);
+          return;
+        }
+      }
+      toggleSelection(id);
+    },
+    [allVisibleIds, selectMany, selectionAnchor, setAnchor, toggleSelection],
+  );
   const allSelectedInPage =
     allVisibleIds.length > 0 && allVisibleIds.every((id) => selectedIds.has(id));
   const someSelectedInPage = allVisibleIds.some((id) => selectedIds.has(id));
@@ -128,8 +153,13 @@ export function LeadsTable({
         cell: ({ row }) => (
           <Checkbox
             checked={selectedIds.has(row.original.id)}
-            onCheckedChange={() => toggleSelection(row.original.id)}
-            onClick={(e) => e.stopPropagation()}
+            // Usamos onClick para capturar shift+click (onCheckedChange no
+            // recibe el evento). El stopPropagation evita que el click
+            // burbujee a la fila (que navega al detalle).
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRowSelection(row.original.id, e.shiftKey);
+            }}
             aria-label={`Seleccionar lead ${composeLeadName(row.original)}`}
           />
         ),
@@ -274,8 +304,8 @@ export function LeadsTable({
       selectMany,
       unselectMany,
       selectedIds,
-      toggleSelection,
       stagesById,
+      handleRowSelection,
     ],
   );
 

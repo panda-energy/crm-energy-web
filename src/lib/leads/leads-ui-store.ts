@@ -20,6 +20,12 @@ import { persist } from "zustand/middleware";
 interface LeadsUiState {
   /** IDs seleccionados para bulk actions. `Set` para deduplicación rápida. */
   selectedIds: Set<string>;
+  /**
+   * Último ID seleccionado por click simple. Sirve de "anchor" para
+   * shift+click → range select. Se mantiene aunque se deseleccione el
+   * lead — el siguiente click simple lo sobreescribe.
+   */
+  selectionAnchor: string | null;
   /** True = filtros visibles. False = colapsados a la izquierda. */
   filtersCollapsed: boolean;
 
@@ -28,6 +34,7 @@ interface LeadsUiState {
   unselectMany: (ids: string[]) => void;
   clearSelection: () => void;
   isSelected: (id: string) => boolean;
+  setAnchor: (id: string | null) => void;
 
   toggleFilters: () => void;
   setFiltersCollapsed: (collapsed: boolean) => void;
@@ -43,6 +50,7 @@ export const useLeadsUiStore = create<LeadsUiState>()(
   persist(
     (set, get) => ({
       selectedIds: new Set<string>(),
+      selectionAnchor: null,
       filtersCollapsed: false,
 
       toggleSelection: (id) =>
@@ -50,13 +58,15 @@ export const useLeadsUiStore = create<LeadsUiState>()(
           const next = new Set(s.selectedIds);
           if (next.has(id)) next.delete(id);
           else next.add(id);
-          return { selectedIds: next };
+          return { selectedIds: next, selectionAnchor: id };
         }),
       selectMany: (ids) =>
         set((s) => {
           const next = new Set(s.selectedIds);
           for (const id of ids) next.add(id);
-          return { selectedIds: next };
+          // Anchor: el último de los seleccionados (útil para range chain).
+          const last = ids[ids.length - 1] ?? s.selectionAnchor;
+          return { selectedIds: next, selectionAnchor: last };
         }),
       unselectMany: (ids) =>
         set((s) => {
@@ -64,8 +74,9 @@ export const useLeadsUiStore = create<LeadsUiState>()(
           for (const id of ids) next.delete(id);
           return { selectedIds: next };
         }),
-      clearSelection: () => set({ selectedIds: new Set() }),
+      clearSelection: () => set({ selectedIds: new Set(), selectionAnchor: null }),
       isSelected: (id) => get().selectedIds.has(id),
+      setAnchor: (id) => set({ selectionAnchor: id }),
 
       toggleFilters: () =>
         set((s) => ({ filtersCollapsed: !s.filtersCollapsed })),

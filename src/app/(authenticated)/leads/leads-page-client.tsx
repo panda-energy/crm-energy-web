@@ -2,17 +2,20 @@
 
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { Plus, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TableSkeleton } from "@/components/skeletons/table-skeleton";
 import { useLeads, leadsQueryKeys } from "@/lib/api/hooks/use-leads";
 import { usePipelines, usePipelineStages } from "@/lib/api/hooks/use-pipelines";
 import { useLeadsSearchParams } from "@/lib/leads/use-leads-search-params";
+import { useLeadsUiStore } from "@/lib/leads/leads-ui-store";
 import type { PipelineStage } from "@/lib/api/hooks/use-pipelines";
 import { LeadsFiltersSidebar } from "@/components/leads/leads-filters-sidebar";
 import { LeadsPagination } from "@/components/leads/leads-pagination";
 import { LeadsTable } from "@/components/leads/leads-table";
+import { BulkActionBar } from "@/components/leads/bulk-action-bar";
 import { CreateLeadSheet } from "@/components/leads/create-lead-sheet";
 import { LeadDetailSheet } from "@/components/leads/lead-detail-sheet";
 
@@ -42,6 +45,21 @@ export function LeadsPageClient({ detailLeadId }: LeadsPageClientProps) {
   const { params, hasActiveFilters, updateFilters, clearFilters } =
     useLeadsSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
+
+  // Sync ?createLead=1 → abre el Sheet (lo dispara cmd-k "Crear lead").
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("createLead") === "1") {
+      setCreateOpen(true);
+      // Limpia el flag para que un refresh no reabra el sheet.
+      const sp = new URLSearchParams(searchParams.toString());
+      sp.delete("createLead");
+      router.replace(`/leads${sp.size ? `?${sp.toString()}` : ""}`, {
+        scroll: false,
+      });
+    }
+  }, [searchParams, router]);
 
   const queryClient = useQueryClient();
 
@@ -94,7 +112,16 @@ export function LeadsPageClient({ detailLeadId }: LeadsPageClientProps) {
 
   const isFirstLoad = leadsQuery.isLoading;
   const total = leadsQuery.data?.total ?? 0;
-  const items = leadsQuery.data?.items ?? [];
+  const items = useMemo(() => leadsQuery.data?.items ?? [], [leadsQuery.data]);
+  const visibleLeadIds = useMemo(() => items.map((l) => l.id), [items]);
+
+  // reason: la selección bulk se limpia al desmontar el cliente — i.e. al
+  // navegar fuera de /leads (o al recargar). Mantenerla cross-route sería
+  // confuso (¿qué se elimina si pulso bulk-delete desde otra vista?). En
+  // cambio SE PRESERVA cross-filter dentro de /leads (el indicador "{M}
+  // no visibles" lo comunica).
+  const clearSelectionOnUnmount = useLeadsUiStore((s) => s.clearSelection);
+  useEffect(() => () => clearSelectionOnUnmount(), [clearSelectionOnUnmount]);
 
   return (
     <div className="-m-4 flex flex-1 md:-m-8">
@@ -188,6 +215,9 @@ export function LeadsPageClient({ detailLeadId }: LeadsPageClientProps) {
       />
 
       {detailLeadId ? <LeadDetailSheet leadId={detailLeadId} /> : null}
+
+      {/* Barra flotante bulk — solo aparece si hay leads seleccionados. */}
+      <BulkActionBar visibleLeadIds={visibleLeadIds} />
     </div>
   );
 }
