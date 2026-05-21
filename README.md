@@ -35,6 +35,8 @@ de energía. Construido con **Next.js 15 (App Router)**, **React 19**,
    - Landing pública: `/`.
    - Sign in / sign up (Clerk): `/sign-in`, `/sign-up`.
    - Dashboard CRM autenticado: `/dashboard`.
+   - El visualizador temporal de tokens (`/dev/tokens`) se retiró al final de
+     Wave 2; Storybook (Wave 3) lo sustituye.
 6. `pnpm test` y `pnpm typecheck` deben pasar en verde.
 
 ### Modo demo (sin claves Clerk)
@@ -156,15 +158,24 @@ crm-energy-web/
 ├── public/
 │   └── mockServiceWorker.js   # Generado por `pnpm msw:init`.
 ├── src/
+│   ├── middleware.ts          # Clerk middleware (no-op si no hay claves).
 │   ├── app/                   # App Router.
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   ├── globals.css        # Tokens + Tailwind v4.
-│   │   └── dev/tokens/        # Visualizador temporal.
+│   │   ├── layout.tsx         # Root layout + Providers.
+│   │   ├── providers.tsx      # ClerkProvider + ThemeProvider + MSW + Toaster.
+│   │   ├── page.tsx           # Landing pública.
+│   │   ├── globals.css        # Tokens + Tailwind v4 + keyframes Radix.
+│   │   ├── sign-in/[[...sign-in]]/page.tsx
+│   │   ├── sign-up/[[...sign-up]]/page.tsx
+│   │   └── (authenticated)/   # Route group — guard Clerk + chrome CRM.
+│   │       ├── layout.tsx     # Sidebar + Topbar + main.
+│   │       └── dashboard/page.tsx
 │   ├── components/
-│   │   └── ui/                # shadcn/ui copiado al repo.
+│   │   ├── ui/                # shadcn/ui copiado al repo.
+│   │   └── layout/            # Sidebar, Topbar, Breadcrumbs, ThemeToggle.
 │   ├── lib/
 │   │   ├── api/types.ts       # Generado — NO editar.
+│   │   ├── auth/              # README multi-tenancy + appearance Clerk.
+│   │   ├── ui/                # Stores Zustand + nav config.
 │   │   └── utils/cn.ts
 │   └── mocks/
 │       ├── handlers.ts

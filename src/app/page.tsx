@@ -1,29 +1,27 @@
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
 /**
- * Landing temporal del scaffold. Sprint 2 reemplaza esta vista por la home del
- * CRM (dashboard + sidebar + topbar).
+ * Landing pública mínima. En Wave 3+ se sustituye por una landing real
+ * (o se redirige a `/dashboard` cuando hay sesión Clerk activa).
  */
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <section className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-24">
-        <h1 className="text-4xl font-semibold tracking-tight">
-          Panda Energy — crm-energy-web
-        </h1>
+        <h1 className="text-4xl font-semibold tracking-tight">Panda Energy</h1>
         <p className="text-muted-foreground">
-          Scaffold inicial. La home del CRM se construye en Sprint 2.
+          CRM IA-first para comercializadoras de energía. Sprint 1 — chasis
+          del producto. Sprint 2 estrena el pipeline.
         </p>
-        <ul className="text-sm text-muted-foreground">
-          <li>
-            Variables de entorno: copia <code className="font-mono">.env.local.example</code> a{" "}
-            <code className="font-mono">.env.local</code>.
-          </li>
-          <li>
-            Tipos del backend: <code className="font-mono">pnpm gen:types</code>.
-          </li>
-          <li>
-            Tokens visuales: <a className="underline" href="/dev/tokens">/dev/tokens</a>.
-          </li>
-        </ul>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild>
+            <Link href="/dashboard">Ir al CRM</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/sign-in">Iniciar sesión</Link>
+          </Button>
+        </div>
       </section>
     </main>
   );
