@@ -1,0 +1,271 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Panda Energy CRM API",
+    "version": "0.0.1-stub",
+    "description": "Stub mínimo de la API de Panda Energy. Reemplazado por el OpenAPI real publicado por el backend FastAPI cuando esté disponible. Solo cubre auth + leads para arrancar Sprint 1 del frontend."
+  },
+  "servers": [
+    {
+      "url": "{apiBase}/v1",
+      "variables": {
+        "apiBase": {
+          "default": "http://localhost:3001",
+          "description": "URL base del backend (Railway en prod/staging)."
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/auth/me": {
+      "get": {
+        "operationId": "getCurrentUser",
+        "summary": "Devuelve el usuario autenticado.",
+        "tags": ["auth"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "x-correlation-id": { "$ref": "#/components/headers/CorrelationId" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "500": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/leads": {
+      "get": {
+        "operationId": "listLeads",
+        "summary": "Lista leads paginados del tenant del usuario.",
+        "tags": ["leads"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 25 }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/LeadStatus" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "x-correlation-id": { "$ref": "#/components/headers/CorrelationId" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LeadPage" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "500": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "post": {
+        "operationId": "createLead",
+        "summary": "Crea un lead. Soporta Idempotency-Key.",
+        "tags": ["leads"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "UUID generado por el cliente para deduplicar reintentos. Si se repite, el backend devuelve la misma respuesta sin crear duplicado.",
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LeadCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Creado",
+            "headers": {
+              "x-correlation-id": { "$ref": "#/components/headers/CorrelationId" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Lead" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "500": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/leads/{leadId}": {
+      "get": {
+        "operationId": "getLead",
+        "summary": "Devuelve un lead por id.",
+        "tags": ["leads"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "leadId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "x-correlation-id": { "$ref": "#/components/headers/CorrelationId" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Lead" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "500": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT de Clerk verificado por el backend."
+      }
+    },
+    "headers": {
+      "CorrelationId": {
+        "description": "Identificador de correlación que enlaza la request con sus logs/spans en el backend.",
+        "schema": { "type": "string" }
+      }
+    },
+    "responses": {
+      "Problem": {
+        "description": "Error en formato RFC 7807.",
+        "headers": {
+          "x-correlation-id": { "$ref": "#/components/headers/CorrelationId" }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": { "$ref": "#/components/schemas/Problem" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Problem": {
+        "type": "object",
+        "description": "RFC 7807 Problem Details.",
+        "required": ["type", "title", "status"],
+        "properties": {
+          "type": { "type": "string", "format": "uri", "default": "about:blank" },
+          "title": { "type": "string" },
+          "status": { "type": "integer" },
+          "detail": { "type": "string" },
+          "instance": { "type": "string" },
+          "correlationId": { "type": "string" }
+        }
+      },
+      "Role": {
+        "type": "string",
+        "enum": ["admin", "sales", "support"]
+      },
+      "User": {
+        "type": "object",
+        "required": ["id", "tenantId", "email", "name", "role"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "name": { "type": "string" },
+          "role": { "$ref": "#/components/schemas/Role" }
+        }
+      },
+      "LeadStatus": {
+        "type": "string",
+        "enum": ["new", "qualified", "contacted", "won", "lost"]
+      },
+      "Lead": {
+        "type": "object",
+        "required": [
+          "id",
+          "tenantId",
+          "name",
+          "email",
+          "phone",
+          "status",
+          "source",
+          "ownerId",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "phone": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/LeadStatus" },
+          "source": { "type": "string" },
+          "ownerId": { "type": "string", "format": "uuid" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "LeadCreate": {
+        "type": "object",
+        "description": "Payload para crear un lead. tenantId, ownerId, createdAt, updatedAt los asigna el backend.",
+        "required": ["name", "email", "phone", "status", "source"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "email": { "type": "string", "format": "email" },
+          "phone": { "type": "string", "minLength": 1 },
+          "status": { "$ref": "#/components/schemas/LeadStatus" },
+          "source": { "type": "string", "minLength": 1 }
+        }
+      },
+      "LeadPage": {
+        "type": "object",
+        "required": ["items", "total", "page", "pageSize"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Lead" }
+          },
+          "total": { "type": "integer", "minimum": 0 },
+          "page": { "type": "integer", "minimum": 1 },
+          "pageSize": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}
