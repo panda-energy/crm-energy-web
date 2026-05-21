@@ -21,7 +21,7 @@ export default function HomePage() {
             Tipos del backend: <code className="font-mono">pnpm gen:types</code>.
           </li>
           <li>
-            Tokens visuales: <a className="underline" href="/_dev/tokens">/_dev/tokens</a>.
+            Tokens visuales: <a className="underline" href="/dev/tokens">/dev/tokens</a>.
           </li>
         </ul>
       </section>

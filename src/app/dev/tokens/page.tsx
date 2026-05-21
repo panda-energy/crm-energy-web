@@ -1,5 +1,5 @@
 /**
- * /_dev/tokens — visualización de design tokens.
+ * /dev/tokens — visualización de design tokens.
  *
  * Esta página es TEMPORAL (Sprint 1). Se elimina en cuanto Storybook esté
  * listo. Sirve para validar contraste manualmente con axe DevTools.
