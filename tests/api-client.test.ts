@@ -22,7 +22,7 @@ import { server } from "@/mocks/server";
  * que cada request capture dos veces.
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 describe("apiGet — headers inyectados", () => {
   it("inyecta Authorization, X-Tenant-Id, X-Correlation-Id, Accept, Content-Type", async () => {
@@ -30,13 +30,13 @@ describe("apiGet — headers inyectados", () => {
     server.use(
       http.get(`${API_URL}/v1/leads`, ({ request }) => {
         captured.push(request.headers);
-        return HttpResponse.json({ items: [], total: 0, page: 1, pageSize: 25 });
+        return HttpResponse.json({ items: [], total: 0, limit: 50, offset: 0 });
       }),
     );
 
     const getToken: GetTokenFn = async () => "jwt-token-abc";
 
-    await apiGet("/leads", {
+    await apiGet("/v1/leads", {
       getToken,
       tenantId: "tenant-xyz",
     });
@@ -58,11 +58,11 @@ describe("apiGet — headers inyectados", () => {
     server.use(
       http.get(`${API_URL}/v1/leads`, ({ request }) => {
         captured.push(request.headers);
-        return HttpResponse.json({ items: [], total: 0, page: 1, pageSize: 25 });
+        return HttpResponse.json({ items: [], total: 0, limit: 50, offset: 0 });
       }),
     );
 
-    await apiGet("/leads", {
+    await apiGet("/v1/leads", {
       getToken: async () => null,
     });
 
@@ -80,7 +80,7 @@ describe("apiGet — headers inyectados", () => {
       }),
     );
 
-    await apiPost("/leads", { name: "A" }, { idempotencyKey: "auto" });
+    await apiPost("/v1/leads", { first_name: "A" }, { idempotencyKey: "auto" });
 
     const key = captured[0]?.get("Idempotency-Key");
     expect(key).toMatch(
@@ -93,13 +93,13 @@ describe("apiGet — headers inyectados", () => {
     server.use(
       http.get(`${API_URL}/v1/leads`, ({ request }) => {
         captured.push(request.headers);
-        return HttpResponse.json({ items: [], total: 0, page: 1, pageSize: 25 });
+        return HttpResponse.json({ items: [], total: 0, limit: 50, offset: 0 });
       }),
     );
 
     // reason: el cliente debería ignorar idempotencyKey en GET para no
     // ensuciar las claves del backend con valores que ese método no honra.
-    await apiGet("/leads", { idempotencyKey: "auto" });
+    await apiGet("/v1/leads", { idempotencyKey: "auto" });
 
     const headers = captured[0];
     if (!headers) throw new Error("no headers captured");
@@ -111,14 +111,14 @@ describe("apiGet — headers inyectados", () => {
     server.use(
       http.get(`${API_URL}/v1/leads`, ({ request }) => {
         urls.push(request.url);
-        return HttpResponse.json({ items: [], total: 0, page: 1, pageSize: 25 });
+        return HttpResponse.json({ items: [], total: 0, limit: 50, offset: 0 });
       }),
     );
 
-    await apiGet("/leads", { query: { page: 2, status: "new" } });
+    await apiGet("/v1/leads", { query: { limit: 25, q: "maria" } });
 
-    expect(urls[0]).toContain("page=2");
-    expect(urls[0]).toContain("status=new");
+    expect(urls[0]).toContain("limit=25");
+    expect(urls[0]).toContain("q=maria");
   });
 
   it("sustituye path params en la ruta", async () => {
@@ -130,7 +130,7 @@ describe("apiGet — headers inyectados", () => {
       }),
     );
 
-    await apiGet("/leads/{leadId}", { pathParams: { leadId: "abc-123" } });
+    await apiGet("/v1/leads/{lead_id}", { pathParams: { lead_id: "abc-123" } });
 
     expect(urls[0]).toContain("/v1/leads/abc-123");
   });
@@ -159,7 +159,7 @@ describe("ApiError — parsing de Problem RFC 7807", () => {
       ),
     );
 
-    await expect(apiGet("/leads/{leadId}", { pathParams: { leadId: "missing" } }))
+    await expect(apiGet("/v1/leads/{lead_id}", { pathParams: { lead_id: "missing" } }))
       .rejects.toMatchObject({
         name: "ApiError",
         type: "https://errors.panda.energy/leads/not-found",
@@ -187,7 +187,7 @@ describe("ApiError — parsing de Problem RFC 7807", () => {
     );
 
     try {
-      await apiGet("/leads");
+      await apiGet("/v1/leads");
       throw new Error("should have thrown");
     } catch (err) {
       expect(isApiError(err)).toBe(true);

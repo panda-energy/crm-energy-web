@@ -62,7 +62,7 @@ export interface ApiRequestOptions {
  */
 function buildUrl(path: string, opts: ApiRequestOptions): string {
   const base =
-    process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+    process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
   // Sustitución de path params: `/leads/{leadId}` → `/leads/abc`.
   let resolved = path;
@@ -75,10 +75,15 @@ function buildUrl(path: string, opts: ApiRequestOptions): string {
     }
   }
 
-  // El OpenAPI declara `servers: [{ url: "{apiBase}/v1" }]`, así que los
-  // paths del schema (`/leads`, `/auth/me`) son relativos al server. El
-  // cliente prefija `/v1` siempre.
-  const url = new URL(`/v1${resolved.startsWith("/") ? resolved : `/${resolved}`}`, base);
+  // El OpenAPI del backend declara los paths **completos** (`/v1/leads`,
+  // `/v1/pipelines`, `/webhooks/whatsapp`, `/healthz`…) y servers como
+  // `http://localhost:8000`. El cliente no prefija nada — concatena base +
+  // path tal cual viene del schema, así soportamos endpoints fuera de `/v1`
+  // (health, webhooks) sin truquillos.
+  const url = new URL(
+    resolved.startsWith("/") ? resolved : `/${resolved}`,
+    base,
+  );
 
   if (opts.query) {
     for (const [key, value] of Object.entries(opts.query)) {
