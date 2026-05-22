@@ -15,7 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useClerk } from "@clerk/nextjs";
+import * as ClerkModule from "@clerk/nextjs";
 import {
   CommandDialog,
   CommandEmpty,
@@ -42,6 +42,18 @@ const isClerkConfigured = Boolean(
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY !== "pk_test_replace_me",
 );
 
+// reason: useClerk() crashea fuera de ClerkProvider (modo demo). El flag
+// isClerkConfigured es estático durante toda la vida de la app (env var),
+// por lo que el orden de hooks NUNCA cambia entre renders. ESLint no puede
+// saberlo, lo desactivamos con justificación.
+function useClerkSafe(): { signOut: () => void | Promise<unknown> } {
+  if (isClerkConfigured) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return ClerkModule.useClerk();
+  }
+  return { signOut: () => undefined };
+}
+
 /**
  * Command palette global (F-2.5).
  *
@@ -60,7 +72,7 @@ export function CommandPalette() {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const clerk = useClerk();
+  const clerk = useClerkSafe();
   const open = useCmdkStore((s) => s.open);
   const setOpen = useCmdkStore((s) => s.setOpen);
   const toggle = useCmdkStore((s) => s.toggle);
