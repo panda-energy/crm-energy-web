@@ -6,7 +6,9 @@ import {
   TENANT_ID,
   defaultStagesFixture,
   pipelinesFixture,
+  DEFAULT_PIPELINE_ID,
 } from "./fixtures/pipelines";
+import { usersFixture, currentUserFixture } from "./fixtures/users";
 
 type Lead = components["schemas"]["LeadOut"];
 type LeadCreate = components["schemas"]["LeadCreate"];
@@ -17,21 +19,44 @@ type LeadBulkResult = components["schemas"]["LeadBulkResult"];
 type LeadPage = components["schemas"]["Page_LeadOut_"];
 type LeadStatus = components["schemas"]["LeadStatus"];
 type LeadSource = components["schemas"]["LeadSource"];
-type Activity = components["schemas"]["ActivityOut"];
 type ActivityCreate = components["schemas"]["ActivityCreate"];
+type MeOut = components["schemas"]["MeOut"];
+type UserListItem = components["schemas"]["UserListItem"];
+type UserListPage = components["schemas"]["UserListPage"];
+type UserRole = components["schemas"]["UserRole"];
 
 /**
- * Handlers MSW — espejo simplificado del backend Sprint 2.
+ * Activity persisted by MSW — espejo simplificado de la union discriminada
+ * `ActivityOut` del backend (cleanup wave). MSW solo emite los 4 tipos
+ * que la UI demo necesita (`stage_changed`, `status_changed`, `note`,
+ * `call`, `email`, `lead_created`, `restored`, `bulk_action`); el resto
+ * de variantes se ignoran porque MSW no simula WhatsApp ni system events.
+ */
+type StoredActivity = {
+  id: string;
+  lead_id: string;
+  actor_user_id: string | null;
+  summary: string | null;
+  occurred_at: string;
+  created_at: string;
+  type: string;
+  payload: Record<string, unknown>;
+};
+
+/**
+ * Handlers MSW — espejo simplificado del backend Sprint 2 (cleanup wave).
  *
  * Cobertura:
+ *  - GET /v1/auth/me (cleanup wave).
+ *  - GET /v1/users (cleanup wave, paginación + filtros q/role).
  *  - GET /v1/leads (filtros: statuses, sources, owner_id, q, sort, limit, offset).
  *  - GET /v1/leads/{lead_id}.
  *  - POST /v1/leads (Idempotency-Key honrado).
  *  - PATCH /v1/leads/{lead_id}.
  *  - DELETE /v1/leads/{lead_id} (soft, devuelve 204).
- *  - POST /v1/leads/bulk (assign_owner / set_status / add_tags / remove_tags).
- *  - POST /v1/leads/{lead_id}/move (cambia stage; bota 4xx si el stage es de
- *    otra pipeline).
+ *  - POST /v1/leads/{lead_id}/restore (idempotente, 204).
+ *  - POST /v1/leads/bulk (action: update | delete).
+ *  - POST /v1/leads/{lead_id}/move (cambia stage; respeta `position`).
  *  - GET /v1/leads/{lead_id}/activities (paginado).
  *  - POST /v1/leads/{lead_id}/activities (manual note/call/email).
  *  - GET /v1/pipelines.
@@ -59,7 +84,8 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 // Estado mutable in-memory. Cada reload del worker / setupServer lo resetea.
 const leadsStore: Lead[] = [...leadsFixture];
-const activitiesStore: Activity[] = [];
+const deletedLeadsStore = new Map<string, Lead>();
+const activitiesStore: StoredActivity[] = [];
 
 // Cache de Idempotency-Key → { bodyHash, response }. Sin TTL — duración del
 // proceso.
@@ -249,6 +275,45 @@ function sortLeads(leads: Lead[], url: URL): Lead[] {
 
 // ── Handlers ───────────────────────────────────────────────────────────────
 
+// ── Auth ───────────────────────────────────────────────────────────────────
+
+const getMeHandler = http.get(`${API_BASE}/v1/auth/me`, () => {
+  const me: MeOut = {
+    ...currentUserFixture,
+    default_pipeline_id: DEFAULT_PIPELINE_ID,
+  };
+  return HttpResponse.json(asJson(me), { headers: correlationHeaders() });
+});
+
+// ── Users ──────────────────────────────────────────────────────────────────
+
+const listUsersHandler = http.get(`${API_BASE}/v1/users`, ({ request }) => {
+  const url = new URL(request.url);
+  const limit = Math.min(Number(url.searchParams.get("limit") ?? 50), 200);
+  const offset = Math.max(Number(url.searchParams.get("offset") ?? 0), 0);
+  const q = url.searchParams.get("q")?.toLowerCase() ?? "";
+  const roles = getAllValues(url, "role") as UserRole[];
+
+  let filtered = [...usersFixture];
+  if (q) {
+    filtered = filtered.filter((u) => {
+      const haystack = `${u.email} ${u.name ?? ""}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }
+  if (roles.length) {
+    filtered = filtered.filter((u) => roles.includes(u.role));
+  }
+  const items = filtered.slice(offset, offset + limit);
+  const body: UserListPage = {
+    items: items as UserListItem[],
+    total: filtered.length,
+    limit,
+    offset,
+  };
+  return HttpResponse.json(asJson(body), { headers: correlationHeaders() });
+});
+
 const listLeadsHandler = http.get(`${API_BASE}/v1/leads`, ({ request }) => {
   const url = new URL(request.url);
   const limit = Math.min(Number(url.searchParams.get("limit") ?? 50), 200);
@@ -306,6 +371,7 @@ const createLeadHandler = http.post(
         estimated_value_cents: body.estimated_value_cents ?? null,
         currency: body.currency ?? "EUR",
         last_contacted_at: null,
+        position: null,
         created_at: now,
         updated_at: now,
       };
@@ -322,12 +388,18 @@ const updateLeadHandler = http.patch(
     if (!lead) return problemResponse(404, "Lead no encontrado");
     const body = (await request.json()) as LeadUpdate;
     return withIdempotency(request, body, async () => {
+      // reason: cleanup wave — `phone` con `''` o `null` borra el teléfono
+      // explícitamente (formalizado en el contrato OpenAPI).
+      const phoneNext =
+        body.phone === "" || body.phone === null
+          ? null
+          : (body.phone ?? lead.phone_e164);
       const updated: Lead = {
         ...lead,
         first_name: body.first_name ?? lead.first_name,
         last_name: body.last_name ?? lead.last_name,
         email: body.email ?? lead.email,
-        phone_e164: body.phone ?? lead.phone_e164,
+        phone_e164: phoneNext,
         company: body.company ?? lead.company,
         cups: body.cups ?? lead.cups,
         source: body.source ?? lead.source,
@@ -350,9 +422,48 @@ const updateLeadHandler = http.patch(
 const deleteLeadHandler = http.delete(
   `${API_BASE}/v1/leads/:leadId`,
   ({ params }) => {
-    const idx = leadsStore.findIndex((l) => l.id === String(params.leadId));
+    const leadId = String(params.leadId);
+    const idx = leadsStore.findIndex((l) => l.id === leadId);
     if (idx < 0) return problemResponse(404, "Lead no encontrado");
-    leadsStore.splice(idx, 1);
+    // reason: guardamos el lead en `deletedLeadsStore` para que restore
+    // pueda recuperarlo. El backend usa `deleted_at`; MSW lo separa físicamente
+    // del store activo — equivalente funcional para la UI.
+    const [deleted] = leadsStore.splice(idx, 1);
+    if (deleted) deletedLeadsStore.set(leadId, deleted);
+    return new HttpResponse(null, {
+      status: 204,
+      headers: correlationHeaders(),
+    });
+  },
+);
+
+const restoreLeadHandler = http.post(
+  `${API_BASE}/v1/leads/:leadId/restore`,
+  ({ params }) => {
+    const leadId = String(params.leadId);
+    // reason: idempotente. Si el lead nunca fue eliminado o ya fue
+    // restaurado, devolvemos 204 igualmente. 404 solo si jamás existió.
+    const inStore = leadsStore.some((l) => l.id === leadId);
+    const inDeleted = deletedLeadsStore.get(leadId);
+    if (!inStore && !inDeleted) {
+      return problemResponse(404, "Lead no encontrado");
+    }
+    if (inDeleted) {
+      // Reinsertar al principio (orden no canónico — backend ordena por
+      // created_at desc por defecto y el lead conserva su created_at).
+      leadsStore.unshift(inDeleted);
+      deletedLeadsStore.delete(leadId);
+      activitiesStore.push({
+        id: crypto.randomUUID(),
+        lead_id: leadId,
+        actor_user_id: null,
+        type: "restored",
+        summary: null,
+        payload: { restored_from: inDeleted.updated_at },
+        occurred_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      });
+    }
     return new HttpResponse(null, {
       status: 204,
       headers: correlationHeaders(),
@@ -365,6 +476,37 @@ const bulkLeadsHandler = http.post(
   async ({ request }) => {
     const body = (await request.json()) as LeadBulkAction;
     return withIdempotency(request, body, async () => {
+      const action = body.action ?? "update";
+      if (action === "delete") {
+        // Soft-delete masivo.
+        const deletedIds: string[] = [];
+        for (const id of body.ids) {
+          const idx = leadsStore.findIndex((l) => l.id === id);
+          if (idx < 0) continue;
+          const [deleted] = leadsStore.splice(idx, 1);
+          if (deleted) {
+            deletedLeadsStore.set(id, deleted);
+            deletedIds.push(id);
+            activitiesStore.push({
+              id: crypto.randomUUID(),
+              lead_id: id,
+              actor_user_id: null,
+              type: "bulk_action",
+              summary: null,
+              payload: { action: "delete", params: { ids_count: body.ids.length } },
+              occurred_at: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+            });
+          }
+        }
+        const result: LeadBulkResult = {
+          matched: deletedIds.length,
+          updated: deletedIds.length,
+          ids: deletedIds,
+        };
+        return { status: 200, response: asJson(result) };
+      }
+
       const matched = leadsStore.filter((l) => body.ids.includes(l.id));
       const updatedIds: string[] = [];
       for (const lead of matched) {
@@ -426,6 +568,18 @@ const moveLeadHandler = http.post(
       const previousStatus = lead.status;
       lead.stage_id = targetStage.id;
       lead.status = statusFromStageId(targetStage.id);
+      // reason: cleanup wave — respetamos `position` opcional (clamping a
+      // [0, len(stage)] best-effort; el backend lo hace contra todos los
+      // leads vivos del stage).
+      if (body.position !== undefined && body.position !== null) {
+        const inStage = leadsStore.filter(
+          (l) => l.stage_id === targetStage.id && l.id !== lead.id,
+        );
+        const clamped = Math.max(0, Math.min(body.position, inStage.length));
+        lead.position = clamped;
+      } else {
+        lead.position = null;
+      }
       lead.updated_at = new Date().toISOString();
 
       // Registra `stage_changed` (y `status_changed` si cambió el bucket).
@@ -483,9 +637,7 @@ const createActivityHandler = http.post(
     const lead = findLead(String(params.leadId));
     if (!lead) return problemResponse(404, "Lead no encontrado");
     const body = (await request.json()) as ActivityCreate;
-    if (
-      !["note", "call", "email"].includes(body.type)
-    ) {
+    if (!["note", "call", "email"].includes(body.type)) {
       return problemResponse(
         400,
         "Tipo de actividad no permitido en este endpoint",
@@ -494,7 +646,7 @@ const createActivityHandler = http.post(
     }
     return withIdempotency(request, body, async () => {
       const now = new Date().toISOString();
-      const activity: Activity = {
+      const activity: StoredActivity = {
         id: crypto.randomUUID(),
         lead_id: lead.id,
         actor_user_id: null,
@@ -540,22 +692,24 @@ const listStagesHandler = http.get(
   ({ params }) => {
     const pipeline = pipelinesFixture.find((p) => p.id === params.pipelineId);
     if (!pipeline) return problemResponse(404, "Pipeline no encontrada");
-    // reason: el OpenAPI declara `stages` en properties pero no en required;
-    // en la práctica el backend siempre lo devuelve y nuestro fixture lo
-    // garantiza. Caemos a `[]` para satisfacer al typecheck.
-    return HttpResponse.json((pipeline.stages ?? []).map(asJson), {
+    return HttpResponse.json(pipeline.stages.map(asJson), {
       headers: correlationHeaders(),
     });
   },
 );
 
 export const handlers = [
+  // Auth
+  getMeHandler,
+  // Users
+  listUsersHandler,
   // Leads
   listLeadsHandler,
   getLeadHandler,
   createLeadHandler,
   updateLeadHandler,
   deleteLeadHandler,
+  restoreLeadHandler,
   bulkLeadsHandler,
   moveLeadHandler,
   listActivitiesHandler,
