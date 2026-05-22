@@ -180,9 +180,11 @@ DevOps las propaga vía **Doppler / Vercel** a staging y producción.
 - **Tailwind CSS 4 estable (4.0.0)** — config principal vive en
   `src/app/globals.css` (`@theme inline`). El `tailwind.config.ts` queda
   reducido a `darkMode: ['class']` y `content` para IDE.
-- **Next 15 + React 19** — versiones pinneadas (`next 15.1.3`, `react 19.0.0`).
-  Si Vercel reporta incompatibilidades con dependencias añadidas en Sprint 2
-  (Clerk, Storybook), se documentará aquí.
+- **Next 15 + React 19** — versiones pinneadas (`next 15.5.18`, `react 19.0.0`).
+  La 15.5.x es la última línea estable que incluye el parche de
+  CVE-2025-66478 (image optimization). React 19 + Tailwind 4 + Clerk @next
+  siguen compatibles. Si Vercel reporta incompatibilidades con
+  dependencias añadidas en sprints posteriores, se documentará aquí.
 - **shadcn CLI** — todavía no se ha corrido (`components.json` ya
   configurado). Cuando Sprint 2 importe componentes shadcn (`Input`, `Select`,
   `Dialog`…), se hará con `pnpm dlx shadcn@latest add <componente>`.
