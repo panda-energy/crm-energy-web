@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 describe("MSW smoke — Sprint 2", () => {
-  it("intercepta GET /v1/leads y devuelve un Page<LeadOut> con 15 fixtures", async () => {
-    const response = await fetch(`${API_URL}/v1/leads?limit=50&offset=0`);
+  it("intercepta GET /v1/leads y devuelve un Page<LeadOut> con los 50 fixtures", async () => {
+    const response = await fetch(`${API_URL}/v1/leads?limit=200&offset=0`);
     expect(response.status).toBe(200);
     expect(response.headers.get("x-correlation-id")).toBeTruthy();
 
@@ -22,20 +22,21 @@ describe("MSW smoke — Sprint 2", () => {
       limit: number;
       offset: number;
     };
-    expect(body.total).toBe(15);
-    expect(body.items).toHaveLength(15);
-    expect(body.limit).toBe(50);
+    expect(body.total).toBe(50);
+    expect(body.items).toHaveLength(50);
+    expect(body.limit).toBe(200);
     expect(body.offset).toBe(0);
-    // Default sort = created_at desc → el más reciente primero (Sergi,
-    // 2026-05-10).
-    expect(body.items[0]?.first_name).toBe("Sergi");
-    expect(body.items[0]?.last_name).toBe("Roca Mas");
-    // María está en la lista, en otra posición.
-    const maria = body.items.find((l) => l.first_name === "María");
-    expect(maria?.last_name).toBe("García López");
-    expect(maria?.tags).toContain("pyme");
-    expect(maria?.pipeline_id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(maria?.stage_id).toMatch(/^[0-9a-f-]{36}$/);
+    // Default sort = created_at desc → el más reciente primero
+    // (María García López, 2026-05-22).
+    expect(body.items[0]?.first_name).toBe("María");
+    expect(body.items[0]?.last_name).toBe("García López");
+    expect(body.items[0]?.tags).toContain("pyme");
+    expect(body.items[0]?.pipeline_id).toMatch(/^[0-9a-f-]{36}$/);
+    expect(body.items[0]?.stage_id).toMatch(/^[0-9a-f-]{36}$/);
+
+    // Los 50 leads distribuidos entre 2 pipelines (Default + Empresas).
+    const pipelines = new Set(body.items.map((l) => l.pipeline_id));
+    expect(pipelines.size).toBe(2);
   });
 
   it("filtra GET /v1/leads por statuses[] y q", async () => {

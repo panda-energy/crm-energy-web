@@ -5,63 +5,76 @@ type UserListItem = components["schemas"]["UserListItem"];
 type MeOut = components["schemas"]["MeOut"];
 
 /**
- * 6 usuarios fixture variados (admin, sales, agent, viewer) para alimentar
- * MSW `GET /v1/users`. UUIDs determinísticos para que el filtro
- * "Propietario" y el bulk-action de asignar propietario se prueben con
- * datos repetibles.
+ * 8 usuarios fixture para alimentar `GET /v1/users` y resolver
+ * `actor_user_id`/`owner_id` a nombre humano en la UI.
  *
- * `id` del primer admin coincide con `currentUserFixture.id` — ese es el
- * usuario que `GET /v1/auth/me` devuelve en modo demo.
+ * Distribución de roles (espeja el seed que el backend hace para tenants
+ * demo): 1 admin, 4 sales, 2 agent (support), 1 viewer.
+ *
+ * `currentUserFixture` apunta a **Carlos Ruiz** (sales) — el rol más
+ * representativo del usuario que verá la demo (no admin, no viewer).
+ *
+ * UUIDs v4 estrictos (Zod los valida con 3er segmento `4` y 4to `[89ab]`).
  */
 
-/**
- * UUIDs v4 estrictos (Zod v4 los valida así: 3er segmento empieza por
- * `4`, 4to por `[89ab]`). Si añades nuevos usuarios, conserva esa forma.
- */
 export const USER_IDS = {
-  alex: "55555555-5555-4555-8555-550000000001",
-  beatriz: "55555555-5555-4555-8555-550000000002",
-  carla: "55555555-5555-4555-8555-550000000003",
-  diego: "55555555-5555-4555-8555-550000000004",
-  eva: "55555555-5555-4555-8555-550000000005",
-  felipe: "55555555-5555-4555-8555-550000000006",
+  maria: "55555555-5555-4555-8555-550000000001",
+  carlos: "55555555-5555-4555-8555-550000000002",
+  laura: "55555555-5555-4555-8555-550000000003",
+  pedro: "55555555-5555-4555-8555-550000000004",
+  ana: "55555555-5555-4555-8555-550000000005",
+  jorge: "55555555-5555-4555-8555-550000000006",
+  lucia: "55555555-5555-4555-8555-550000000007",
+  diego: "55555555-5555-4555-8555-550000000008",
 } as const;
 
 export const usersFixture: UserListItem[] = [
   {
-    id: USER_IDS.alex,
-    email: "alex.admin@panda.energy",
-    name: "Alex Admin",
+    id: USER_IDS.maria,
+    email: "mhernandez@panda.energy",
+    name: "María Hernández",
     role: "admin",
   },
   {
-    id: USER_IDS.beatriz,
-    email: "beatriz.sales@panda.energy",
-    name: "Beatriz Sales",
+    id: USER_IDS.carlos,
+    email: "cruiz@panda.energy",
+    name: "Carlos Ruiz",
     role: "sales",
   },
   {
-    id: USER_IDS.carla,
-    email: "carla.sales@panda.energy",
-    name: "Carla Field",
+    id: USER_IDS.laura,
+    email: "lmartin@panda.energy",
+    name: "Laura Martín",
     role: "sales",
+  },
+  {
+    id: USER_IDS.pedro,
+    email: "psanchez@panda.energy",
+    name: "Pedro Sánchez",
+    role: "sales",
+  },
+  {
+    id: USER_IDS.ana,
+    email: "atorres@panda.energy",
+    name: "Ana Torres",
+    role: "sales",
+  },
+  {
+    id: USER_IDS.jorge,
+    email: "jvega@panda.energy",
+    name: "Jorge Vega",
+    role: "agent",
+  },
+  {
+    id: USER_IDS.lucia,
+    email: "lromero@panda.energy",
+    name: "Lucía Romero",
+    role: "agent",
   },
   {
     id: USER_IDS.diego,
-    email: "diego.support@panda.energy",
-    name: "Diego Support",
-    role: "agent",
-  },
-  {
-    id: USER_IDS.eva,
-    email: "eva.support@panda.energy",
-    name: "Eva Ops",
-    role: "agent",
-  },
-  {
-    id: USER_IDS.felipe,
-    email: "felipe.read@panda.energy",
-    name: null,
+    email: "dcastro@panda.energy",
+    name: "Diego Castro",
     role: "viewer",
   },
 ];
@@ -69,17 +82,20 @@ export const usersFixture: UserListItem[] = [
 /**
  * Usuario que respalda la sesión Clerk en modo demo. `GET /v1/auth/me`
  * devuelve esto + `default_pipeline_id` rellenado por el handler.
+ *
+ * Carlos Ruiz (sales) — perfil más representativo del comercial que
+ * usaría el CRM 8h/día.
  */
 export const currentUserFixture: Omit<MeOut, "default_pipeline_id"> = {
-  id: USER_IDS.alex,
+  id: USER_IDS.carlos,
   tenant_id: TENANT_ID,
-  clerk_user_id: "user_demo_alex",
-  email: "alex.admin@panda.energy",
-  name: "Alex Admin",
-  first_name: "Alex",
-  last_name: "Admin",
+  clerk_user_id: "user_demo_carlos",
+  email: "cruiz@panda.energy",
+  name: "Carlos Ruiz",
+  first_name: "Carlos",
+  last_name: "Ruiz",
   image_url: null,
-  role: "admin",
+  role: "sales",
   last_seen_at: "2026-05-22T08:00:00.000Z",
   created_at: "2026-04-01T08:00:00.000Z",
 };

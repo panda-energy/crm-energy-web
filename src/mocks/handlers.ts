@@ -1,10 +1,11 @@
 import { http, HttpResponse } from "msw";
 import type { components } from "@/lib/api/types";
-import { leadsFixture } from "./fixtures/leads";
+import { ACTIVITY_FIXTURES } from "./fixtures/activities";
+import { LEAD_FIXTURES } from "./fixtures/leads";
 import {
   STAGE_IDS,
   TENANT_ID,
-  defaultStagesFixture,
+  allStagesFixture,
   pipelinesFixture,
   DEFAULT_PIPELINE_ID,
 } from "./fixtures/pipelines";
@@ -83,9 +84,13 @@ type StoredActivity = {
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 // Estado mutable in-memory. Cada reload del worker / setupServer lo resetea.
-const leadsStore: Lead[] = [...leadsFixture];
+const leadsStore: Lead[] = [...LEAD_FIXTURES];
 const deletedLeadsStore = new Map<string, Lead>();
-const activitiesStore: StoredActivity[] = [];
+// reason: pre-seed con ~100 actividades (1 `lead_created` por lead + extras
+// variados) para que la demo tenga histórico realista al abrir cualquier
+// detalle. Cualquier mutación posterior (move, restore, bulk, create)
+// añade más entradas in-memory.
+const activitiesStore: StoredActivity[] = [...ACTIVITY_FIXTURES];
 
 // Cache de Idempotency-Key → { bodyHash, response }. Sin TTL — duración del
 // proceso.
@@ -206,11 +211,21 @@ function getAllValues(url: URL, name: string): string[] {
   return url.searchParams.getAll(name);
 }
 
+/**
+ * Deriva el `LeadStatus` coarse a partir del `stage_id`. Backend hace lo
+ * mismo via `is_won`/`is_lost` + slug; aquí buscamos el stage en
+ * `allStagesFixture` (union de ambas pipelines).
+ */
 function statusFromStageId(stageId: string): LeadStatus {
-  if (stageId === STAGE_IDS.won) return "won";
-  if (stageId === STAGE_IDS.lost) return "lost";
-  if (stageId === STAGE_IDS.qualified) return "qualified";
-  if (stageId === STAGE_IDS.contacted) return "contacted";
+  const stage = allStagesFixture.find((s) => s.id === stageId);
+  if (!stage) return "new";
+  if (stage.is_won) return "won";
+  if (stage.is_lost) return "lost";
+  // Slug del stage coincide con LeadStatus para `new`/`contacted`/
+  // `qualified`. Stages como `negotiation` caen a `qualified` (pre-won).
+  if (stage.slug === "contacted") return "contacted";
+  if (stage.slug === "qualified") return "qualified";
+  if (stage.slug === "negotiation") return "qualified";
   return "new";
 }
 
@@ -517,10 +532,12 @@ const bulkLeadsHandler = http.post(
         }
         if (body.set_status) {
           lead.status = body.set_status;
-          // Move to first stage with matching slug — el backend hace lo
-          // mismo. Para MSW asumimos default pipeline.
-          const stage = defaultStagesFixture.find(
-            (s) => s.slug === body.set_status,
+          // reason: el backend mueve al primer stage del pipeline del
+          // lead cuyo slug matchea el status (NO al pipeline default).
+          // Buscamos en el pipeline actual del lead.
+          const stage = allStagesFixture.find(
+            (s) =>
+              s.pipeline_id === lead.pipeline_id && s.slug === body.set_status,
           );
           if (stage) lead.stage_id = stage.id;
           changed = true;
@@ -555,8 +572,11 @@ const moveLeadHandler = http.post(
     const lead = findLead(String(params.leadId));
     if (!lead) return problemResponse(404, "Lead no encontrado");
     const body = (await request.json()) as LeadMove;
-    const targetStage = defaultStagesFixture.find((s) => s.id === body.stage_id);
-    if (!targetStage) {
+    // reason: el target stage debe pertenecer al pipeline del lead. Buscamos
+    // en la unión de stages y validamos pipeline_id explícito (backend hace
+    // exactamente esto en `services/leads.py::move_lead`).
+    const targetStage = allStagesFixture.find((s) => s.id === body.stage_id);
+    if (!targetStage || targetStage.pipeline_id !== lead.pipeline_id) {
       return problemResponse(
         400,
         "Stage no pertenece al pipeline del lead",
