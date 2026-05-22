@@ -153,7 +153,10 @@ function LeadDetailBody({
   const stagesQuery = usePipelineStages(lead.pipeline_id);
 
   const stagesById = useMemo(() => {
-    const m = new Map<string, { id: string; name: string }>();
+    const m = new Map<
+      string,
+      import("@/lib/api/hooks/use-pipelines").PipelineStage
+    >();
     for (const s of stagesQuery.data ?? []) m.set(s.id, s);
     return m;
   }, [stagesQuery.data]);
@@ -183,10 +186,10 @@ function LeadDetailBody({
     setDeleteConfirmOpen(false);
     try {
       await deleteLead.mutateAsync({
+        // reason: el backend ya expone POST /v1/leads/{id}/restore (idempotente).
+        // El hook ofrece un toast con "Deshacer" 6s que llama al endpoint y
+        // restaura tanto la BD como las cachés frontend.
         undoMessage: `Lead eliminado: ${composeLeadName(lead)}`,
-        // reason: deshabilitado hasta que backend exponga
-        // POST /v1/leads/{id}/restore. Cuando esté, pasar `restoreEnabled: true`.
-        restoreEnabled: false,
       });
       onClose();
     } catch (err) {
@@ -456,9 +459,7 @@ function LeadDetailBody({
             <AddActivityForm leadId={lead.id} />
             <LeadActivitiesList
               activities={activitiesQuery.data}
-              stagesById={
-                stagesById as Map<string, import("@/lib/api/hooks/use-pipelines").PipelineStage>
-              }
+              stagesById={stagesById}
               loading={activitiesQuery.isLoading}
             />
           </div>
@@ -476,9 +477,7 @@ function LeadDetailBody({
             />
             <LeadActivitiesList
               activities={activitiesQuery.data}
-              stagesById={
-                stagesById as Map<string, import("@/lib/api/hooks/use-pipelines").PipelineStage>
-              }
+              stagesById={stagesById}
               filterType="note"
               loading={activitiesQuery.isLoading}
             />
@@ -492,9 +491,8 @@ function LeadDetailBody({
           <DialogHeader>
             <DialogTitle>Eliminar lead</DialogTitle>
             <DialogDescription>
-              Eliminar lead <strong>{composeLeadName(lead)}</strong>. Esta
-              acción no se puede deshacer (función de restore pendiente en
-              backend).
+              Eliminar lead <strong>{composeLeadName(lead)}</strong>. Se puede
+              recuperar desde el toast de notificación durante 6 segundos.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

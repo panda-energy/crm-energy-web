@@ -8,6 +8,7 @@ import {
 import {
   apiDelete,
   apiPatch,
+  apiPost,
   type ApiRequestOptions,
 } from "../client";
 import { toast } from "@/lib/ui/toast";
@@ -32,21 +33,14 @@ import {
  *    real (revertir la operación) lo gestiona el caller.
  *
  * Solo cubrimos las acciones que el BACKLOG marca como reversibles:
- *  - delete (soft-delete + restore visual en cache hasta refetch).
+ *  - delete (soft-delete + restore vía `POST /v1/leads/{id}/restore`).
  *  - update status / owner / tags (revierte la mutación via PATCH inverso).
  *
- * La "deuda backend" del restore se gestiona elegantemente: durante los 6s
- * que dura el toast, el lead sigue en caché frontend (lo restauramos a
- * `previousData`). Si el user pulsa Deshacer dentro de la ventana, NO
- * llamamos al backend para "restaurar" — solo descartamos la mutación
- * pendiente local. Pero como el backend YA hizo el soft-delete, al
- * refetch siguiente el lead desaparece igualmente. Por eso lo flagueamos
- * como "undo limitado" y desactivamos el botón en lead-detail-sheet.
- *
- * Para esta wave, el undo SÍ está activo en:
- *  - update inline (status change, owner change, tags) → revierte
- *    mandando PATCH inverso con el valor anterior. Esto SÍ funciona
- *    extremo a extremo.
+ * **Cleanup wave**: el undo de delete ya NO es limitado. Cuando el user
+ * pulsa Deshacer dentro de la ventana de 6s, lanzamos restore al backend:
+ * el lead vuelve a la BD (idempotente) y queda una actividad `restored`
+ * en su timeline. La cache se re-puebla con el snapshot pre-delete para
+ * UX inmediata; el siguiente refetch confirma desde el servidor.
  */
 
 const UNDO_DURATION_MS = 6000;
@@ -202,19 +196,29 @@ export function useOptimisticUpdateLead(
 }
 
 /**
- * Soft-delete con optimistic remove de la cache de lista.
+ * Soft-delete con optimistic remove + undo real de 6s vía
+ * `POST /v1/leads/{id}/restore` (cleanup wave).
  *
- * El undo de 6s aquí es **limitado**: el toast aparece, pero el botón
- * Deshacer queda explícitamente deshabilitado con tooltip — backend aún
- * no expone restore. Cuando lo exponga (deuda), reemplazar el `onAction`
- * por la llamada real.
+ * Flujo end-to-end:
+ *  1. `onMutate` saca el lead de TODAS las páginas de la lista y guarda
+ *     snapshots para revert en caso de fallo de la DELETE.
+ *  2. Si la DELETE falla → restauramos los snapshots y mostramos error.
+ *  3. Si la DELETE tiene éxito → mostramos toast con acción "Deshacer".
+ *     Al pulsar Deshacer, llamamos al endpoint `/restore` (idempotente),
+ *     re-inyectamos el `previousDetail` en cada página snapshotada para
+ *     UX inmediata, e invalidamos para resync con backend.
+ *
+ * Argumento `vars.undoEnabled` (default `true`) — solo se desactiva para
+ * delete en flujos no reversibles (no usado actualmente; lo dejamos para
+ * forward-compat). Si es `false`, el toast usa `success` simple sin
+ * acción.
  */
 export function useOptimisticDeleteLead(
   leadId: string,
 ): UseMutationResult<
   void,
   Error,
-  { undoMessage: string; restoreEnabled?: boolean }
+  { undoMessage: string; undoEnabled?: boolean }
 > {
   const { getToken, tenantId } = useClerkApiContext();
   const queryClient = useQueryClient();
@@ -222,7 +226,7 @@ export function useOptimisticDeleteLead(
   return useMutation<
     void,
     Error,
-    { undoMessage: string; restoreEnabled?: boolean },
+    { undoMessage: string; undoEnabled?: boolean },
     { previousList: Map<string, LeadPage>; previousDetail?: Lead }
   >({
     mutationFn: async () => {
@@ -251,7 +255,11 @@ export function useOptimisticDeleteLead(
           return {
             ...old,
             items: filtered,
-            total: Math.max(0, old.total - (filtered.length === old.items.length ? 0 : 1)),
+            total: Math.max(
+              0,
+              old.total -
+                (filtered.length === old.items.length ? 0 : 1),
+            ),
           };
         });
       }
@@ -269,22 +277,59 @@ export function useOptimisticDeleteLead(
       });
     },
 
-    onSuccess: (_data, vars) => {
-      // Toast con undo (limitado hasta que backend exponga restore).
+    onSuccess: (_data, vars, context) => {
+      const enabled = vars.undoEnabled !== false;
+      if (!enabled) {
+        toast.success(vars.undoMessage);
+        return;
+      }
+
       toast.action(vars.undoMessage, {
-        actionLabel: vars.restoreEnabled ? "Deshacer" : "Restore pendiente",
+        actionLabel: "Deshacer",
         duration: UNDO_DURATION_MS,
         onAction: async () => {
-          if (!vars.restoreEnabled) {
-            toast.info("Restore aún no disponible", {
-              description:
-                "Pendiente del endpoint POST /v1/leads/{id}/restore (backend).",
+          try {
+            await apiPost<void>(
+              `/v1/leads/{lead_id}/restore`,
+              undefined,
+              {
+                getToken,
+                tenantId,
+                pathParams: { lead_id: leadId },
+                idempotencyKey: crypto.randomUUID(),
+              },
+            );
+            // Re-inserta el lead en cada snapshot de página. Si la página
+            // contenía el lead, lo volvemos a meter en su posición original
+            // (best-effort: lo prepend si no recuperable).
+            if (context?.previousList) {
+              for (const [key, prevPage] of context.previousList) {
+                queryClient.setQueryData(JSON.parse(key), prevPage);
+              }
+            }
+            if (context?.previousDetail) {
+              queryClient.setQueryData(
+                leadsQueryKeys.detail(leadId),
+                context.previousDetail,
+              );
+            }
+            // Invalida para que el siguiente refetch sincronice con BD.
+            void queryClient.invalidateQueries({
+              queryKey: leadsQueryKeys.all,
             });
-            return;
+            void queryClient.invalidateQueries({
+              queryKey: leadsQueryKeys.detail(leadId),
+            });
+            void queryClient.invalidateQueries({
+              queryKey: leadsQueryKeys.activities(leadId),
+            });
+            toast.success("Lead restaurado");
+          } catch (err) {
+            toast.error("No se pudo restaurar el lead", {
+              description:
+                err instanceof Error ? err.message : undefined,
+            });
           }
-          // reason: cuando esté el endpoint, llamar a `apiPost` con
-          // `/v1/leads/{lead_id}/restore` e invalidar caches.
-          toast.info("Pendiente de implementación.");
         },
       });
     },

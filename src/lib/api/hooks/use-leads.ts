@@ -132,6 +132,10 @@ export function useUpdateLead(leadId: string) {
 /**
  * Soft-delete de un lead (DELETE → 204). El backend lo marca como eliminado
  * lógicamente; la cache de lista se invalida.
+ *
+ * Cleanup wave: el undo real se construye combinando este hook con
+ * `useRestoreLead(leadId)`. Ver `useOptimisticDeleteLead` para el flujo
+ * end-to-end con toast de 6s.
  */
 export function useDeleteLead(leadId: string) {
   return useApiMutation<"/v1/leads/{lead_id}", "delete">(
@@ -146,8 +150,42 @@ export function useDeleteLead(leadId: string) {
 }
 
 /**
- * Acción masiva (assign_owner / set_status / add_tags / remove_tags).
- * Backend acepta hasta 500 IDs por llamada.
+ * Restaura un lead soft-deleted vía `POST /v1/leads/{id}/restore`
+ * (cleanup wave). El endpoint es **idempotente**: devuelve 204 aunque
+ * el lead no esté eliminado, así que el caller no tiene que comprobar
+ * estado antes de llamar. 404 solo si el lead no existe en el tenant.
+ *
+ * Body vacío (la ruta no acepta payload). El hook genérico requiere un
+ * tipo para `body`; usamos `undefined` y el wrapper sabe omitirlo.
+ */
+export function useRestoreLead(leadId: string) {
+  return useApiMutation<"/v1/leads/{lead_id}/restore", "post">(
+    "/v1/leads/{lead_id}/restore",
+    {
+      method: "POST",
+      pathParams: { lead_id: leadId },
+      idempotencyKey: "auto",
+      invalidates: [
+        leadsQueryKeys.all,
+        leadsQueryKeys.detail(leadId),
+        leadsQueryKeys.activities(leadId),
+      ],
+    },
+  );
+}
+
+/**
+ * Acción masiva sobre leads. Cleanup wave: el campo `action` discrimina
+ * entre dos modos:
+ *
+ *  - `action: 'update'` (default) — aplica las mutaciones (assign_owner /
+ *    set_status / add_tags / remove_tags) a cada lead matcheado.
+ *  - `action: 'delete'` — soft-delete masivo; los demás campos se ignoran.
+ *    Los IDs devueltos en `result.ids` se pueden recuperar individualmente
+ *    con `POST /v1/leads/{id}/restore` mientras dure el undo (6s).
+ *
+ * Hasta 500 IDs por llamada. Idempotency-Key 'auto' por defecto: re-enviar
+ * la misma llamada en una ventana corta devuelve el resultado cacheado.
  */
 export function useBulkLeads() {
   return useApiMutation<
@@ -166,6 +204,10 @@ export function useBulkLeads() {
  * Mover un lead a otra etapa del mismo pipeline (4xx si el stage_id apunta
  * a otro pipeline). El backend registra automáticamente una actividad
  * `stage_changed` (+ `status_changed` si el bucket coarse cambia).
+ *
+ * Cleanup wave: `LeadMove.position` opcional permite insertar en una
+ * posición específica del stage destino. `null` (o ausente) = al final;
+ * out-of-range se clampa server-side a `[0, len(stage)]`.
  */
 export function useMoveLead(leadId: string) {
   return useApiMutation<
