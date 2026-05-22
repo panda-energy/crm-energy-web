@@ -1,5 +1,5 @@
 /**
- * Schemas Zod para los tipos críticos del CRM (Sprint 1 + 2).
+ * Schemas Zod para los tipos críticos del CRM (Sprint 1 + 2 + cleanup wave).
  *
  * **Importante:** la **fuente de verdad** del contrato sigue siendo el
  * OpenAPI del backend (regla cross-skill #7). `lib/api/types.ts` se genera
@@ -59,6 +59,11 @@ export const LeadSortFieldSchema = z.enum([
 
 export const SortDirectionSchema = z.enum(["asc", "desc"]);
 
+/**
+ * Discriminator value for ActivityOut variants. El backend (cleanup wave)
+ * añadió `restored`, `bulk_action` y la variante de fallback `unknown` al
+ * enum oficial.
+ */
 export const ActivityTypeSchema = z.enum([
   "note",
   "call",
@@ -69,7 +74,10 @@ export const ActivityTypeSchema = z.enum([
   "owner_changed",
   "status_changed",
   "lead_created",
+  "restored",
+  "bulk_action",
   "system",
+  "unknown",
 ]);
 
 export const MessageDirectionSchema = z.enum(["inbound", "outbound"]);
@@ -83,6 +91,8 @@ export const MessageStatusSchema = z.enum([
   "failed",
 ]);
 
+export const UserRoleSchema = z.enum(["admin", "sales", "agent", "viewer"]);
+
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 /** date-time ISO con offset (`2026-05-21T09:30:00+00:00` o `…Z`). */
@@ -95,12 +105,32 @@ const uuid = () => z.string().uuid();
 const nullable = <T extends z.ZodTypeAny>(schema: T) =>
   z.union([schema, z.null()]);
 
+/**
+ * E.164 strict — `+` seguido de 1-15 dígitos con primer dígito 1-9.
+ *
+ * Espejo del pattern declarado por el backend en `LeadCreate.phone` y
+ * `LeadUpdate.phone`: `^\+?[1-9]\d{1,14}$`. Aquí endurecemos a `\+` obli-
+ * gatorio porque el frontend NO acepta inputs ambiguos — el backend sí
+ * normaliza variantes (`34600…`, `0034600…`, etc.) pero la UI siempre
+ * muestra y guarda E.164 estricto para evitar disonancia.
+ *
+ * El backend permite además `''` (string vacío) y `null` en LeadUpdate como
+ * señales explícitas de "borrar teléfono"; ver `LeadUpdateSchema.phone`.
+ */
+export const PHONE_E164_PATTERN = /^\+[1-9]\d{1,14}$/;
+export const phoneE164Schema = z
+  .string()
+  .regex(PHONE_E164_PATTERN, "Teléfono no válido (formato E.164: +<país><número>).");
+
 // ── Lead ────────────────────────────────────────────────────────────────────
 
 /**
  * Espejo de `components["schemas"]["LeadOut"]`. Todos los campos optional
  * del backend se modelan como **nullable explícito** porque la API los
  * serializa con `null`, no los omite.
+ *
+ * Cleanup wave: `position` (int | null) describe el orden del lead dentro
+ * de su stage; `null` significa "al final" (default legacy).
  */
 export const LeadSchema = z.object({
   id: uuid(),
@@ -122,16 +152,25 @@ export const LeadSchema = z.object({
   estimated_value_cents: nullable(z.number().int()),
   currency: z.string(),
   last_contacted_at: nullable(dateTime()),
+  // reason: el OpenAPI marca `position` como propiedad opcional (no en
+  // required[]) y nullable. Lo modelamos como `int | null` opcional: el
+  // backend lo OMITE solo en respuestas pre-cleanup; en datos nuevos siempre
+  // viene (puede ser `null` = al final).
+  position: nullable(z.number().int()).optional(),
   created_at: dateTime(),
   updated_at: dateTime(),
 });
 export type Lead = z.infer<typeof LeadSchema>;
 
+/**
+ * `phone` en CREATE acepta E.164 estricto. Vacío NO se permite (regla UI:
+ * crear lead con teléfono debe ser una decisión consciente).
+ */
 export const LeadCreateSchema = z.object({
   first_name: z.string().max(120).nullish(),
   last_name: z.string().max(120).nullish(),
   email: z.string().email().max(320).nullish(),
-  phone: z.string().nullish(),
+  phone: phoneE164Schema.nullish(),
   company: z.string().max(255).nullish(),
   cups: z.string().max(22).nullish(),
   source: LeadSourceSchema.optional(),
@@ -146,11 +185,23 @@ export const LeadCreateSchema = z.object({
 });
 export type LeadCreate = z.infer<typeof LeadCreateSchema>;
 
+/**
+ * `phone` en UPDATE acepta tres formas semánticas distintas (cleanup wave
+ * formalizó el comportamiento):
+ *  - **Omitido** (clave ausente) → no se toca.
+ *  - **`''` (string vacío) o `null`** → reset explícito a null en la BD.
+ *  - **E.164 estricto** → se valida con `phoneE164Schema` antes de mandar.
+ *
+ * Por eso no usamos `phoneE164Schema.nullish()`: el regex rechazaría `''`.
+ * Hacemos un union con literal vacío + null + E.164.
+ */
 export const LeadUpdateSchema = z.object({
   first_name: z.string().max(120).nullish(),
   last_name: z.string().max(120).nullish(),
   email: z.string().email().max(320).nullish(),
-  phone: z.string().nullish(),
+  phone: z
+    .union([z.literal(""), phoneE164Schema, z.null()])
+    .optional(),
   company: z.string().max(255).nullish(),
   cups: z.string().max(22).nullish(),
   source: LeadSourceSchema.nullish(),
@@ -163,14 +214,27 @@ export const LeadUpdateSchema = z.object({
 });
 export type LeadUpdate = z.infer<typeof LeadUpdateSchema>;
 
+/**
+ * Cleanup wave: añadido `position` opcional para insertar el lead en una
+ * posición específica del stage destino. `null` o ausente = al final
+ * (backend lo clampa a `[0, len(stage)]`).
+ */
 export const LeadMoveSchema = z.object({
   stage_id: uuid(),
+  position: z.number().int().min(0).max(1_000_000).nullish(),
   note: z.string().max(500).nullish(),
 });
 export type LeadMove = z.infer<typeof LeadMoveSchema>;
 
+/**
+ * Cleanup wave: `action` discrimina entre `update` (mutaciones in-place) y
+ * `delete` (soft-delete). Cuando `action === 'delete'` los demás campos
+ * se ignoran; los IDs eliminados pueden recuperarse vía
+ * `POST /v1/leads/{id}/restore` mientras siga el undo (6s).
+ */
 export const LeadBulkActionSchema = z.object({
   ids: z.array(uuid()).min(1).max(500),
+  action: z.enum(["update", "delete"]).optional(),
   assign_owner_id: uuid().nullish(),
   set_status: LeadStatusSchema.nullish(),
   add_tags: z.array(z.string()).max(32).optional(),
@@ -195,25 +259,215 @@ export const LeadPageSchema = z.object({
 });
 export type LeadPage = z.infer<typeof LeadPageSchema>;
 
-// ── Activity ────────────────────────────────────────────────────────────────
+// ── Activity (cleanup wave: unión discriminada por `type`) ─────────────────
 
-export const ActivitySchema = z.object({
+/**
+ * Base shape compartido por TODAS las variantes de `ActivityOut`. Cada
+ * variante añade `type` literal + `payload` tipado.
+ *
+ * El backend emite estas variantes en `/v1/leads/{id}/activities` (GET +
+ * POST). El discriminador es el campo `type`; usamos
+ * `z.discriminatedUnion` para narrowing exhaustivo en la UI.
+ */
+const activityBase = {
   id: uuid(),
   lead_id: uuid(),
   actor_user_id: nullable(uuid()),
-  type: ActivityTypeSchema,
   summary: nullable(z.string()),
-  payload: z.record(z.string(), z.unknown()),
   occurred_at: dateTime(),
   created_at: dateTime(),
+};
+
+/** `note` — nota libre creada manualmente. `payload.body` es el cuerpo. */
+export const NoteActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("note"),
+  payload: z
+    .object({
+      body: nullable(z.string()).optional(),
+    })
+    .passthrough(),
 });
+
+/** `call` — log de llamada. `payload.outcome` + `payload.duration_sec`. */
+export const CallActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("call"),
+  payload: z
+    .object({
+      outcome: nullable(z.string()).optional(),
+      duration_sec: nullable(z.number().int().min(0)).optional(),
+    })
+    .passthrough(),
+});
+
+/** `email` — log de email manual. `payload.subject` + `payload.body`. */
+export const EmailActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("email"),
+  payload: z
+    .object({
+      subject: nullable(z.string()).optional(),
+      body: nullable(z.string()).optional(),
+    })
+    .passthrough(),
+});
+
+/** `whatsapp_inbound` — mensaje del cliente final. */
+export const WhatsAppInboundActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("whatsapp_inbound"),
+  payload: z
+    .object({
+      text: nullable(z.string()).optional(),
+      template_name: nullable(z.string()).optional(),
+      wamid: nullable(z.string()).optional(),
+    })
+    .passthrough(),
+});
+
+/** `whatsapp_outbound` — mensaje saliente vía Meta Cloud. */
+export const WhatsAppOutboundActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("whatsapp_outbound"),
+  payload: z
+    .object({
+      text: nullable(z.string()).optional(),
+      template_name: nullable(z.string()).optional(),
+      wamid: nullable(z.string()).optional(),
+    })
+    .passthrough(),
+});
+
+/** `stage_changed` — backend emite este al ejecutar `/move`. */
+export const StageChangedActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("stage_changed"),
+  payload: z
+    .object({
+      from_stage_id: nullable(uuid()).optional(),
+      from_stage_name: nullable(z.string()).optional(),
+      to_stage_id: uuid(),
+      to_stage_name: nullable(z.string()).optional(),
+      note: nullable(z.string()).optional(),
+    })
+    .passthrough(),
+});
+
+/** `status_changed` — bucket coarse cambió (típicamente derivado de move). */
+export const StatusChangedActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("status_changed"),
+  payload: z
+    .object({
+      from_status: nullable(z.string()).optional(),
+      to_status: z.string(),
+    })
+    .passthrough(),
+});
+
+/** `owner_changed` — asignación o reasignación de propietario. */
+export const OwnerChangedActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("owner_changed"),
+  payload: z
+    .object({
+      from_owner_id: nullable(uuid()).optional(),
+      to_owner_id: nullable(uuid()).optional(),
+    })
+    .passthrough(),
+});
+
+/** `lead_created` — entrada en el funnel. */
+export const LeadCreatedActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("lead_created"),
+  payload: z
+    .object({
+      pipeline_id: nullable(uuid()).optional(),
+      stage_id: nullable(uuid()).optional(),
+      source: nullable(z.string()).optional(),
+    })
+    .passthrough(),
+});
+
+/**
+ * `restored` — soft-delete revertido (típicamente por undo dentro de la
+ * ventana de 6s, pero el endpoint es idempotente).
+ */
+export const RestoredActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("restored"),
+  payload: z
+    .object({
+      restored_from: nullable(dateTime()).optional(),
+    })
+    .passthrough(),
+});
+
+/**
+ * `bulk_action` — auditoría dejada por una mutación masiva en cada lead
+ * afectado. `payload.action` identifica la operación; `payload.params`
+ * preserva los argumentos para forensics.
+ */
+export const BulkActionActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("bulk_action"),
+  payload: z
+    .object({
+      action: z.string(),
+      params: z.record(z.string(), z.unknown()).optional(),
+    })
+    .passthrough(),
+});
+
+/** `system` — eventos genéricos del sistema (catch-all auditable). */
+export const SystemActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("system"),
+  payload: z.record(z.string(), z.unknown()),
+});
+
+/**
+ * `unknown` — fallback de forward-compat: el backend marca con este tipo
+ * cualquier entrada cuyo `activities.type` legacy no esté en el vocabulario
+ * actual. La UI debe renderizar un entry genérico mostrando `summary` +
+ * preservando el `payload` opaco para inspección.
+ */
+export const UnknownActivitySchema = z.object({
+  ...activityBase,
+  type: z.literal("unknown"),
+  payload: z.record(z.string(), z.unknown()).optional(),
+});
+
+/**
+ * Unión discriminada sobre `type`. El consumidor obtiene narrowing
+ * exhaustivo en switch/case sin runtime checks defensivos. Sustituye al
+ * helper obsoleto `extractActivityDelta` (cleanup wave).
+ */
+export const ActivitySchema = z.discriminatedUnion("type", [
+  NoteActivitySchema,
+  CallActivitySchema,
+  EmailActivitySchema,
+  WhatsAppInboundActivitySchema,
+  WhatsAppOutboundActivitySchema,
+  StageChangedActivitySchema,
+  StatusChangedActivitySchema,
+  OwnerChangedActivitySchema,
+  LeadCreatedActivitySchema,
+  RestoredActivitySchema,
+  BulkActionActivitySchema,
+  SystemActivitySchema,
+  UnknownActivitySchema,
+]);
 export type Activity = z.infer<typeof ActivitySchema>;
 
 export const ActivityListSchema = z.array(ActivitySchema);
 export type ActivityList = z.infer<typeof ActivityListSchema>;
 
+/** Solo tipos manuales (note/call/email) son creables por la UI. */
 export const ActivityCreateSchema = z.object({
-  type: ActivityTypeSchema,
+  type: z.enum(["note", "call", "email"]),
   summary: z.string().max(500).nullish(),
   payload: z.record(z.string(), z.unknown()).optional(),
 });
@@ -221,6 +475,12 @@ export type ActivityCreate = z.infer<typeof ActivityCreateSchema>;
 
 // ── Pipeline ────────────────────────────────────────────────────────────────
 
+/**
+ * Cleanup wave: `entry_criteria` añadido al schema. Es un array (o null)
+ * cuyos elementos pueden ser shorthands string (id de un criterio
+ * registrado) o objetos `{ type, params }`. Sprint 2 trata este campo como
+ * **lectura informativa**; en Sprint 3 el motor de auto-stage lo consumirá.
+ */
 export const PipelineStageSchema = z.object({
   id: uuid(),
   pipeline_id: uuid(),
@@ -229,6 +489,7 @@ export const PipelineStageSchema = z.object({
   position: z.number().int(),
   is_won: z.boolean(),
   is_lost: z.boolean(),
+  entry_criteria: nullable(z.array(z.unknown())).optional(),
   created_at: dateTime(),
   updated_at: dateTime(),
 });
@@ -238,13 +499,9 @@ export const PipelineStageListSchema = z.array(PipelineStageSchema);
 export type PipelineStageList = z.infer<typeof PipelineStageListSchema>;
 
 /**
- * El backend marca `stages` como required en `PipelineOut.required`, pero el
- * `array` no aparece en ese listado (queda en `properties.stages`). En la
- * práctica viene siempre — modelamos como required.
- *
- * reason: el OpenAPI snapshot tiene `stages` en `properties` pero NO en
- * `required`. El servicio sí lo devuelve siempre. Si el backend cambia y deja
- * de mandarlo, la validación Zod lo dirá.
+ * Cleanup wave: `stages` ahora viene en `required`; eliminamos el
+ * workaround `.default([])` que rellenaba defensivamente la lista cuando
+ * el contrato declaraba el campo como opcional.
  */
 export const PipelineSchema = z.object({
   id: uuid(),
@@ -252,7 +509,7 @@ export const PipelineSchema = z.object({
   name: z.string(),
   slug: z.string(),
   is_default: z.boolean(),
-  stages: z.array(PipelineStageSchema).default([]),
+  stages: z.array(PipelineStageSchema),
   created_at: dateTime(),
   updated_at: dateTime(),
 });
@@ -267,6 +524,7 @@ export const PipelineStageInSchema = z.object({
   position: z.number().int().min(0).max(10000).optional(),
   is_won: z.boolean().optional(),
   is_lost: z.boolean().optional(),
+  entry_criteria: nullable(z.array(z.unknown())).optional(),
 });
 export type PipelineStageIn = z.infer<typeof PipelineStageInSchema>;
 
@@ -288,6 +546,49 @@ export const PipelineStageReplaceSchema = z.object({
   stages: z.array(PipelineStageInSchema).min(1).max(20),
 });
 export type PipelineStageReplace = z.infer<typeof PipelineStageReplaceSchema>;
+
+// ── Users (cleanup wave: GET /v1/users + /v1/auth/me) ──────────────────────
+
+/**
+ * `UserListItem` — payload slim emitido por `GET /v1/users`. Para owner
+ * pickers y dropdowns de asignación.
+ */
+export const UserListItemSchema = z.object({
+  id: uuid(),
+  email: z.string(),
+  name: nullable(z.string()).optional(),
+  role: UserRoleSchema,
+});
+export type UserListItem = z.infer<typeof UserListItemSchema>;
+
+export const UserListPageSchema = z.object({
+  items: z.array(UserListItemSchema),
+  total: z.number().int().min(0),
+  limit: z.number().int().min(1).max(200),
+  offset: z.number().int().min(0),
+});
+export type UserListPage = z.infer<typeof UserListPageSchema>;
+
+/**
+ * `MeOut` — respuesta de `GET /v1/auth/me`. Extiende UserOut con el
+ * `default_pipeline_id` del tenant para evitar una segunda llamada a
+ * `/v1/pipelines` cuando el frontend hidrata el form de crear lead.
+ */
+export const MeOutSchema = z.object({
+  id: uuid(),
+  tenant_id: uuid(),
+  clerk_user_id: z.string(),
+  email: z.string(),
+  name: nullable(z.string()).optional(),
+  first_name: nullable(z.string()).optional(),
+  last_name: nullable(z.string()).optional(),
+  image_url: nullable(z.string()).optional(),
+  role: UserRoleSchema,
+  last_seen_at: nullable(dateTime()).optional(),
+  default_pipeline_id: nullable(uuid()).optional(),
+  created_at: dateTime(),
+});
+export type MeOut = z.infer<typeof MeOutSchema>;
 
 // ── WhatsApp ────────────────────────────────────────────────────────────────
 
@@ -360,9 +661,9 @@ type _LeadPageCompat = _Assignable<
   components["schemas"]["Page_LeadOut_"],
   LeadPage
 >;
-type _ActivityCompat = _Assignable<
-  components["schemas"]["ActivityOut"],
-  Activity
+type _PipelineCompat = _Assignable<
+  components["schemas"]["PipelineOut"],
+  Pipeline
 >;
 type _PipelineStageCompat = _Assignable<
   components["schemas"]["PipelineStageOut"],
@@ -376,24 +677,26 @@ type _LeadBulkResultCompat = _Assignable<
   components["schemas"]["LeadBulkResult"],
   LeadBulkResult
 >;
-
-// `PipelineOut` no incluye `stages` en `required` aunque siempre lo manda,
-// así que aquí solo verificamos que nuestro Zod (que SÍ lo requiere) es
-// asignable al OpenAPI generado, no al revés. El `default([])` del Zod lo
-// hace asignable.
-type _PipelineFromBackend = Omit<components["schemas"]["PipelineOut"], "stages"> & {
-  stages: components["schemas"]["PipelineStageOut"][];
-};
-type _PipelineCompat = _Assignable<_PipelineFromBackend, Pipeline>;
+type _MeOutCompat = _Assignable<components["schemas"]["MeOut"], MeOut>;
+type _UserListItemCompat = _Assignable<
+  components["schemas"]["UserListItem"],
+  UserListItem
+>;
+type _UserListPageCompat = _Assignable<
+  components["schemas"]["UserListPage"],
+  UserListPage
+>;
 
 // Si alguno de estos no es `true`, el typecheck falla en el ensamblado.
 const _compatibilityChecks: [
   _LeadCompat,
   _LeadPageCompat,
-  _ActivityCompat,
   _PipelineCompat,
   _PipelineStageCompat,
   _WhatsAppMessageCompat,
   _LeadBulkResultCompat,
-] = [true, true, true, true, true, true, true];
+  _MeOutCompat,
+  _UserListItemCompat,
+  _UserListPageCompat,
+] = [true, true, true, true, true, true, true, true, true];
 void _compatibilityChecks;
