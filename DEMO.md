@@ -30,8 +30,9 @@ Si el puerto 3000 está ocupado: `pnpm dev -- -p 3001`.
 - **Auth desactivada.** Clerk degrada a no-op porque `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
   está ausente. La consola del navegador lo anuncia con un warning gris.
 - **MSW activo.** El service worker `mockServiceWorker.js` intercepta toda
-  llamada a `/v1/*` y responde con fixtures (15 leads, pipeline default,
-  actividades, usuarios). La pestaña Network del navegador lo confirma.
+  llamada a `/v1/*` y responde con fixtures (50 leads ES, 2 pipelines,
+  8 usuarios, ~100 actividades). La pestaña Network del navegador lo
+  confirma.
 - **Cero red real.** `NEXT_PUBLIC_API_URL` es irrelevante con MSW activo.
 
 ---
@@ -148,6 +149,17 @@ Si el puerto 3000 está ocupado: `pnpm dev -- -p 3001`.
   soltar entre dos cards. Optimistic — el comercial no espera al
   servidor para reorganizar."
 
+### Paso 10b — Roadmap visible (30 s)
+
+- Sidebar → click **CUPS / Contratos / ATR / Tickets / Comisiones /
+  Configuración**. Cada ruta renderiza un placeholder con icono,
+  descripción y **badge "Disponible en Sprint X"** + 3-5 bullets
+  concretos de qué traerá.
+- **Qué decir:** "El roadmap está dentro del producto, no en un slide
+  aparte. El observador ve dónde estamos hoy, qué llega en Sprint 3
+  (CUPS + Contratos), Sprint 4 (ATR + Tickets) y Sprint 5-6
+  (Comisiones + Configuración). Cero promesas vagas."
+
 ### Paso 11 — Dark mode (30 s)
 
 - Topbar → toggle luna/sol → toda la app cambia a dark mode (system,
@@ -198,15 +210,14 @@ Si el puerto 3000 está ocupado: `pnpm dev -- -p 3001`.
 
 ```bash
 # Smoke server-side (cuando arranca pnpm dev en :3000)
-curl -sI http://localhost:3000/         | head -1   # 200
-curl -sI http://localhost:3000/leads    | head -1   # 200
-curl -sI http://localhost:3000/pipeline | head -1   # 200
-curl -sI http://localhost:3000/dashboard| head -1   # 200
-curl -sI http://localhost:3000/sign-in  | head -1   # 200
+for r in / /dashboard /leads /pipeline /cups /contracts /atr /tickets /commissions /settings /sign-in; do
+  printf "%-15s %s\n" "$r" "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000$r)"
+done
+# Todas las rutas deben devolver 200.
 
 # Validación de calidad (todo verde)
 pnpm typecheck   # tsc --noEmit
 pnpm lint        # next lint
-pnpm test        # vitest run — 153 tests pasan
+pnpm test        # vitest run — 163 tests pasan
 pnpm build       # next build
 ```
