@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TableSkeleton } from "@/components/skeletons/table-skeleton";
+import { useDefaultPipelineId } from "@/lib/api/hooks/use-auth";
 import { useLeads, leadsQueryKeys } from "@/lib/api/hooks/use-leads";
 import { usePipelines, usePipelineStages } from "@/lib/api/hooks/use-pipelines";
 import { useLeadsSearchParams } from "@/lib/leads/use-leads-search-params";
@@ -90,7 +91,14 @@ export function LeadsPageClient({ detailLeadId }: LeadsPageClientProps) {
   }, [queryClient]);
 
   const pipelinesQuery = usePipelines();
+  // reason (cleanup wave): preferimos `useAuthMe().default_pipeline_id`
+  // como fuente de verdad — viene del backend directamente y evita el
+  // race en el que `pipelinesQuery` resuelve antes que el form que el
+  // user abrió. Caemos al primer pipeline disponible solo si /auth/me aún
+  // no resolvió.
+  const meDefaultPipelineId = useDefaultPipelineId();
   const defaultPipelineId =
+    meDefaultPipelineId ??
     pipelinesQuery.data?.find((p) => p.is_default)?.id ??
     pipelinesQuery.data?.[0]?.id;
   const stagesQuery = usePipelineStages(defaultPipelineId);

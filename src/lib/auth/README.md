@@ -55,6 +55,25 @@ Si `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` está vacío o usa el placeholder
 Para activar Clerk real: copiar `pk_test_...` y `sk_test_...` del dashboard
 Clerk → `.env.local`.
 
+## Perfil interno: `useAuthMe()`
+
+Una vez verificado el JWT, el backend resuelve el usuario interno asociado
+a `clerk_user_id` y lo expone vía `GET /v1/auth/me`. El frontend lo
+consume con:
+
+```ts
+import { useAuthMe, useDefaultPipelineId } from "@/lib/api/hooks/use-auth";
+
+const { data: me } = useAuthMe();
+// → me.id, me.tenant_id, me.role, me.default_pipeline_id, me.email, …
+```
+
+`useDefaultPipelineId()` es un atajo que devuelve `me.default_pipeline_id`
+para hidratar el form de crear lead sin esperar a `usePipelines()`. Si la
+sesión Clerk aún no tiene un user row interno (Clerk webhook no procesado),
+el endpoint devuelve 404 y el hook entra en error state — el caller debe
+degradar (banner "perfil aún provisionándose") en lugar de bloquear.
+
 ## Componentes UI relacionados
 
 - `<UserButton>` — avatar + menú de perfil/logout. Lo renderiza la topbar.
