@@ -32,30 +32,31 @@ export const navItems: ReadonlyArray<NavItem> = [
   { label: "Leads", href: "/leads", icon: Users },
   { label: "Pipeline", href: "/pipeline", icon: BarChart3 },
   { label: "CUPS", href: "/cups", icon: Building2 },
-  { label: "Contratos", href: "/contratos", icon: FileText },
+  { label: "Contratos", href: "/contracts", icon: FileText },
   { label: "ATR", href: "/atr", icon: Tag },
   { label: "Tickets", href: "/tickets", icon: Inbox },
-  { label: "Comisiones", href: "/comisiones", icon: Wallet },
-  { label: "Configuración", href: "/configuracion", icon: Settings },
+  { label: "Comisiones", href: "/commissions", icon: Wallet },
+  { label: "Configuración", href: "/settings", icon: Settings },
 ];
 
 /**
  * Mapa de segmento de ruta → label en castellano. Lo consumen las
  * breadcrumbs para no inferir labels desde el path en crudo.
  *
- * Las claves son el segmento literal (sin `/`). Si una clave no existe,
- * el componente Breadcrumbs hace fallback a capitalizar el segmento.
+ * Las claves son el segmento literal (sin `/`) — siempre en inglés,
+ * el valor es el display en castellano. Si una clave no existe, el
+ * componente Breadcrumbs hace fallback a capitalizar el segmento.
  */
 export const segmentLabels: Record<string, string> = {
   dashboard: "Dashboard",
   leads: "Leads",
   pipeline: "Pipeline",
   cups: "CUPS",
-  contratos: "Contratos",
+  contracts: "Contratos",
   atr: "ATR",
   tickets: "Tickets",
-  comisiones: "Comisiones",
-  configuracion: "Configuración",
+  commissions: "Comisiones",
+  settings: "Configuración",
   nuevo: "Nuevo",
   editar: "Editar",
 };
