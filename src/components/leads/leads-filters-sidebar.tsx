@@ -22,6 +22,7 @@ import type { UseLeadsParams } from "@/lib/api/hooks/use-leads";
 import { cn } from "@/lib/utils/cn";
 import { MultiSelectFilter } from "./multi-select-filter";
 import { LeadStatusBadge } from "./lead-status-badge";
+import { UsersMultiSelect } from "./users-multi-select";
 
 /**
  * Sidebar de filtros para `/leads` (F-2.1).
@@ -34,10 +35,9 @@ import { LeadStatusBadge } from "./lead-status-badge";
  *  - Tags se construyen a partir de los visibles en pantalla + permite
  *    añadir manual (tag-free-text).
  *
- * Owners:
- *  - El backend aún no expone `/v1/users`. Mostramos un MultiSelect vacío
- *    con texto "Equipo pendiente — backend B-3.X" y permitimos teclear
- *    UUID directo en el Input "owner_id" (raro pero correcto).
+ * Owners (cleanup wave):
+ *  - `UsersMultiSelect` consume `GET /v1/users` con debounce. Reemplaza
+ *    al placeholder vacío + input UUID plano de Sprint 2 inicial.
  */
 export interface LeadsFiltersSidebarProps {
   params: UseLeadsParams;
@@ -140,8 +140,7 @@ export function LeadsFiltersSidebar({
     [selectedTags, updateFilters],
   );
 
-  // ── Owners (placeholder backend) ─────────────────────────────────────────
-  const [ownerDraft, setOwnerDraft] = useState("");
+  // ── Owners (cleanup wave: useUsers + UsersMultiSelect) ───────────────────
   const ownerIds = params.owner_id ?? [];
 
   if (collapsed) {
@@ -237,65 +236,15 @@ export function LeadsFiltersSidebar({
           />
         </div>
 
-        {/* Owner — placeholder */}
+        {/* Owner — UsersMultiSelect con búsqueda contra /v1/users */}
         <div className="space-y-1.5">
-          <Label
-            htmlFor="leads-owner-id"
-            className="text-xs uppercase tracking-wide text-muted-foreground"
-          >
+          <Label className="text-xs uppercase tracking-wide text-muted-foreground">
             Propietario
           </Label>
-          <MultiSelectFilter<string>
-            label="Sin asignar / cualquiera"
-            options={[]}
+          <UsersMultiSelect
             selected={ownerIds}
             onChange={(next) => updateFilters({ owner_id: next })}
-            emptyText="Equipo pendiente — backend B-3.X. Pega un UUID abajo para filtrar manualmente."
           />
-          <div className="flex gap-1">
-            <Input
-              id="leads-owner-id"
-              value={ownerDraft}
-              onChange={(e) => setOwnerDraft(e.target.value)}
-              placeholder="UUID del propietario"
-              className="h-8 text-xs"
-              aria-label="Añadir propietario por UUID"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 text-xs"
-              onClick={() => {
-                const v = ownerDraft.trim();
-                if (!v || ownerIds.includes(v)) return;
-                updateFilters({ owner_id: [...ownerIds, v] });
-                setOwnerDraft("");
-              }}
-            >
-              Añadir
-            </Button>
-          </div>
-          {ownerIds.length > 0 ? (
-            <ul className="flex flex-wrap gap-1">
-              {ownerIds.map((id) => (
-                <li key={id}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateFilters({
-                        owner_id: ownerIds.filter((x) => x !== id),
-                      })
-                    }
-                    aria-label={`Quitar ${id}`}
-                    className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] text-muted-foreground hover:bg-muted/70"
-                  >
-                    {id.slice(0, 8)}…
-                    <X className="size-3" aria-hidden />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
         </div>
 
         {/* Pipeline */}
