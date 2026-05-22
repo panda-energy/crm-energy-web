@@ -51,6 +51,12 @@ tsconfig.tsbuildinfo
 # storybook
 storybook-static/
 
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
 # IDE
 .vscode/
 .idea/

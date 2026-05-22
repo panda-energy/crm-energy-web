@@ -261,6 +261,58 @@ stories y el `pnpm build-storybook` verde; DevOps añade el token de
 Chromatic, el addon `@chromatic-com/storybook` y el step de CI. Hasta
 entonces, el baseline visual no se ejecuta automáticamente.
 
+## E2E con Playwright
+
+Cobertura crítica del CRM web vía Playwright (chromium desktop). El test
+de flujo crítico abre `/leads`, crea un lead con cmd-k, navega al
+detalle desde el toast, edita inline un campo, elimina con confirm y
+prueba el undo. El smoke verifica cmd-k abrir/cerrar y la sincronía
+URL ↔ filtros.
+
+### Comandos
+
+```bash
+pnpm e2e               # corre todos los tests (chromium headless)
+pnpm e2e:list          # SOLO lista los tests (dry-run, sin browser)
+pnpm e2e:ui            # modo UI interactivo (debug)
+```
+
+### Setup inicial (una vez por máquina)
+
+```bash
+pnpm exec playwright install chromium             # binarios
+pnpm exec playwright install-deps chromium        # libs SO (Linux/WSL — requiere sudo)
+```
+
+En WSL sin sudo, los binarios se descargan pero faltan libs nativas
+(`libnspr4.so`, `libnss3.so`, etc.). `pnpm e2e:list` funciona; `pnpm e2e`
+exige las libs. DevOps las instala en CI con
+`playwright install-deps chromium` ejecutado en el runner.
+
+### Configuración
+
+- `playwright.config.ts` — baseURL, webServer (`pnpm dev` con
+  `NEXT_PUBLIC_API_MOCKING=enabled`), retries CI=2.
+- Tests en `e2e/`. Solo `chromium` desktop por ahora.
+- Reporter: `list` en local, `html` + `github` en CI.
+- `webServer.reuseExistingServer` activo en local — arranca dev una vez
+  y los tests se enchufan.
+
+### Para DevOps
+
+CI deberá:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm exec playwright install --with-deps chromium  # binario + libs SO
+pnpm e2e                                            # full run
+```
+
+Y publicar `playwright-report/` como artifact (la config ya emite
+HTML + GitHub annotations en CI).
+
+---
+
 ## Para DevOps
 
 Cuando configures CI:
@@ -273,6 +325,8 @@ pnpm lint
 pnpm test
 pnpm build
 pnpm build-storybook
+pnpm exec playwright install --with-deps chromium
+pnpm e2e
 ```
 
 Variables de entorno que necesitarán Doppler/Vercel: ver tabla arriba.
