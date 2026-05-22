@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { SkipLink } from "@/components/layout/skip-link";
-import { CommandPalette } from "@/components/command-palette/command-palette";
+import { CommandPaletteBoundary } from "@/components/command-palette/command-palette-boundary";
 
 const isClerkConfigured = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
@@ -48,9 +48,11 @@ export default async function AuthenticatedLayout({
           {children}
         </main>
       </div>
-      {/* Command palette global — el listener cmd+k está dentro. Vive
-          fuera de <main> para que se monte una sola vez por sesión. */}
-      <CommandPalette />
+      {/* Command palette global con boundary lazy: hasta el primer cmd+k
+          solo monta un listener ligero; al disparar el atajo carga el
+          dialog real. Vive fuera de <main> para que se monte una sola
+          vez por sesión. */}
+      <CommandPaletteBoundary />
     </div>
   );
 }

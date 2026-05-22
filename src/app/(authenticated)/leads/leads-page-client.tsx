@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { Plus, Users } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,14 +17,42 @@ import type { PipelineStage } from "@/lib/api/hooks/use-pipelines";
 import { LeadsFiltersSidebar } from "@/components/leads/leads-filters-sidebar";
 import { LeadsPagination } from "@/components/leads/leads-pagination";
 import { LeadsTable } from "@/components/leads/leads-table";
-import { LeadsTimelineView } from "@/components/leads/leads-timeline-view";
 import {
   LeadsViewToggle,
   type LeadsView,
 } from "@/components/leads/leads-view-toggle";
-import { BulkActionBar } from "@/components/leads/bulk-action-bar";
 import { CreateLeadSheet } from "@/components/leads/create-lead-sheet";
 import { LeadDetailSheet } from "@/components/leads/lead-detail-sheet";
+
+// reason: `LeadsTimelineView` solo se monta cuando `?view=timeline`. Se
+// dynamic-import-ea para sacar `date-fns` + `@tanstack/react-virtual` del
+// First Load JS de `/leads`. `ssr: false` porque la vista usa
+// `useVirtualizer` que toca `window`.
+const LeadsTimelineView = dynamic(
+  () =>
+    import("@/components/leads/leads-timeline-view").then((m) => ({
+      default: m.LeadsTimelineView,
+    })),
+  {
+    ssr: false,
+    loading: () => <TableSkeleton rows={8} cols={1} />,
+  },
+);
+
+// reason: `BulkActionBar` solo aparece si hay leads seleccionados. El
+// dynamic import elimina del shell de `/leads` los Radix Dialog/Popover/Select
+// que arrastra (~10-15 kB). Sin `ssr: false` porque el cliente puede
+// hydratar con `selectedIds` ya poblado tras navegar atrás.
+const BulkActionBar = dynamic(
+  () =>
+    import("@/components/leads/bulk-action-bar").then((m) => ({
+      default: m.BulkActionBar,
+    })),
+  {
+    // Sin loading: la barra es invisible mientras no hay selección.
+    loading: () => null,
+  },
+);
 
 function parseView(raw: string | null): LeadsView {
   return raw === "timeline" ? "timeline" : "table";
@@ -158,6 +187,11 @@ export function LeadsPageClient({ detailLeadId }: LeadsPageClientProps) {
   const clearSelectionOnUnmount = useLeadsUiStore((s) => s.clearSelection);
   useEffect(() => () => clearSelectionOnUnmount(), [clearSelectionOnUnmount]);
 
+  // reason: gate del dynamic import de `BulkActionBar`. Si no hay selección,
+  // ni siquiera descargamos el chunk; al primer click el chunk se trae
+  // mientras el `loading: () => null` mantiene la UI estable.
+  const hasSelection = useLeadsUiStore((s) => s.selectedIds.size > 0);
+
   return (
     <div className="-m-4 flex flex-1 md:-m-8">
       <LeadsFiltersSidebar
@@ -284,8 +318,10 @@ export function LeadsPageClient({ detailLeadId }: LeadsPageClientProps) {
 
       {detailLeadId ? <LeadDetailSheet leadId={detailLeadId} /> : null}
 
-      {/* Barra flotante bulk — solo aparece si hay leads seleccionados. */}
-      <BulkActionBar visibleLeadIds={visibleLeadIds} />
+      {/* Barra flotante bulk — solo se monta (y solo se descarga su chunk)
+          si hay leads seleccionados. Esto evita cargar Radix Dialog/Popover/
+          Select hasta que el usuario interactúe con la selección. */}
+      {hasSelection ? <BulkActionBar visibleLeadIds={visibleLeadIds} /> : null}
     </div>
   );
 }
