@@ -33,6 +33,12 @@ export interface ParsedDrop {
   leadId: string;
   fromStageId: string;
   toStageId: string;
+  /**
+   * ID de la card sobre la que se soltó (cuando aplica), para que el caller
+   * pueda calcular `position` con `computeDropPosition`. `null` cuando se
+   * soltó sobre la columna en sí (drop al final).
+   */
+  overCardId: string | null;
 }
 
 export interface DropEventInput {
@@ -69,17 +75,56 @@ export function parseDropEvent(input: DropEventInput): ParsedDrop | null {
   // Si overId es un stage droppable, lo extraemos directamente.
   const stageFromDroppable = parseStageDroppableId(overId);
   let toStageId: string | undefined;
+  let overCardId: string | null = null;
   if (stageFromDroppable) {
     toStageId = stageFromDroppable;
   } else {
     // overId es probablemente otra card → resolver via mapa.
     toStageId = leadStageById.get(overId);
+    overCardId = toStageId ? overId : null;
   }
 
   if (!toStageId) return null;
   if (toStageId === fromStageId) return null;
 
-  return { leadId: activeId, fromStageId, toStageId };
+  return { leadId: activeId, fromStageId, toStageId, overCardId };
+}
+
+/**
+ * Calcula la posición de inserción `position` que el backend espera en
+ * `LeadMove.position` (cleanup wave).
+ *
+ * Convención semántica (espejada del backend):
+ *  - **`null`** → "al final" (`position?: null` en el payload).
+ *  - **`0`** → al principio del stage destino.
+ *  - **`N` (1 ≤ N < len)** → entre la card `N-1` y la card `N`.
+ *
+ * Entradas:
+ *  - `stageCards`: leads del stage destino **excluyendo** el lead arrastrado
+ *    (el caller filtra antes para que el índice corresponda al destino post-
+ *    drop). En orden de presentación (ya respetando `position`).
+ *  - `overCardId`: ID de la card sobre la que se soltó; `null` si se soltó
+ *    en una zona neutra del stage → "al final".
+ *
+ * Devuelve:
+ *  - `null` si `overCardId` es `null` o no se encontró la card → backend
+ *    lo trata como "al final".
+ *  - Un entero `[0, len(stageCards)]` en otro caso.
+ *
+ * Notas:
+ *  - El backend reordena el resto del stage automáticamente cuando recibe
+ *    una `position` explícita; no necesitamos generar el resto del array.
+ *  - Si el caller no provee `overCardId` (drop al final), devolvemos `null`
+ *    → cualquier valor previo de position se sobrescribe en backend.
+ */
+export function computeDropPosition(
+  stageCards: ReadonlyArray<{ id: string }>,
+  overCardId: string | null,
+): number | null {
+  if (!overCardId) return null;
+  const idx = stageCards.findIndex((c) => c.id === overCardId);
+  if (idx < 0) return null;
+  return idx;
 }
 
 // ── Optimistic helpers ──────────────────────────────────────────────────────

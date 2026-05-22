@@ -38,6 +38,7 @@ import { usePipelines, usePipelineStages } from "@/lib/api/hooks/use-pipelines";
 import { LeadPageSchema } from "@/lib/api/zod-schemas";
 import {
   applyOptimisticMoveToPage,
+  computeDropPosition,
   parseDropEvent,
 } from "@/lib/kanban/dnd-helpers";
 import { KanbanCard } from "./kanban-card";
@@ -58,13 +59,15 @@ import { KanbanSkeleton } from "./kanban-skeleton";
  *    las páginas de DOS columnas a la vez (origen + destino), por eso la
  *    mutación se hace inline (no usamos `useMoveLead`).
  *
- * Deuda anotada:
- *  - `position` explícito al backend: no lo enviamos en MVP. Backend
- *    decide el orden dentro del stage. Cuando exponga "position dentro de
- *    stage", añadir.
- *  - `entry_criteria` de stages: no existe en OpenAPI snapshot. Cuando
- *    exista, validar en `handleDragEnd` antes del optimistic y mostrar
- *    toast warning si no se cumple.
+ * Cleanup wave:
+ *  - **`position` explícito** en el payload `LeadMove`: lo calculamos con
+ *    `computeDropPosition` a partir del índice del drop. `null` = al final.
+ *  - **`entry_criteria` por stage**: si el stage destino define criterios,
+ *    los enseñamos en un toast warning antes del optimistic. El drop sigue
+ *    adelante porque la evaluación real del DSL (cuándo se cumplen) la
+ *    hará Sprint 3 (motor de auto-stage); aquí solo informamos.
+ *
+ * Deuda anotada (no es bug del cleanup):
  *  - Una query por columna multiplica round-trips. Alternativa: una sola
  *    `useLeads({ pipeline_id })` con limit alto + groupBy cliente. Decidir
  *    cuando midamos en staging.
@@ -166,7 +169,37 @@ export function PipelinePageClient() {
       });
       if (!parsed) return;
 
-      const { leadId, fromStageId, toStageId } = parsed;
+      const { leadId, fromStageId, toStageId, overCardId } = parsed;
+
+      // Calcular position desde el índice de drop (cleanup wave).
+      // Filtramos el lead arrastrado del array destino para que el índice
+      // post-drop sea consistente con el resto del stage.
+      const destinationStageIdx = stages.findIndex((s) => s.id === toStageId);
+      const destinationCards =
+        columnQueries[destinationStageIdx]?.data?.items.filter(
+          (l) => l.id !== leadId,
+        ) ?? [];
+      const position = computeDropPosition(destinationCards, overCardId);
+
+      // Entry criteria warning — si el stage destino los declara, mostramos
+      // un toast informativo. NO bloqueamos el drop (la validación real
+      // pertenece al motor de auto-stage del backend Sprint 3).
+      const targetStage = stages.find((s) => s.id === toStageId);
+      const criteria = targetStage?.entry_criteria;
+      if (
+        targetStage &&
+        Array.isArray(criteria) &&
+        criteria.length > 0
+      ) {
+        toast.warning(
+          `La etapa "${targetStage.name}" tiene criterios de entrada`,
+          {
+            description:
+              "Revisa que el lead los cumpla. La validación automática llega en Sprint 3.",
+            duration: 4000,
+          },
+        );
+      }
 
       // Snapshot de todas las páginas afectadas (lista global + por stage).
       const pageQueries = queryClient.getQueriesData<LeadPage>({
@@ -219,7 +252,12 @@ export function PipelinePageClient() {
       try {
         await apiPost<Lead>(
           `/v1/leads/{lead_id}/move`,
-          { stage_id: toStageId },
+          // reason: `position` opcional — `null` o ausencia significan
+          // "al final" en el backend. Lo enviamos solo cuando computeDropPosition
+          // devolvió un índice válido (drop entre dos cards o al principio).
+          position !== null
+            ? { stage_id: toStageId, position }
+            : { stage_id: toStageId },
           {
             getToken,
             tenantId,
@@ -250,7 +288,15 @@ export function PipelinePageClient() {
         });
       }
     },
-    [getToken, leadStageById, pipelineId, queryClient, tenantId],
+    [
+      columnQueries,
+      getToken,
+      leadStageById,
+      pipelineId,
+      queryClient,
+      stages,
+      tenantId,
+    ],
   );
 
   // ── UI ────────────────────────────────────────────────────────────────────

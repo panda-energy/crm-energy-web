@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyOptimisticMoveToPage,
+  computeDropPosition,
   groupLeadsByStage,
   makeStageDroppableId,
   parseDropEvent,
@@ -53,7 +54,7 @@ describe("parseDropEvent", () => {
     ["lead-c", "stage-qualified"],
   ]);
 
-  it("drop sobre una columna distinta → transición válida", () => {
+  it("drop sobre una columna distinta → transición válida sin overCardId", () => {
     const result = parseDropEvent({
       activeId: "lead-a",
       overId: makeStageDroppableId("stage-contacted"),
@@ -63,10 +64,11 @@ describe("parseDropEvent", () => {
       leadId: "lead-a",
       fromStageId: "stage-new",
       toStageId: "stage-contacted",
+      overCardId: null,
     });
   });
 
-  it("drop sobre otra card → resuelve stage desde el mapa", () => {
+  it("drop sobre otra card → resuelve stage y propaga overCardId", () => {
     const result = parseDropEvent({
       activeId: "lead-a",
       overId: "lead-c",
@@ -76,6 +78,7 @@ describe("parseDropEvent", () => {
       leadId: "lead-a",
       fromStageId: "stage-new",
       toStageId: "stage-qualified",
+      overCardId: "lead-c",
     });
   });
 
@@ -159,6 +162,39 @@ describe("applyOptimisticMoveToPage", () => {
       "stage-qualified",
     );
     expect(next.items[0]!.status).toBe("new");
+  });
+});
+
+describe("computeDropPosition", () => {
+  const stageCards = [
+    { id: "a" },
+    { id: "b" },
+    { id: "c" },
+    { id: "d" },
+  ];
+
+  it("drop al final → null", () => {
+    expect(computeDropPosition(stageCards, null)).toBeNull();
+  });
+
+  it("drop sobre la primera card → 0 (al principio)", () => {
+    expect(computeDropPosition(stageCards, "a")).toBe(0);
+  });
+
+  it("drop entre cards → índice de la card destino", () => {
+    expect(computeDropPosition(stageCards, "c")).toBe(2);
+  });
+
+  it("drop sobre la última card → len - 1", () => {
+    expect(computeDropPosition(stageCards, "d")).toBe(3);
+  });
+
+  it("columna vacía → null", () => {
+    expect(computeDropPosition([], "anything")).toBeNull();
+  });
+
+  it("overCardId no encontrado → null (degrada a 'al final')", () => {
+    expect(computeDropPosition(stageCards, "zzz")).toBeNull();
   });
 });
 
