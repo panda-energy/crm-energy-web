@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { components } from "@/lib/api/types";
+import { PHONE_E164_PATTERN } from "@/lib/api/zod-schemas";
 import { LEAD_SOURCE_ORDER } from "./format";
 
 /**
@@ -27,8 +28,15 @@ type LeadCreateBody = components["schemas"]["LeadCreate"];
  * forma que espera el backend (`LeadCreate`).
  */
 
-/** Regex teléfono: opcional empty, o `+` seguido de 8-15 dígitos. */
-const PHONE_REGEX = /^(\+\d{8,15})?$/;
+/**
+ * Regex teléfono: opcional empty (form flexible — el campo no es
+ * obligatorio en CREATE) **o** E.164 estricto compartido con
+ * `phoneE164Schema` del boundary layer. Cuando el user introduce algo,
+ * forzamos formato correcto; si lo deja en blanco, omitimos.
+ */
+const PHONE_REGEX = new RegExp(
+  `^(?:|${PHONE_E164_PATTERN.source})$`,
+);
 
 /**
  * UUID "laxo" (8-4-4-4-12 hex), sin enforce de la versión RFC 4122. El
@@ -57,7 +65,8 @@ export const CreateLeadFormSchema = z
       .string()
       .trim()
       .refine((v) => PHONE_REGEX.test(v), {
-        message: "Debe empezar por + y tener 8 a 15 dígitos.",
+        message:
+          "Formato E.164: + seguido del prefijo internacional (ej. +34612345678).",
       }),
     source: z.enum(LEAD_SOURCE_ORDER as readonly [string, ...string[]]),
     pipeline_id: z
