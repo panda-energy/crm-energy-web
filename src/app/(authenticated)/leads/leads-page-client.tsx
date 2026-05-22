@@ -3,7 +3,7 @@
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { Plus, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TableSkeleton } from "@/components/skeletons/table-skeleton";
@@ -16,9 +16,18 @@ import type { PipelineStage } from "@/lib/api/hooks/use-pipelines";
 import { LeadsFiltersSidebar } from "@/components/leads/leads-filters-sidebar";
 import { LeadsPagination } from "@/components/leads/leads-pagination";
 import { LeadsTable } from "@/components/leads/leads-table";
+import { LeadsTimelineView } from "@/components/leads/leads-timeline-view";
+import {
+  LeadsViewToggle,
+  type LeadsView,
+} from "@/components/leads/leads-view-toggle";
 import { BulkActionBar } from "@/components/leads/bulk-action-bar";
 import { CreateLeadSheet } from "@/components/leads/create-lead-sheet";
 import { LeadDetailSheet } from "@/components/leads/lead-detail-sheet";
+
+function parseView(raw: string | null): LeadsView {
+  return raw === "timeline" ? "timeline" : "table";
+}
 
 /**
  * Cliente principal de la página `/leads` (F-2.1).
@@ -61,6 +70,24 @@ export function LeadsPageClient({ detailLeadId }: LeadsPageClientProps) {
       });
     }
   }, [searchParams, router]);
+
+  // F-2.3: toggle Tabla | Timeline. Estado en URL (`?view=table|timeline`)
+  // para que el deep-link comparta el contexto. La tabla es el default
+  // (omite el parámetro). El Kanban sigue siendo `/pipeline` — separado.
+  const view = parseView(searchParams.get("view"));
+  const setView = useCallback(
+    (next: LeadsView) => {
+      const sp = new URLSearchParams(searchParams.toString());
+      if (next === "timeline") {
+        sp.set("view", "timeline");
+      } else {
+        sp.delete("view");
+      }
+      const qs = sp.toString();
+      router.replace(`/leads${qs ? `?${qs}` : ""}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
 
   const queryClient = useQueryClient();
 
@@ -153,14 +180,27 @@ export function LeadsPageClient({ detailLeadId }: LeadsPageClientProps) {
                 : `${total.toLocaleString("es-ES")} ${total === 1 ? "lead" : "leads"} ${hasActiveFilters ? "filtrados" : "totales"}`}
             </p>
           </div>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" aria-hidden />
-            Crear lead
-          </Button>
+          <div className="flex items-center gap-2">
+            <LeadsViewToggle value={view} onChange={setView} />
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="size-4" aria-hidden />
+              Crear lead
+            </Button>
+          </div>
         </header>
 
         {isFirstLoad ? (
-          <TableSkeleton rows={8} cols={8} />
+          view === "timeline" ? (
+            <LeadsTimelineView
+              data={[]}
+              isLoading
+              hasActiveFilters={hasActiveFilters}
+              onCreateLead={() => setCreateOpen(true)}
+              onClearFilters={clearFilters}
+            />
+          ) : (
+            <TableSkeleton rows={8} cols={8} />
+          )
         ) : leadsQuery.isError ? (
           <EmptyState
             icon={<Users />}
@@ -173,6 +213,26 @@ export function LeadsPageClient({ detailLeadId }: LeadsPageClientProps) {
               <Button onClick={() => leadsQuery.refetch()}>Reintentar</Button>
             }
           />
+        ) : view === "timeline" ? (
+          <div className="flex flex-1 flex-col gap-4">
+            <LeadsTimelineView
+              data={items}
+              hasActiveFilters={hasActiveFilters}
+              onCreateLead={() => setCreateOpen(true)}
+              onClearFilters={clearFilters}
+              isRefetching={leadsQuery.isFetching && !leadsQuery.isLoading}
+            />
+            {/* La paginación sigue aplicando: el Timeline muestra la página
+                actual del query. El user pasa de página manteniendo la vista. */}
+            {total > 0 ? (
+              <LeadsPagination
+                total={total}
+                limit={limit}
+                offset={offset}
+                onChange={updateFilters}
+              />
+            ) : null}
+          </div>
         ) : total === 0 && hasActiveFilters ? (
           <EmptyState
             icon={<Users />}
