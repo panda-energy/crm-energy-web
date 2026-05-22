@@ -98,8 +98,14 @@ export const UserRoleSchema = z.enum(["admin", "sales", "agent", "viewer"]);
 /** date-time ISO con offset (`2026-05-21T09:30:00+00:00` o `…Z`). */
 const dateTime = () => z.string().datetime({ offset: true });
 
-/** UUID v4 (el backend siempre los emite). */
-const uuid = () => z.string().uuid();
+/**
+ * UUID en formato canónico 8-4-4-4-12 (hex). Permisivo entre versiones —
+ * acepta v1, v4, v5 y "nil"-style. Los fixtures MSW usan UUIDs determinísticos
+ * (`33333333-3333-3333-3333-333333333333`) que NO son v4 estrictos pero sí
+ * son sintácticamente UUIDs válidos. El backend real emite v4; ambos pasan.
+ */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uuid = () => z.string().regex(UUID_RE, { message: "Invalid UUID" });
 
 /** Campo "anyOf: [T, null]" del backend (Pydantic v2 con Optional). */
 const nullable = <T extends z.ZodTypeAny>(schema: T) =>
