@@ -15,6 +15,7 @@ import { SidebarNav } from "./sidebar";
 import { Breadcrumbs } from "./breadcrumbs";
 import { ThemeToggle } from "./theme-toggle";
 import { CommandPaletteTrigger } from "@/components/command-palette/command-palette-trigger";
+import { AiChatTrigger } from "@/components/ai-chat/ai-chat-trigger";
 import { LiveIndicator } from "./live-indicator";
 
 const isClerkConfigured = Boolean(
@@ -66,6 +67,7 @@ export function Topbar() {
 
       <div className="ml-auto flex items-center gap-2">
         <LiveIndicator />
+        <AiChatTrigger />
         <CommandPaletteTrigger />
         {isClerkConfigured ? (
           <OrganizationSwitcher

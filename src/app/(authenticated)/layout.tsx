@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { SkipLink } from "@/components/layout/skip-link";
 import { CommandPaletteBoundary } from "@/components/command-palette/command-palette-boundary";
+import { AiChatBoundary } from "@/components/ai-chat/ai-chat-boundary";
 
 const isClerkConfigured = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
@@ -53,6 +54,9 @@ export default async function AuthenticatedLayout({
           dialog real. Vive fuera de <main> para que se monte una sola
           vez por sesión. */}
       <CommandPaletteBoundary />
+      {/* AI Chat panel global con boundary lazy: hasta el primer Cmd+J
+          o click en trigger del topbar, solo monta un listener ligero. */}
+      <AiChatBoundary />
     </div>
   );
 }
