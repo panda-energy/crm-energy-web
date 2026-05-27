@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { PortalTopbar } from "@/components/portal/portal-topbar";
+import { DemoBanner } from "@/components/layout/demo-banner";
 
 /**
  * Layout del Portal Cliente.
@@ -18,6 +19,7 @@ export default function PortalLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <DemoBanner />
       <PortalTopbar />
       <main
         id="main-content"
