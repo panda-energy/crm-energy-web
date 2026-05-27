@@ -10,6 +10,7 @@ import { useProducts, type Product } from "@/lib/api/hooks/use-products";
 import { useCalculateQuote, type QuoteCalculateResponse } from "@/lib/api/hooks/use-quotes";
 import { ProductCard } from "./product-card";
 import { QuoteSummary } from "./quote-summary";
+import { AiSuggestion } from "@/components/ai-chat/ai-suggestion";
 
 /**
  * Product selector with quote simulation (F-3.4).
@@ -178,6 +179,15 @@ export function ProductSelector({
           </div>
         </div>
       )}
+
+      {/* AI suggestion for power */}
+      <AiSuggestion
+        suggestion="5.75 kW"
+        explanation="Potencia optima recomendada: 5.75 kW basado en consumo SIPS"
+        onApply={() => {
+          // In production, this would set the power field value
+        }}
+      />
 
       {/* Product cards */}
       <div

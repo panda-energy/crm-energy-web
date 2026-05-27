@@ -52,6 +52,7 @@ import {
   LEAD_SOURCE_ORDER,
 } from "@/lib/leads/format";
 import { TagsInput } from "./tags-input";
+import { AiSuggestion } from "@/components/ai-chat/ai-suggestion";
 
 /**
  * Sheet lateral para crear un Lead (F-2.10).
@@ -359,6 +360,13 @@ export function CreateLeadSheet({
                   placeholder="cliente@ejemplo.com"
                 />
               </FormField>
+
+              {/* AI warning suggestion -- contextual */}
+              <AiSuggestion
+                suggestion=""
+                explanation="Este CUPS ya tiene un contrato activo con competencia"
+                isWarning
+              />
 
               <FormField
                 label="Teléfono"
