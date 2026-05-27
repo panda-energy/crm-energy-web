@@ -13,6 +13,8 @@ import { ChatInput } from "./chat-input";
 import { StreamingMessage } from "./streaming-message";
 import { ThinkingIndicator } from "./thinking-indicator";
 import { MarkdownContent } from "./markdown-content";
+import { ToolCallCard } from "./tool-call-card";
+import type { ChatMessage } from "@/lib/api/types-sprint5";
 
 /**
  * AiChatPanel -- global side drawer for conversational AI.
@@ -137,19 +139,25 @@ export function AiChatPanel() {
   }, []);
 
   const renderMessageContent = useCallback(
-    (msg: { id: string; role: string; content: string }) => {
+    (msg: ChatMessage) => {
       if (msg.role === "assistant") {
         const shouldAnimate = msg.id === streamingMsgId;
-        if (shouldAnimate) {
-          return (
-            <StreamingMessage
-              content={msg.content}
-              animate
-              onComplete={() => setStreamingMsgId(null)}
-            />
-          );
-        }
-        return <MarkdownContent content={msg.content} />;
+        return (
+          <>
+            {shouldAnimate ? (
+              <StreamingMessage
+                content={msg.content}
+                animate
+                onComplete={() => setStreamingMsgId(null)}
+              />
+            ) : (
+              <MarkdownContent content={msg.content} />
+            )}
+            {msg.tool_calls?.map((tc) => (
+              <ToolCallCard key={tc.id} toolCall={tc} className="mt-2" />
+            ))}
+          </>
+        );
       }
       return msg.content;
     },
