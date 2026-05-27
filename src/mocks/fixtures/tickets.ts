@@ -30,7 +30,8 @@ const LEAD_IDS = {
 } as const;
 
 // SLA deadlines: some in the past (breached), some in future
-const now = "2026-05-27T12:00:00.000Z";
+// reason: reference timestamp for SLA deadline calculations
+const _now = "2026-05-27T12:00:00.000Z";
 const past = "2026-05-26T08:00:00.000Z";
 const future = "2026-05-28T18:00:00.000Z";
 const farFuture = "2026-05-30T12:00:00.000Z";

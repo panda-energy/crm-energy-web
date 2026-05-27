@@ -20,7 +20,6 @@ import {
   useContracts,
   contractsQueryKeys,
   useCancelContract,
-  useSignContract,
 } from "@/lib/api/hooks/use-contracts";
 import { toast } from "@/lib/ui/toast";
 import { ContractsTable } from "./contracts-table";

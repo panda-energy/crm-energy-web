@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { RefreshCw } from "lucide-react";
 import type { AtrMessage } from "@/lib/api/types-sprint4";
 import { useRetryAtrMessage, useAtrMessageXml } from "@/lib/api/hooks/use-atr";

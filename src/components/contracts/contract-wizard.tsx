@@ -15,7 +15,6 @@ import { useCups, type Cups } from "@/lib/api/hooks/use-cups";
 import type { Product } from "@/lib/api/hooks/use-products";
 import { useCreateContract } from "@/lib/api/hooks/use-contracts";
 import type { QuoteCalculateResponse } from "@/lib/api/hooks/use-quotes";
-import { ContractCreateSchema } from "@/lib/api/zod-schemas";
 import { toast } from "@/lib/ui/toast";
 import { ProductSelector } from "./product-selector";
 import { WizardSteps } from "./wizard-step";

@@ -26,7 +26,7 @@ function formatDate(iso: string): string {
 export function ChatMessage({ message }: ChatMessageProps) {
   const isAgent = message.sender_type === "agent";
   const isSystem = message.sender_type === "system";
-  const isCustomer = message.sender_type === "customer";
+  const _isCustomer = message.sender_type === "customer";
 
   if (isSystem) {
     return (

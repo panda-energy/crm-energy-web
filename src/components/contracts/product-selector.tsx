@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Package } from "lucide-react";
+import { Package } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";

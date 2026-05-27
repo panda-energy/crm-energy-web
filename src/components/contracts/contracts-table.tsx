@@ -6,7 +6,7 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import { Download, FileText, MoreHorizontal, Send, XCircle } from "lucide-react";
+import { Download, Send, XCircle } from "lucide-react";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {

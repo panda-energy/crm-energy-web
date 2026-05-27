@@ -9,7 +9,6 @@ import type { Ticket } from "@/lib/api/types-sprint4";
 import {
   useTicketMessages,
   useSendTicketMessage,
-  useCloseTicket,
 } from "@/lib/api/hooks/use-tickets";
 import { TicketConversationHeader } from "./ticket-conversation-header";
 import { ChatMessage, ChatDateSeparator } from "./chat-message";

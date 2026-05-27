@@ -474,7 +474,8 @@ const signContractHandler = http.post(
   async ({ params, request }) => {
     const idx = contractsStore.findIndex((c) => c.id === params.contractId);
     if (idx < 0) return problemResponse(404, "Contrato no encontrado");
-    const body = (await request.json()) as ContractSignRequest;
+    // reason: body consumed to validate request shape, values not used in mock
+    const _body = (await request.json()) as ContractSignRequest;
     const contract = contractsStore[idx]!;
     const now = new Date().toISOString();
     const signatureRequestId = crypto.randomUUID();

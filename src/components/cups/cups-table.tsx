@@ -15,7 +15,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { Cups } from "@/lib/api/hooks/use-cups";
-import { toast } from "@/lib/ui/toast";
 import { cn } from "@/lib/utils/cn";
 import { CupsStatusBadge } from "./cups-status-badge";
 

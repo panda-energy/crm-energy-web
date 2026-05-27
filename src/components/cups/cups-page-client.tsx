@@ -8,7 +8,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { TableSkeleton } from "@/components/skeletons/table-skeleton";
 import { useCups, cupsQueryKeys, type Cups } from "@/lib/api/hooks/use-cups";
-import { useSips } from "@/lib/api/hooks/use-cups";
 import { toast } from "@/lib/ui/toast";
 import { CupsTable } from "./cups-table";
 import { CreateCupsDialog } from "./create-cups-dialog";
