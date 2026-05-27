@@ -718,6 +718,9 @@ const listStagesHandler = http.get(
   },
 );
 
+// Sprint 3 handlers (CUPS, Products, Contracts, Quotes, OCR)
+import { sprint3Handlers } from "./handlers-sprint3";
+
 export const handlers = [
   // Auth
   getMeHandler,
@@ -738,4 +741,6 @@ export const handlers = [
   listPipelinesHandler,
   getPipelineHandler,
   listStagesHandler,
+  // Sprint 3
+  ...sprint3Handlers,
 ];
