@@ -720,6 +720,8 @@ const listStagesHandler = http.get(
 
 // Sprint 3 handlers (CUPS, Products, Contracts, Quotes, OCR)
 import { sprint3Handlers } from "./handlers-sprint3";
+// Sprint 4 handlers (ATR messages, Tickets)
+import { sprint4Handlers } from "./handlers-sprint4";
 
 export const handlers = [
   // Auth
@@ -743,4 +745,6 @@ export const handlers = [
   listStagesHandler,
   // Sprint 3
   ...sprint3Handlers,
+  // Sprint 4
+  ...sprint4Handlers,
 ];
