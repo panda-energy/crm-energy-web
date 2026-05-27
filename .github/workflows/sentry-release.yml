@@ -1,0 +1,35 @@
+# Sentry Release -- crm-energy-web
+#
+# D-3.1: Create Sentry release and associate commits on deploy.
+# Source maps are uploaded by @sentry/nextjs during Vercel build
+# (configured via SENTRY_AUTH_TOKEN env var in Vercel).
+# This workflow creates the release object and links commits.
+#
+# Requires SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT in repo secrets.
+
+name: sentry-release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    name: sentry/release
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Sentry release
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: production
+          version: ${{ github.sha }}

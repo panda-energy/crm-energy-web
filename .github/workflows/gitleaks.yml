@@ -1,0 +1,26 @@
+# Gitleaks -- secret scanning
+#
+# D-2.7: Pre-commit hooks with gitleaks in all repos
+# Runs on every PR and push. Weekly full-history scan on Mondays.
+
+name: gitleaks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  scan:
+    name: gitleaks/scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
