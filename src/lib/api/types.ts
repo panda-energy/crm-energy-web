@@ -64,6 +64,185 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/contracts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List contracts
+         * @description Return the tenant's contracts, newest first.
+         */
+        get: operations["list_contracts_v1_contracts_get"];
+        put?: never;
+        /**
+         * Create a contract (draft)
+         * @description Create a draft contract linking one lead + one CUPS + one product. The contract `number` is auto-generated per tenant + year. The contract is created in `draft`; transition to `signed` via the `/sign` endpoint added in B-3.6.
+         */
+        post: operations["create_contract_v1_contracts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/contracts/{contract_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get contract by ID */
+        get: operations["get_contract_v1_contracts__contract_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update contract metadata
+         * @description Partial update of customer / billing fields. Status changes are **not** allowed here; use the dedicated transition endpoints.
+         */
+        patch: operations["update_contract_v1_contracts__contract_id__patch"];
+        trace?: never;
+    };
+    "/v1/contracts/{contract_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a contract
+         * @description Cancel a contract regardless of its current state (except already cancelled). Stores an optional `reason` for the audit trail.
+         */
+        post: operations["cancel_contract_v1_contracts__contract_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/contracts/{contract_id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the contract PDF
+         * @description Returns the persisted contract PDF. Renders the PDF on the fly when the contract has not been rendered yet (still in draft) and no PDF is on file. Returns 404 when the contract does not exist; 503 when storage cannot be read.
+         */
+        get: operations["download_contract_pdf_v1_contracts__contract_id__pdf_get"];
+        put?: never;
+        /**
+         * Render and store the contract PDF
+         * @description Renders the contract PDF from the in-house HTML/CSS template via weasyprint and stores it through the configured Storage backend (Cloudflare R2 in production, local filesystem in dev/tests). The contract row is updated with the storage pointer, SHA-256 digest and timestamp. Available while the contract is still in `draft` or `rejected` — once signed, the PDF on file is the legal artifact and must not be regenerated.
+         */
+        post: operations["render_contract_pdf_endpoint_v1_contracts__contract_id__pdf_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/contracts/{contract_id}/sign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send the contract for e-signature
+         * @description Pushes the contract PDF to the configured e-signature provider (Signaturit in Sprint 3) and stores a `signature_requests` audit row. The contract stays in `draft` until the webhook (`B-3.7`) delivers the `completed` event, at which point it transitions to `signed`.
+         *
+         *     The `Idempotency-Key` header is required: a retry with the same key + body returns the original 202 envelope; a retry with a different body returns 409. Returns 503 when Signaturit credentials are not provisioned.
+         */
+        post: operations["sign_contract_v1_contracts__contract_id__sign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/cups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List CUPS
+         * @description Return CUPS rows scoped to the caller's tenant, newest first.
+         */
+        get: operations["list_cups_v1_cups_get"];
+        put?: never;
+        /**
+         * Register a CUPS
+         * @description Create a CUPS row inside the caller's tenant. The `code` must match the ES 20/22 or PT 20 format; invalid codes return 422. Re-using the same code inside the tenant returns 409 (the row already exists).
+         */
+        post: operations["create_cups_v1_cups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/cups/{code}/sips": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch SIPS data for a CUPS
+         * @description Returns the SIPS (regulator) snapshot for the given CUPS literal. The CUPS must already be registered inside the tenant. Results are cached locally on the row for 7 days (configurable via `SIPS_CACHE_TTL_DAYS`); pass `?refresh=true` to bypass the cache.
+         *
+         *     Returns 503 when the SIPS provider is enabled but credentials are not configured. Returns 422 when the path parameter is not a valid CUPS, 404 when the CUPS does not exist or the upstream has no record, and 502 on upstream transport errors.
+         */
+        get: operations["get_sips_v1_cups__code__sips_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/cups/{cups_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get CUPS by ID */
+        get: operations["get_cups_v1_cups__cups_id__get"];
+        put?: never;
+        post?: never;
+        /** Soft-delete a CUPS */
+        delete: operations["delete_cups_v1_cups__cups_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a CUPS
+         * @description Partial update; omitted fields stay unchanged.
+         */
+        patch: operations["update_cups_v1_cups__cups_id__patch"];
+        trace?: never;
+    };
     "/v1/leads": {
         parameters: {
             query?: never;
@@ -145,6 +324,28 @@ export interface paths {
          * @description Adds a manually-logged activity (note/call/email). System activities (stage_changed, status_changed, whatsapp_*…) are created by the API itself.
          */
         post: operations["create_activity_v1_leads__lead_id__activities_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/leads/{lead_id}/invoices/ocr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extract structured fields from a lead's invoice PDF
+         * @description Accepts a multipart PDF upload, routes it through the ModelRouter (Anthropic Claude in production, mock in tests) and returns the extracted CUPS / consumption / power / tariff / supplier so the frontend can pre-fill the savings calculator and the CUPS form.
+         *
+         *     Requires `Idempotency-Key` (the hash includes the PDF bytes so a retry with the same file + key returns the cached extraction). Returns 503 when Anthropic credentials are not configured.
+         */
+        post: operations["extract_invoice_pdf_v1_leads__lead_id__invoices_ocr_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -271,6 +472,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List products
+         * @description Returns the tenant's tariff catalog, newest first.
+         */
+        get: operations["list_products_v1_products_get"];
+        put?: never;
+        /**
+         * Create a product (tariff)
+         * @description Add a new tariff to the catalog. `pricing` is validated against `tariff_kind`: `fixed` / `multi_period` require a non-empty `periods` array; `indexed_omie` requires `margin_eur_per_kwh`. Mismatched bodies return 422. Code uniqueness is per tenant.
+         */
+        post: operations["create_product_v1_products_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/products/{product_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get product by ID */
+        get: operations["get_product_v1_products__product_id__get"];
+        put?: never;
+        post?: never;
+        /** Soft-delete a product */
+        delete: operations["delete_product_v1_products__product_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update product
+         * @description Partial update; omitted fields stay unchanged.
+         */
+        patch: operations["update_product_v1_products__product_id__patch"];
+        trace?: never;
+    };
+    "/v1/quotes/calculate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Estimate 12-month savings
+         * @description Calculates 12-month savings of moving a CUPS from the supplied baseline (current bill) to either an explicit `rate` or to one of the tenant's products (collapsed to a single average per period). Requires `Idempotency-Key`; replays return the cached envelope.
+         *
+         *     Returns 422 when neither `rate` nor a resolvable `product_id` is given; 404 when the `product_id` is unknown in the tenant.
+         */
+        post: operations["calculate_quote_v1_quotes_calculate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/users": {
         parameters: {
             query?: never;
@@ -305,6 +574,26 @@ export interface paths {
          * @description Receives organization / user / membership lifecycle events from Clerk and keeps the internal `tenants` and `users` tables in sync. Signature is verified with svix; the request body must be the raw bytes Clerk signed. Returns 204 No Content on success, 400 on missing/invalid signature, 503 when the webhook secret is not configured on the server.
          */
         post: operations["clerk_webhook_webhooks_clerk_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/signaturit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Signaturit webhook
+         * @description Signaturit posts signature lifecycle events here. Body is HMAC-SHA1 signed with `SIGNATURIT_WEBHOOK_SECRET`; mismatched or missing signatures return 401. Unknown signature ids return 204 (idempotent — the provider retries). Configured-but-completed events advance the linked contract to `signed` and stamp `signed_at`.
+         */
+        post: operations["signaturit_webhook_webhooks_signaturit_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -362,6 +651,15 @@ export interface components {
          * @enum {string}
          */
         ActivityType: "note" | "call" | "email" | "whatsapp_inbound" | "whatsapp_outbound" | "stage_changed" | "owner_changed" | "status_changed" | "lead_created" | "restored" | "bulk_action" | "system";
+        /** Body_extract_invoice_pdf_v1_leads__lead_id__invoices_ocr_post */
+        Body_extract_invoice_pdf_v1_leads__lead_id__invoices_ocr_post: {
+            /**
+             * File
+             * Format: binary
+             * @description PDF invoice (max 8 MiB).
+             */
+            file: string;
+        };
         /** BulkActionActivityOut */
         BulkActionActivityOut: {
             /** Actor User Id */
@@ -492,6 +790,370 @@ export interface components {
              */
             status: "ok" | "degraded" | "down" | "skipped";
         };
+        /**
+         * ContractCancel
+         * @description Payload for ``POST /v1/contracts/{id}/cancel``.
+         */
+        ContractCancel: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /**
+         * ContractCreate
+         * @description Payload for ``POST /v1/contracts``.
+         */
+        ContractCreate: {
+            /** Billing Address */
+            billing_address?: string | null;
+            /**
+             * Cups Id
+             * Format: uuid
+             */
+            cups_id: string;
+            /**
+             * Currency
+             * @default EUR
+             */
+            currency: string;
+            /** Customer Email */
+            customer_email?: string | null;
+            /** Customer Name */
+            customer_name: string;
+            /** Customer Phone E164 */
+            customer_phone_e164?: string | null;
+            /** Customer Tax Id */
+            customer_tax_id: string;
+            /** Extra */
+            extra?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /** Start Date */
+            start_date?: string | null;
+            /**
+             * Term Months
+             * @default 12
+             */
+            term_months: number;
+        };
+        /**
+         * ContractOut
+         * @description Single-contract response.
+         */
+        ContractOut: {
+            /** Activated At */
+            activated_at: string | null;
+            /** Billing Address */
+            billing_address: string | null;
+            /** Cancelled At */
+            cancelled_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Cups Id
+             * Format: uuid
+             */
+            cups_id: string;
+            /** Currency */
+            currency: string;
+            /** Customer Email */
+            customer_email: string | null;
+            /** Customer Name */
+            customer_name: string;
+            /** Customer Phone E164 */
+            customer_phone_e164: string | null;
+            /** Customer Tax Id */
+            customer_tax_id: string;
+            /** Extra */
+            extra: {
+                [key: string]: unknown;
+            };
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lead Id
+             * Format: uuid
+             */
+            lead_id: string;
+            /** Number */
+            number: string;
+            /** Pdf Generated At */
+            pdf_generated_at: string | null;
+            /** Pdf Sha256 */
+            pdf_sha256: string | null;
+            /** Pdf Storage Bucket */
+            pdf_storage_bucket: string | null;
+            /** Pdf Storage Key */
+            pdf_storage_key: string | null;
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /** Rejected At */
+            rejected_at: string | null;
+            /** Rejection Reason */
+            rejection_reason: string | null;
+            /** Sent To Dso At */
+            sent_to_dso_at: string | null;
+            /** Signature Provider */
+            signature_provider: string | null;
+            /** Signature Provider Id */
+            signature_provider_id: string | null;
+            /** Signature Requested At */
+            signature_requested_at: string | null;
+            /** Signed At */
+            signed_at: string | null;
+            /** Start Date */
+            start_date: string | null;
+            status: components["schemas"]["ContractStatus"];
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /** Term Months */
+            term_months: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * ContractSignRequest
+         * @description Payload for ``POST /v1/contracts/{id}/sign``.
+         */
+        ContractSignRequest: {
+            /** Body */
+            body?: string | null;
+            /** Recipient Email */
+            recipient_email: string;
+            /** Recipient Name */
+            recipient_name: string;
+            /** Subject */
+            subject?: string | null;
+        };
+        /**
+         * ContractSignResponse
+         * @description Response for ``POST /v1/contracts/{id}/sign``.
+         */
+        ContractSignResponse: {
+            contract: components["schemas"]["ContractOut"];
+            /** Provider */
+            provider: string;
+            /** Provider Id */
+            provider_id: string;
+            /**
+             * Requested At
+             * Format: date-time
+             */
+            requested_at: string;
+            /**
+             * Signature Request Id
+             * Format: uuid
+             */
+            signature_request_id: string;
+        };
+        /**
+         * ContractStatus
+         * @description Lifecycle states for a contract.
+         * @enum {string}
+         */
+        ContractStatus: "draft" | "signed" | "sent_to_dso" | "active" | "rejected" | "cancelled";
+        /**
+         * ContractUpdate
+         * @description PATCH payload — every field is optional.
+         */
+        ContractUpdate: {
+            /** Billing Address */
+            billing_address?: string | null;
+            /** Customer Email */
+            customer_email?: string | null;
+            /** Customer Name */
+            customer_name?: string | null;
+            /** Customer Phone E164 */
+            customer_phone_e164?: string | null;
+            /** Customer Tax Id */
+            customer_tax_id?: string | null;
+            /** Extra */
+            extra?: {
+                [key: string]: unknown;
+            } | null;
+            /** Start Date */
+            start_date?: string | null;
+            /** Term Months */
+            term_months?: number | null;
+        };
+        /**
+         * CupsCountry
+         * @description ISO country code of the issuing distributor.
+         * @enum {string}
+         */
+        CupsCountry: "ES" | "PT";
+        /**
+         * CupsCreate
+         * @description Payload accepted by ``POST /v1/cups``.
+         */
+        CupsCreate: {
+            /** Address */
+            address?: string | null;
+            /** City */
+            city?: string | null;
+            /**
+             * Code
+             * Format: cups
+             * @description CUPS (Código Universal del Punto de Suministro). Accepts the 20 or 22 character ES format (`ES0021000000000000JN[1P]`) or the 20 character PT format. Server normalises to upper-case and validates the regex.
+             */
+            code: string;
+            /** Distributor Code */
+            distributor_code?: string | null;
+            /** Distributor Name */
+            distributor_name?: string | null;
+            /** @default electricity */
+            energy_type: components["schemas"]["EnergyType"];
+            /**
+             * Lead Id
+             * @description Optional lead that owns this CUPS (for the contracting flow).
+             */
+            lead_id?: string | null;
+            /** Postal Code */
+            postal_code?: string | null;
+            /** Power P1 Kw */
+            power_p1_kw?: number | string | null;
+            /** Power P2 Kw */
+            power_p2_kw?: number | string | null;
+            /** Power P3 Kw */
+            power_p3_kw?: number | string | null;
+            /** Power P4 Kw */
+            power_p4_kw?: number | string | null;
+            /** Power P5 Kw */
+            power_p5_kw?: number | string | null;
+            /** Power P6 Kw */
+            power_p6_kw?: number | string | null;
+            /** Province */
+            province?: string | null;
+            /** Tariff Access Code */
+            tariff_access_code?: string | null;
+        };
+        /**
+         * CupsOut
+         * @description Single-CUPS response.
+         */
+        CupsOut: {
+            /** Address */
+            address: string | null;
+            /** City */
+            city: string | null;
+            /** Code */
+            code: string;
+            country: components["schemas"]["CupsCountry"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Distributor Code */
+            distributor_code: string | null;
+            /** Distributor Name */
+            distributor_name: string | null;
+            energy_type: components["schemas"]["EnergyType"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lead Id */
+            lead_id: string | null;
+            /** Postal Code */
+            postal_code: string | null;
+            /** Power P1 Kw */
+            power_p1_kw: string | null;
+            /** Power P2 Kw */
+            power_p2_kw: string | null;
+            /** Power P3 Kw */
+            power_p3_kw: string | null;
+            /** Power P4 Kw */
+            power_p4_kw: string | null;
+            /** Power P5 Kw */
+            power_p5_kw: string | null;
+            /** Power P6 Kw */
+            power_p6_kw: string | null;
+            /** Province */
+            province: string | null;
+            /** Sips Fetched At */
+            sips_fetched_at: string | null;
+            status: components["schemas"]["CupsStatus"];
+            /** Tariff Access Code */
+            tariff_access_code: string | null;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * CupsStatus
+         * @description Lifecycle status of the supply point inside Panda.
+         * @enum {string}
+         */
+        CupsStatus: "draft" | "active" | "switching" | "inactive";
+        /**
+         * CupsUpdate
+         * @description PATCH payload. Every field is optional.
+         */
+        CupsUpdate: {
+            /** Address */
+            address?: string | null;
+            /** City */
+            city?: string | null;
+            /** Distributor Code */
+            distributor_code?: string | null;
+            /** Distributor Name */
+            distributor_name?: string | null;
+            energy_type?: components["schemas"]["EnergyType"] | null;
+            /** Lead Id */
+            lead_id?: string | null;
+            /** Postal Code */
+            postal_code?: string | null;
+            /** Power P1 Kw */
+            power_p1_kw?: number | string | null;
+            /** Power P2 Kw */
+            power_p2_kw?: number | string | null;
+            /** Power P3 Kw */
+            power_p3_kw?: number | string | null;
+            /** Power P4 Kw */
+            power_p4_kw?: number | string | null;
+            /** Power P5 Kw */
+            power_p5_kw?: number | string | null;
+            /** Power P6 Kw */
+            power_p6_kw?: number | string | null;
+            /** Province */
+            province?: string | null;
+            status?: components["schemas"]["CupsStatus"] | null;
+            /** Tariff Access Code */
+            tariff_access_code?: string | null;
+        };
         /** EmailActivityOut */
         EmailActivityOut: {
             /** Actor User Id */
@@ -538,6 +1200,12 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /**
+         * EnergyType
+         * @description Kind of energy delivered through this supply point.
+         * @enum {string}
+         */
+        EnergyType: "electricity" | "gas";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -576,6 +1244,49 @@ export interface components {
              * @description Application version.
              */
             version: string;
+        };
+        /**
+         * InvoiceOcrResponse
+         * @description Structured fields extracted from a customer's energy bill PDF.
+         */
+        InvoiceOcrResponse: {
+            /** Annual Energy Kwh */
+            annual_energy_kwh?: string | null;
+            /** Annual Total Eur */
+            annual_total_eur?: string | null;
+            /** Billing Period Days */
+            billing_period_days?: number | null;
+            /** Contracted Power Kw */
+            contracted_power_kw?: string | null;
+            /**
+             * Cups
+             * @description CUPS found on the bill, if any.
+             */
+            cups?: string | null;
+            /**
+             * Input Tokens
+             * @default 0
+             */
+            input_tokens: number;
+            /**
+             * Model
+             * @description Model that produced the extraction.
+             */
+            model: string;
+            /**
+             * Output Tokens
+             * @default 0
+             */
+            output_tokens: number;
+            /**
+             * Provider
+             * @description LLM provider routed to (anthropic|mock).
+             */
+            provider: string;
+            /** Supplier */
+            supplier?: string | null;
+            /** Tariff Access Code */
+            tariff_access_code?: string | null;
         };
         /**
          * LeadBulkAction
@@ -1040,6 +1751,52 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** Page[ContractOut] */
+        Page_ContractOut_: {
+            /**
+             * Items
+             * @description Items on this page. `len(items) <= limit` always. When `offset + limit > total`, `items` is truncated to the rows that still exist past `offset`.
+             */
+            items: components["schemas"]["ContractOut"][];
+            /**
+             * Limit
+             * @description Maximum items returned per page.
+             */
+            limit: number;
+            /**
+             * Offset
+             * @description Offset of this page in the result set.
+             */
+            offset: number;
+            /**
+             * Total
+             * @description Total number of rows matching the **filtered** query (i.e. after `q`, `statuses`, `tag`, etc. are applied) — NOT the global count of rows in the table. Pagination math: `hasMore = offset + len(items) < total`.
+             */
+            total: number;
+        };
+        /** Page[CupsOut] */
+        Page_CupsOut_: {
+            /**
+             * Items
+             * @description Items on this page. `len(items) <= limit` always. When `offset + limit > total`, `items` is truncated to the rows that still exist past `offset`.
+             */
+            items: components["schemas"]["CupsOut"][];
+            /**
+             * Limit
+             * @description Maximum items returned per page.
+             */
+            limit: number;
+            /**
+             * Offset
+             * @description Offset of this page in the result set.
+             */
+            offset: number;
+            /**
+             * Total
+             * @description Total number of rows matching the **filtered** query (i.e. after `q`, `statuses`, `tag`, etc. are applied) — NOT the global count of rows in the table. Pagination math: `hasMore = offset + len(items) < total`.
+             */
+            total: number;
+        };
         /** Page[LeadOut] */
         Page_LeadOut_: {
             /**
@@ -1047,6 +1804,29 @@ export interface components {
              * @description Items on this page. `len(items) <= limit` always. When `offset + limit > total`, `items` is truncated to the rows that still exist past `offset`.
              */
             items: components["schemas"]["LeadOut"][];
+            /**
+             * Limit
+             * @description Maximum items returned per page.
+             */
+            limit: number;
+            /**
+             * Offset
+             * @description Offset of this page in the result set.
+             */
+            offset: number;
+            /**
+             * Total
+             * @description Total number of rows matching the **filtered** query (i.e. after `q`, `statuses`, `tag`, etc. are applied) — NOT the global count of rows in the table. Pagination math: `hasMore = offset + len(items) < total`.
+             */
+            total: number;
+        };
+        /** Page[ProductOut] */
+        Page_ProductOut_: {
+            /**
+             * Items
+             * @description Items on this page. `len(items) <= limit` always. When `offset + limit > total`, `items` is truncated to the rows that still exist past `offset`.
+             */
+            items: components["schemas"]["ProductOut"][];
             /**
              * Limit
              * @description Maximum items returned per page.
@@ -1198,6 +1978,172 @@ export interface components {
             name?: string | null;
         };
         /**
+         * ProductCreate
+         * @description Payload accepted by ``POST /v1/products``.
+         *
+         *     ``pricing`` is validated against the shape implied by ``tariff_kind`` —
+         *     fixed/multi_period require a non-empty ``periods`` list; indexed_omie
+         *     requires ``margin_eur_per_kwh``. Mismatch returns 422.
+         */
+        ProductCreate: {
+            /** Code */
+            code: string;
+            /**
+             * Currency
+             * @default EUR
+             */
+            currency: string;
+            /** @default electricity */
+            energy_type: components["schemas"]["EnergyType"];
+            /** Name */
+            name: string;
+            /** Notes */
+            notes?: string | null;
+            /** Pricing */
+            pricing?: {
+                [key: string]: unknown;
+            };
+            /** @default fixed */
+            tariff_kind: components["schemas"]["TariffKind"];
+            /**
+             * Term Months
+             * @default 12
+             */
+            term_months: number;
+        };
+        /**
+         * ProductOut
+         * @description Single-product response.
+         */
+        ProductOut: {
+            /** Code */
+            code: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            energy_type: components["schemas"]["EnergyType"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes: string | null;
+            /** Pricing */
+            pricing: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["ProductStatus"];
+            tariff_kind: components["schemas"]["TariffKind"];
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /** Term Months */
+            term_months: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * ProductStatus
+         * @description Catalog lifecycle of a product.
+         * @enum {string}
+         */
+        ProductStatus: "draft" | "active" | "retired";
+        /**
+         * ProductUpdate
+         * @description PATCH payload — only what the operator wants to change.
+         */
+        ProductUpdate: {
+            /** Currency */
+            currency?: string | null;
+            energy_type?: components["schemas"]["EnergyType"] | null;
+            /** Name */
+            name?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Pricing */
+            pricing?: {
+                [key: string]: unknown;
+            } | null;
+            status?: components["schemas"]["ProductStatus"] | null;
+            tariff_kind?: components["schemas"]["TariffKind"] | null;
+            /** Term Months */
+            term_months?: number | null;
+        };
+        /**
+         * QuoteBaselineIn
+         * @description Baseline (current bill) section of a quote request.
+         */
+        QuoteBaselineIn: {
+            /** Annual Energy Kwh */
+            annual_energy_kwh: number | string;
+            /** Annual Total Eur */
+            annual_total_eur: number | string;
+            /** Contracted Power Kw */
+            contracted_power_kw?: number | string | null;
+        };
+        /**
+         * QuoteCalculateRequest
+         * @description Payload accepted by ``POST /v1/quotes/calculate``.
+         *
+         *     ``product_id`` is optional — when supplied we pull the per-period rates
+         *     from the catalog and collapse them to the simple shape the calculator
+         *     expects. Otherwise the caller passes explicit ``rate`` values.
+         */
+        QuoteCalculateRequest: {
+            baseline: components["schemas"]["QuoteBaselineIn"];
+            /** Cups Id */
+            cups_id?: string | null;
+            /** Product Id */
+            product_id?: string | null;
+            rate?: components["schemas"]["QuoteRateIn"] | null;
+        };
+        /**
+         * QuoteCalculateResponse
+         * @description Calculator output.
+         */
+        QuoteCalculateResponse: {
+            /** Assumptions */
+            assumptions: string[];
+            /** Baseline Eur */
+            baseline_eur: string;
+            /** Projected Eur */
+            projected_eur: string;
+            /** Savings Eur */
+            savings_eur: string;
+            /** Savings Pct */
+            savings_pct: string;
+        };
+        /**
+         * QuoteRateIn
+         * @description Average rates to apply to the projection.
+         */
+        QuoteRateIn: {
+            /** Energy Eur Per Kwh */
+            energy_eur_per_kwh: number | string;
+            /**
+             * Fixed Monthly Eur
+             * @default 0
+             */
+            fixed_monthly_eur: number | string;
+            /**
+             * Power Eur Per Kw Day
+             * @default 0
+             */
+            power_eur_per_kw_day: number | string;
+        };
+        /**
          * ReadinessStatus
          * @description Response payload for the readiness endpoint.
          */
@@ -1281,6 +2227,51 @@ export interface components {
             restored_from?: string | null;
         } & {
             [key: string]: unknown;
+        };
+        /**
+         * SipsResponse
+         * @description Payload returned by ``GET /v1/cups/{code}/sips``.
+         */
+        SipsResponse: {
+            /** Address */
+            address?: string | null;
+            /**
+             * Cached
+             * @description True when the response came from the local 7d cache.
+             */
+            cached: boolean;
+            /** City */
+            city?: string | null;
+            /** Code */
+            code: string;
+            /** Consumption 12M Kwh */
+            consumption_12m_kwh?: string | null;
+            /** Contracted Power Kw */
+            contracted_power_kw?: {
+                [key: string]: string;
+            };
+            /** Distributor Code */
+            distributor_code?: string | null;
+            /** Distributor Name */
+            distributor_name?: string | null;
+            /**
+             * Fetched At
+             * @description When the payload was first fetched from upstream.
+             */
+            fetched_at?: string | null;
+            /** Postal Code */
+            postal_code?: string | null;
+            /** Province */
+            province?: string | null;
+            /**
+             * Raw
+             * @description Full provider payload, kept for forensic inspection.
+             */
+            raw?: {
+                [key: string]: unknown;
+            };
+            /** Tariff Access Code */
+            tariff_access_code?: string | null;
         };
         /**
          * SortDirection
@@ -1433,6 +2424,12 @@ export interface components {
         SystemPayload: {
             [key: string]: unknown;
         };
+        /**
+         * TariffKind
+         * @description High-level tariff structure.
+         * @enum {string}
+         */
+        TariffKind: "fixed" | "indexed_omie" | "multi_period";
         /**
          * UnknownActivityOut
          * @description Backward-compat variant for activity types not in the current vocabulary.
@@ -1801,6 +2798,577 @@ export interface operations {
             };
         };
     };
+    list_contracts_v1_contracts_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ContractOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_contract_v1_contracts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContractCreate"];
+            };
+        };
+        responses: {
+            /** @description Contract created in draft. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractOut"];
+                };
+            };
+            /** @description Lead / CUPS / product not found in this tenant. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_contract_v1_contracts__contract_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_contract_v1_contracts__contract_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContractUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_contract_v1_contracts__contract_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContractCancel"];
+            };
+        };
+        responses: {
+            /** @description Contract cancelled. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractOut"];
+                };
+            };
+            /** @description Contract not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Contract is already cancelled. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_contract_pdf_v1_contracts__contract_id__pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PDF body. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    "application/pdf": unknown;
+                };
+            };
+            /** @description Contract not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    render_contract_pdf_endpoint_v1_contracts__contract_id__pdf_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contract_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PDF rendered and persisted. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractOut"];
+                };
+            };
+            /** @description Contract not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Contract is not in draft/rejected status. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sign_contract_v1_contracts__contract_id__sign_post: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Caller-generated UUID/string scoped to this endpoint. Required. Re-sending the same key with the same body returns the original response without re-firing the send. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                contract_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContractSignRequest"];
+            };
+        };
+        responses: {
+            /** @description Cached response (idempotency replay). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractSignResponse"];
+                };
+            };
+            /** @description Signature request accepted by the provider. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractSignResponse"];
+                };
+            };
+            /** @description Missing Idempotency-Key or PDF cannot be rendered. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Contract not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Contract is not in draft, or the same Idempotency-Key was reused with a different request body. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Provider error. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Signaturit credentials not configured. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_cups_v1_cups_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_CupsOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_cups_v1_cups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CupsCreate"];
+            };
+        };
+        responses: {
+            /** @description CUPS registered. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CupsOut"];
+                };
+            };
+            /** @description A CUPS with this code already exists in the tenant. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description CUPS validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_sips_v1_cups__code__sips_get: {
+        parameters: {
+            query?: {
+                /** @description Bypass the local 7d cache. */
+                refresh?: boolean;
+            };
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description SIPS payload (live or cached). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SipsResponse"];
+                };
+            };
+            /** @description CUPS not found locally or in the upstream. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid CUPS literal. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Upstream transport / decoding error. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description SIPS provider credentials are not configured. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_cups_v1_cups__cups_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cups_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CupsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_cups_v1_cups__cups_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cups_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_cups_v1_cups__cups_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cups_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CupsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CupsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_leads_v1_leads_get: {
         parameters: {
             query?: {
@@ -2075,6 +3643,86 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    extract_invoice_pdf_v1_leads__lead_id__invoices_ocr_post: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Caller-generated UUID/string scoped to this endpoint. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                lead_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_extract_invoice_pdf_v1_leads__lead_id__invoices_ocr_post"];
+            };
+        };
+        responses: {
+            /** @description Extraction complete (live or cached replay). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceOcrResponse"];
+                };
+            };
+            /** @description Missing Idempotency-Key or invalid file. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lead not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency-Key reused with a different PDF. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PDF exceeds 8 MiB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Model returned malformed output. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Anthropic credentials not configured. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2395,6 +4043,226 @@ export interface operations {
             };
         };
     };
+    list_products_v1_products_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ProductOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_product_v1_products_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductCreate"];
+            };
+        };
+        responses: {
+            /** @description Product registered. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductOut"];
+                };
+            };
+            /** @description A product with this code already exists in the tenant. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Pricing block does not match the declared tariff kind. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_product_v1_products__product_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_product_v1_products__product_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_product_v1_products__product_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    calculate_quote_v1_quotes_calculate_post: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Caller-generated UUID/string scoped to this endpoint. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteCalculateRequest"];
+            };
+        };
+        responses: {
+            /** @description Quote (live or cached idempotency replay). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuoteCalculateResponse"];
+                };
+            };
+            /** @description Missing Idempotency-Key header. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Product not found in this tenant. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency-Key reused with a different body. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Pricing inputs incomplete. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     list_users_v1_users_get: {
         parameters: {
             query?: {
@@ -2459,6 +4327,58 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    signaturit_webhook_webhooks_signaturit_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-signaturit-signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Event accepted (signed or no-op). */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Signature missing / mismatched. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Webhook secret not configured. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

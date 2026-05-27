@@ -200,3 +200,39 @@ export function apiDelete<TResponse = void>(
 ): Promise<TResponse> {
   return request<TResponse>("DELETE", path, undefined, opts);
 }
+
+/**
+ * POST con `multipart/form-data` (para OCR upload, etc.).
+ *
+ * NO JSON-stringifica el body — pasa el `FormData` directamente.
+ * NO establece `Content-Type` — el navegador lo pone con el boundary
+ * correcto automáticamente.
+ */
+export async function apiPostFormData<TResponse>(
+  path: string,
+  formData: FormData,
+  opts: ApiRequestOptions = {},
+): Promise<TResponse> {
+  const url = buildUrl(path, opts);
+  const headers = await buildHeaders("POST", opts);
+  // El browser necesita poner el Content-Type con boundary; eliminamos
+  // el que buildHeaders inyecta.
+  headers.delete("Content-Type");
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: formData,
+    signal: opts.signal,
+  });
+
+  if (!response.ok) {
+    throw await apiErrorFromResponse(response);
+  }
+
+  if (response.status === 204) {
+    return undefined as TResponse;
+  }
+
+  return (await response.json()) as TResponse;
+}

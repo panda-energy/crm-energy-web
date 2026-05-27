@@ -634,6 +634,314 @@ export const WhatsAppTemplateSendSchema = z.object({
 });
 export type WhatsAppTemplateSend = z.infer<typeof WhatsAppTemplateSendSchema>;
 
+// ── CUPS (Sprint 3) ─────────────────────────────────────────────────────────
+
+export const CupsStatusSchema = z.enum(["draft", "active", "switching", "inactive"]);
+export const CupsCountrySchema = z.enum(["ES", "PT"]);
+export const EnergyTypeSchema = z.enum(["electricity", "gas"]);
+
+/** Espejo de `components["schemas"]["CupsOut"]`. */
+export const CupsSchema = z.object({
+  id: uuid(),
+  tenant_id: uuid(),
+  code: z.string(),
+  lead_id: nullable(uuid()),
+  country: CupsCountrySchema,
+  energy_type: EnergyTypeSchema,
+  address: nullable(z.string()),
+  city: nullable(z.string()),
+  postal_code: nullable(z.string()),
+  province: nullable(z.string()),
+  distributor_code: nullable(z.string()),
+  distributor_name: nullable(z.string()),
+  tariff_access_code: nullable(z.string()),
+  power_p1_kw: nullable(z.string()),
+  power_p2_kw: nullable(z.string()),
+  power_p3_kw: nullable(z.string()),
+  power_p4_kw: nullable(z.string()),
+  power_p5_kw: nullable(z.string()),
+  power_p6_kw: nullable(z.string()),
+  status: CupsStatusSchema,
+  sips_fetched_at: nullable(dateTime()),
+  created_at: dateTime(),
+  updated_at: dateTime(),
+});
+export type Cups = z.infer<typeof CupsSchema>;
+
+export const CupsPageSchema = z.object({
+  items: z.array(CupsSchema),
+  total: z.number().int().min(0),
+  limit: z.number().int().min(1).max(200),
+  offset: z.number().int().min(0),
+});
+export type CupsPage = z.infer<typeof CupsPageSchema>;
+
+export const CupsCreateSchema = z.object({
+  code: z.string().min(20).max(22),
+  lead_id: uuid().nullish(),
+  energy_type: EnergyTypeSchema.optional(),
+  address: z.string().nullish(),
+  city: z.string().nullish(),
+  postal_code: z.string().nullish(),
+  province: z.string().nullish(),
+  distributor_code: z.string().nullish(),
+  distributor_name: z.string().nullish(),
+  tariff_access_code: z.string().nullish(),
+  power_p1_kw: z.number().nullish(),
+  power_p2_kw: z.number().nullish(),
+  power_p3_kw: z.number().nullish(),
+  power_p4_kw: z.number().nullish(),
+  power_p5_kw: z.number().nullish(),
+  power_p6_kw: z.number().nullish(),
+});
+export type CupsCreate = z.infer<typeof CupsCreateSchema>;
+
+export const CupsUpdateSchema = z.object({
+  lead_id: uuid().nullish(),
+  energy_type: EnergyTypeSchema.nullish(),
+  address: z.string().nullish(),
+  city: z.string().nullish(),
+  postal_code: z.string().nullish(),
+  province: z.string().nullish(),
+  distributor_code: z.string().nullish(),
+  distributor_name: z.string().nullish(),
+  tariff_access_code: z.string().nullish(),
+  power_p1_kw: z.number().nullish(),
+  power_p2_kw: z.number().nullish(),
+  power_p3_kw: z.number().nullish(),
+  power_p4_kw: z.number().nullish(),
+  power_p5_kw: z.number().nullish(),
+  power_p6_kw: z.number().nullish(),
+  status: CupsStatusSchema.nullish(),
+});
+export type CupsUpdate = z.infer<typeof CupsUpdateSchema>;
+
+/** SIPS data returned by `GET /v1/cups/{code}/sips`. */
+export const SipsResponseSchema = z.object({
+  code: z.string(),
+  cached: z.boolean(),
+  distributor_code: nullable(z.string()).optional(),
+  distributor_name: nullable(z.string()).optional(),
+  tariff_access_code: nullable(z.string()).optional(),
+  address: nullable(z.string()).optional(),
+  city: nullable(z.string()).optional(),
+  postal_code: nullable(z.string()).optional(),
+  province: nullable(z.string()).optional(),
+  consumption_12m_kwh: nullable(z.string()).optional(),
+  contracted_power_kw: z.record(z.string(), z.unknown()).nullish(),
+  fetched_at: nullable(z.string()).optional(),
+  raw: z.record(z.string(), z.unknown()).nullish(),
+});
+export type SipsResponse = z.infer<typeof SipsResponseSchema>;
+
+// ── Products (Sprint 3) ─────────────────────────────────────────────────────
+
+export const ProductStatusSchema = z.enum(["draft", "active", "retired"]);
+export const TariffKindSchema = z.enum(["fixed", "indexed_omie", "multi_period"]);
+
+export const ProductSchema = z.object({
+  id: uuid(),
+  tenant_id: uuid(),
+  code: z.string(),
+  name: z.string(),
+  energy_type: EnergyTypeSchema,
+  tariff_kind: TariffKindSchema,
+  term_months: z.number().int(),
+  currency: z.string(),
+  pricing: z.record(z.string(), z.unknown()),
+  notes: nullable(z.string()),
+  status: ProductStatusSchema,
+  created_at: dateTime(),
+  updated_at: dateTime(),
+});
+export type Product = z.infer<typeof ProductSchema>;
+
+export const ProductPageSchema = z.object({
+  items: z.array(ProductSchema),
+  total: z.number().int().min(0),
+  limit: z.number().int().min(1).max(200),
+  offset: z.number().int().min(0),
+});
+export type ProductPage = z.infer<typeof ProductPageSchema>;
+
+export const ProductCreateSchema = z.object({
+  name: z.string().min(1).max(255),
+  code: z.string().min(1).max(64),
+  energy_type: EnergyTypeSchema.optional(),
+  tariff_kind: TariffKindSchema.optional(),
+  term_months: z.number().int().min(1).optional(),
+  currency: z.string().length(3).optional(),
+  pricing: z.record(z.string(), z.unknown()).optional(),
+  notes: z.string().nullish(),
+});
+export type ProductCreate = z.infer<typeof ProductCreateSchema>;
+
+export const ProductUpdateSchema = z.object({
+  name: z.string().min(1).max(255).nullish(),
+  energy_type: EnergyTypeSchema.nullish(),
+  tariff_kind: TariffKindSchema.nullish(),
+  term_months: z.number().int().min(1).nullish(),
+  currency: z.string().length(3).nullish(),
+  pricing: z.record(z.string(), z.unknown()).nullish(),
+  notes: z.string().nullish(),
+  status: ProductStatusSchema.nullish(),
+});
+export type ProductUpdate = z.infer<typeof ProductUpdateSchema>;
+
+// ── Contracts (Sprint 3) ────────────────────────────────────────────────────
+
+export const ContractStatusSchema = z.enum([
+  "draft",
+  "signed",
+  "sent_to_dso",
+  "active",
+  "rejected",
+  "cancelled",
+]);
+
+export const ContractSchema = z.object({
+  id: uuid(),
+  tenant_id: uuid(),
+  lead_id: uuid(),
+  cups_id: uuid(),
+  product_id: uuid(),
+  number: z.string(),
+  customer_name: z.string(),
+  customer_tax_id: z.string(),
+  customer_email: nullable(z.string()),
+  customer_phone_e164: nullable(z.string()),
+  billing_address: nullable(z.string()),
+  status: ContractStatusSchema,
+  start_date: nullable(z.string()),
+  term_months: z.number().int(),
+  currency: z.string(),
+  extra: z.record(z.string(), z.unknown()),
+  pdf_storage_key: nullable(z.string()),
+  pdf_storage_bucket: nullable(z.string()),
+  pdf_sha256: nullable(z.string()),
+  pdf_generated_at: nullable(dateTime()),
+  signature_provider: nullable(z.string()),
+  signature_provider_id: nullable(z.string()),
+  signature_requested_at: nullable(dateTime()),
+  signed_at: nullable(dateTime()),
+  sent_to_dso_at: nullable(dateTime()),
+  activated_at: nullable(dateTime()),
+  cancelled_at: nullable(dateTime()),
+  rejected_at: nullable(dateTime()),
+  rejection_reason: nullable(z.string()),
+  created_at: dateTime(),
+  updated_at: dateTime(),
+});
+export type Contract = z.infer<typeof ContractSchema>;
+
+export const ContractPageSchema = z.object({
+  items: z.array(ContractSchema),
+  total: z.number().int().min(0),
+  limit: z.number().int().min(1).max(200),
+  offset: z.number().int().min(0),
+});
+export type ContractPage = z.infer<typeof ContractPageSchema>;
+
+export const ContractCreateSchema = z.object({
+  lead_id: uuid(),
+  cups_id: uuid(),
+  product_id: uuid(),
+  customer_name: z.string().min(1).max(255),
+  customer_tax_id: z.string().min(1).max(20),
+  customer_email: z.string().email().nullish(),
+  customer_phone_e164: phoneE164Schema.nullish(),
+  billing_address: z.string().nullish(),
+  start_date: z.string().nullish(),
+  term_months: z.number().int().min(1).optional(),
+  currency: z.string().length(3).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
+});
+export type ContractCreate = z.infer<typeof ContractCreateSchema>;
+
+export const ContractUpdateSchema = z.object({
+  customer_name: z.string().min(1).max(255).nullish(),
+  customer_tax_id: z.string().min(1).max(20).nullish(),
+  customer_email: z.string().email().nullish(),
+  customer_phone_e164: phoneE164Schema.nullish(),
+  billing_address: z.string().nullish(),
+  start_date: z.string().nullish(),
+  term_months: z.number().int().min(1).nullish(),
+  extra: z.record(z.string(), z.unknown()).nullish(),
+});
+export type ContractUpdate = z.infer<typeof ContractUpdateSchema>;
+
+export const ContractCancelSchema = z.object({
+  reason: z.string().nullish(),
+});
+export type ContractCancel = z.infer<typeof ContractCancelSchema>;
+
+export const ContractSignRequestSchema = z.object({
+  recipient_name: z.string().min(1),
+  recipient_email: z.string().email(),
+  subject: z.string().nullish(),
+  body: z.string().nullish(),
+});
+export type ContractSignRequest = z.infer<typeof ContractSignRequestSchema>;
+
+export const ContractSignResponseSchema = z.object({
+  signature_request_id: uuid(),
+  provider: z.string(),
+  provider_id: z.string(),
+  requested_at: dateTime(),
+  contract: ContractSchema,
+});
+export type ContractSignResponse = z.infer<typeof ContractSignResponseSchema>;
+
+// ── Quotes (Sprint 3) ──────────────────────────────────────────────────────
+
+export const QuoteBaselineInSchema = z.object({
+  annual_energy_kwh: z.number().positive(),
+  annual_total_eur: z.number().positive(),
+  contracted_power_kw: z.number().nullish(),
+});
+export type QuoteBaselineIn = z.infer<typeof QuoteBaselineInSchema>;
+
+export const QuoteRateInSchema = z.object({
+  energy_eur_per_kwh: z.number(),
+  power_eur_per_kw_day: z.number().optional(),
+  fixed_monthly_eur: z.number().optional(),
+});
+export type QuoteRateIn = z.infer<typeof QuoteRateInSchema>;
+
+export const QuoteCalculateRequestSchema = z.object({
+  baseline: QuoteBaselineInSchema,
+  cups_id: uuid().nullish(),
+  product_id: uuid().nullish(),
+  rate: QuoteRateInSchema.nullish(),
+});
+export type QuoteCalculateRequest = z.infer<typeof QuoteCalculateRequestSchema>;
+
+export const QuoteCalculateResponseSchema = z.object({
+  baseline_eur: z.string(),
+  projected_eur: z.string(),
+  savings_eur: z.string(),
+  savings_pct: z.string(),
+  assumptions: z.array(z.string()),
+});
+export type QuoteCalculateResponse = z.infer<typeof QuoteCalculateResponseSchema>;
+
+// ── Invoice OCR (Sprint 3) ──────────────────────────────────────────────────
+
+export const InvoiceOcrResponseSchema = z.object({
+  provider: z.string(),
+  model: z.string(),
+  cups: nullable(z.string()).optional(),
+  tariff_access_code: nullable(z.string()).optional(),
+  contracted_power_kw: nullable(z.string()).optional(),
+  annual_energy_kwh: nullable(z.string()).optional(),
+  annual_total_eur: nullable(z.string()).optional(),
+  billing_period_days: nullable(z.number().int()).optional(),
+  supplier: nullable(z.string()).optional(),
+  input_tokens: z.number().int().optional(),
+  output_tokens: z.number().int().optional(),
+});
+export type InvoiceOcrResponse = z.infer<typeof InvoiceOcrResponseSchema>;
+
 // ── Problem Details (RFC 7807) ──────────────────────────────────────────────
 
 export const ProblemSchema = z.object({
@@ -693,6 +1001,33 @@ type _UserListPageCompat = _Assignable<
   UserListPage
 >;
 
+// Sprint 3 compatibility checks
+type _CupsCompat = _Assignable<components["schemas"]["CupsOut"], Cups>;
+type _CupsPageCompat = _Assignable<
+  components["schemas"]["Page_CupsOut_"],
+  CupsPage
+>;
+type _ProductCompat = _Assignable<
+  components["schemas"]["ProductOut"],
+  Product
+>;
+type _ProductPageCompat = _Assignable<
+  components["schemas"]["Page_ProductOut_"],
+  ProductPage
+>;
+type _ContractCompat = _Assignable<
+  components["schemas"]["ContractOut"],
+  Contract
+>;
+type _ContractPageCompat = _Assignable<
+  components["schemas"]["Page_ContractOut_"],
+  ContractPage
+>;
+type _QuoteResponseCompat = _Assignable<
+  components["schemas"]["QuoteCalculateResponse"],
+  QuoteCalculateResponse
+>;
+
 // Si alguno de estos no es `true`, el typecheck falla en el ensamblado.
 const _compatibilityChecks: [
   _LeadCompat,
@@ -704,5 +1039,12 @@ const _compatibilityChecks: [
   _MeOutCompat,
   _UserListItemCompat,
   _UserListPageCompat,
-] = [true, true, true, true, true, true, true, true, true];
+  _CupsCompat,
+  _CupsPageCompat,
+  _ProductCompat,
+  _ProductPageCompat,
+  _ContractCompat,
+  _ContractPageCompat,
+  _QuoteResponseCompat,
+] = [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
 void _compatibilityChecks;

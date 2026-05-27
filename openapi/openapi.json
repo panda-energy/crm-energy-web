@@ -51,6 +51,21 @@
         "title": "ActivityType",
         "type": "string"
       },
+      "Body_extract_invoice_pdf_v1_leads__lead_id__invoices_ocr_post": {
+        "properties": {
+          "file": {
+            "description": "PDF invoice (max 8 MiB).",
+            "format": "binary",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_extract_invoice_pdf_v1_leads__lead_id__invoices_ocr_post",
+        "type": "object"
+      },
       "BulkActionActivityOut": {
         "properties": {
           "actor_user_id": {
@@ -290,6 +305,1324 @@
         "title": "ComponentStatus",
         "type": "object"
       },
+      "ContractCancel": {
+        "description": "Payload for ``POST /v1/contracts/{id}/cancel``.",
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "title": "ContractCancel",
+        "type": "object"
+      },
+      "ContractCreate": {
+        "description": "Payload for ``POST /v1/contracts``.",
+        "properties": {
+          "billing_address": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Address"
+          },
+          "cups_id": {
+            "format": "uuid",
+            "title": "Cups Id",
+            "type": "string"
+          },
+          "currency": {
+            "default": "EUR",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Currency",
+            "type": "string"
+          },
+          "customer_email": {
+            "anyOf": [
+              {
+                "maxLength": 320,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Email"
+          },
+          "customer_name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Customer Name",
+            "type": "string"
+          },
+          "customer_phone_e164": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "maxLength": 32,
+            "title": "Customer Phone E164"
+          },
+          "customer_tax_id": {
+            "maxLength": 32,
+            "minLength": 4,
+            "title": "Customer Tax Id",
+            "type": "string"
+          },
+          "extra": {
+            "additionalProperties": true,
+            "title": "Extra",
+            "type": "object"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "term_months": {
+            "default": 12,
+            "maximum": 120.0,
+            "minimum": 1.0,
+            "title": "Term Months",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lead_id",
+          "cups_id",
+          "product_id",
+          "customer_name",
+          "customer_tax_id"
+        ],
+        "title": "ContractCreate",
+        "type": "object"
+      },
+      "ContractOut": {
+        "description": "Single-contract response.",
+        "properties": {
+          "activated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
+          },
+          "billing_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Address"
+          },
+          "cancelled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "cups_id": {
+            "format": "uuid",
+            "title": "Cups Id",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "customer_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Email"
+          },
+          "customer_name": {
+            "title": "Customer Name",
+            "type": "string"
+          },
+          "customer_phone_e164": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Phone E164"
+          },
+          "customer_tax_id": {
+            "title": "Customer Tax Id",
+            "type": "string"
+          },
+          "extra": {
+            "additionalProperties": true,
+            "title": "Extra",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "format": "uuid",
+            "title": "Lead Id",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "pdf_generated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Generated At"
+          },
+          "pdf_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Sha256"
+          },
+          "pdf_storage_bucket": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Storage Bucket"
+          },
+          "pdf_storage_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Storage Key"
+          },
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "rejected_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejected At"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          },
+          "sent_to_dso_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent To Dso At"
+          },
+          "signature_provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signature Provider"
+          },
+          "signature_provider_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signature Provider Id"
+          },
+          "signature_requested_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signature Requested At"
+          },
+          "signed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signed At"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ContractStatus"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "term_months": {
+            "title": "Term Months",
+            "type": "integer"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tenant_id",
+          "lead_id",
+          "cups_id",
+          "product_id",
+          "number",
+          "status",
+          "customer_name",
+          "customer_tax_id",
+          "customer_email",
+          "customer_phone_e164",
+          "billing_address",
+          "start_date",
+          "term_months",
+          "currency",
+          "pdf_storage_bucket",
+          "pdf_storage_key",
+          "pdf_sha256",
+          "pdf_generated_at",
+          "signature_provider",
+          "signature_provider_id",
+          "signature_requested_at",
+          "signed_at",
+          "sent_to_dso_at",
+          "activated_at",
+          "rejected_at",
+          "rejection_reason",
+          "cancelled_at",
+          "extra",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ContractOut",
+        "type": "object"
+      },
+      "ContractSignRequest": {
+        "description": "Payload for ``POST /v1/contracts/{id}/sign``.",
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "recipient_email": {
+            "maxLength": 320,
+            "minLength": 4,
+            "title": "Recipient Email",
+            "type": "string"
+          },
+          "recipient_name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Recipient Name",
+            "type": "string"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          }
+        },
+        "required": [
+          "recipient_name",
+          "recipient_email"
+        ],
+        "title": "ContractSignRequest",
+        "type": "object"
+      },
+      "ContractSignResponse": {
+        "description": "Response for ``POST /v1/contracts/{id}/sign``.",
+        "properties": {
+          "contract": {
+            "$ref": "#/components/schemas/ContractOut"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "provider_id": {
+            "title": "Provider Id",
+            "type": "string"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "signature_request_id": {
+            "format": "uuid",
+            "title": "Signature Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "contract",
+          "signature_request_id",
+          "provider",
+          "provider_id",
+          "requested_at"
+        ],
+        "title": "ContractSignResponse",
+        "type": "object"
+      },
+      "ContractStatus": {
+        "description": "Lifecycle states for a contract.",
+        "enum": [
+          "draft",
+          "signed",
+          "sent_to_dso",
+          "active",
+          "rejected",
+          "cancelled"
+        ],
+        "title": "ContractStatus",
+        "type": "string"
+      },
+      "ContractUpdate": {
+        "description": "PATCH payload \u2014 every field is optional.",
+        "properties": {
+          "billing_address": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Address"
+          },
+          "customer_email": {
+            "anyOf": [
+              {
+                "maxLength": 320,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Email"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name"
+          },
+          "customer_phone_e164": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "maxLength": 32,
+            "title": "Customer Phone E164"
+          },
+          "customer_tax_id": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 4,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Tax Id"
+          },
+          "extra": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extra"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "term_months": {
+            "anyOf": [
+              {
+                "maximum": 120.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Term Months"
+          }
+        },
+        "title": "ContractUpdate",
+        "type": "object"
+      },
+      "CupsCountry": {
+        "description": "ISO country code of the issuing distributor.",
+        "enum": [
+          "ES",
+          "PT"
+        ],
+        "title": "CupsCountry",
+        "type": "string"
+      },
+      "CupsCreate": {
+        "description": "Payload accepted by ``POST /v1/cups``.",
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "code": {
+            "description": "CUPS (C\u00f3digo Universal del Punto de Suministro). Accepts the 20 or 22 character ES format (`ES0021000000000000JN[1P]`) or the 20 character PT format. Server normalises to upper-case and validates the regex.",
+            "format": "cups",
+            "maxLength": 22,
+            "pattern": "^(?:ES\\d{16}[A-Z]{2}(?:\\d[A-Z])?|PT\\d{16}[A-Z]{2})$",
+            "title": "Code",
+            "type": "string"
+          },
+          "distributor_code": {
+            "anyOf": [
+              {
+                "maxLength": 4,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distributor Code"
+          },
+          "distributor_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distributor Name"
+          },
+          "energy_type": {
+            "$ref": "#/components/schemas/EnergyType",
+            "default": "electricity"
+          },
+          "lead_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional lead that owns this CUPS (for the contracting flow).",
+            "title": "Lead Id"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "maxLength": 12,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          },
+          "power_p1_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P1 Kw"
+          },
+          "power_p2_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P2 Kw"
+          },
+          "power_p3_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P3 Kw"
+          },
+          "power_p4_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P4 Kw"
+          },
+          "power_p5_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P5 Kw"
+          },
+          "power_p6_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P6 Kw"
+          },
+          "province": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Province"
+          },
+          "tariff_access_code": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tariff Access Code"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "CupsCreate",
+        "type": "object"
+      },
+      "CupsOut": {
+        "description": "Single-CUPS response.",
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "country": {
+            "$ref": "#/components/schemas/CupsCountry"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "distributor_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distributor Code"
+          },
+          "distributor_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distributor Name"
+          },
+          "energy_type": {
+            "$ref": "#/components/schemas/EnergyType"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Id"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          },
+          "power_p1_kw": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P1 Kw"
+          },
+          "power_p2_kw": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P2 Kw"
+          },
+          "power_p3_kw": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P3 Kw"
+          },
+          "power_p4_kw": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P4 Kw"
+          },
+          "power_p5_kw": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P5 Kw"
+          },
+          "power_p6_kw": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P6 Kw"
+          },
+          "province": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Province"
+          },
+          "sips_fetched_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sips Fetched At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CupsStatus"
+          },
+          "tariff_access_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tariff Access Code"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tenant_id",
+          "lead_id",
+          "code",
+          "country",
+          "energy_type",
+          "status",
+          "distributor_code",
+          "distributor_name",
+          "address",
+          "postal_code",
+          "city",
+          "province",
+          "power_p1_kw",
+          "power_p2_kw",
+          "power_p3_kw",
+          "power_p4_kw",
+          "power_p5_kw",
+          "power_p6_kw",
+          "tariff_access_code",
+          "sips_fetched_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CupsOut",
+        "type": "object"
+      },
+      "CupsStatus": {
+        "description": "Lifecycle status of the supply point inside Panda.",
+        "enum": [
+          "draft",
+          "active",
+          "switching",
+          "inactive"
+        ],
+        "title": "CupsStatus",
+        "type": "string"
+      },
+      "CupsUpdate": {
+        "description": "PATCH payload. Every field is optional.",
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "distributor_code": {
+            "anyOf": [
+              {
+                "maxLength": 4,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distributor Code"
+          },
+          "distributor_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distributor Name"
+          },
+          "energy_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EnergyType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lead_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Id"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "maxLength": 12,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          },
+          "power_p1_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P1 Kw"
+          },
+          "power_p2_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P2 Kw"
+          },
+          "power_p3_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P3 Kw"
+          },
+          "power_p4_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P4 Kw"
+          },
+          "power_p5_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P5 Kw"
+          },
+          "power_p6_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Power P6 Kw"
+          },
+          "province": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Province"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CupsStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tariff_access_code": {
+            "anyOf": [
+              {
+                "maxLength": 10,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tariff Access Code"
+          }
+        },
+        "title": "CupsUpdate",
+        "type": "object"
+      },
       "EmailActivityOut": {
         "properties": {
           "actor_user_id": {
@@ -387,6 +1720,15 @@
         "title": "EmailPayload",
         "type": "object"
       },
+      "EnergyType": {
+        "description": "Kind of energy delivered through this supply point.",
+        "enum": [
+          "electricity",
+          "gas"
+        ],
+        "title": "EnergyType",
+        "type": "string"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -439,6 +1781,118 @@
           "timestamp"
         ],
         "title": "HealthStatus",
+        "type": "object"
+      },
+      "InvoiceOcrResponse": {
+        "description": "Structured fields extracted from a customer's energy bill PDF.",
+        "properties": {
+          "annual_energy_kwh": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annual Energy Kwh"
+          },
+          "annual_total_eur": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annual Total Eur"
+          },
+          "billing_period_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Billing Period Days"
+          },
+          "contracted_power_kw": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contracted Power Kw"
+          },
+          "cups": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "CUPS found on the bill, if any.",
+            "title": "Cups"
+          },
+          "input_tokens": {
+            "default": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "model": {
+            "description": "Model that produced the extraction.",
+            "title": "Model",
+            "type": "string"
+          },
+          "output_tokens": {
+            "default": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "provider": {
+            "description": "LLM provider routed to (anthropic|mock).",
+            "title": "Provider",
+            "type": "string"
+          },
+          "supplier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier"
+          },
+          "tariff_access_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tariff Access Code"
+          }
+        },
+        "required": [
+          "model",
+          "provider"
+        ],
+        "title": "InvoiceOcrResponse",
         "type": "object"
       },
       "LeadBulkAction": {
@@ -1593,6 +3047,84 @@
         "title": "OwnerChangedPayload",
         "type": "object"
       },
+      "Page_ContractOut_": {
+        "properties": {
+          "items": {
+            "description": "Items on this page. `len(items) <= limit` always. When `offset + limit > total`, `items` is truncated to the rows that still exist past `offset`.",
+            "items": {
+              "$ref": "#/components/schemas/ContractOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "description": "Maximum items returned per page.",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "Offset of this page in the result set.",
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of rows matching the **filtered** query (i.e. after `q`, `statuses`, `tag`, etc. are applied) \u2014 NOT the global count of rows in the table. Pagination math: `hasMore = offset + len(items) < total`.",
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[ContractOut]",
+        "type": "object"
+      },
+      "Page_CupsOut_": {
+        "properties": {
+          "items": {
+            "description": "Items on this page. `len(items) <= limit` always. When `offset + limit > total`, `items` is truncated to the rows that still exist past `offset`.",
+            "items": {
+              "$ref": "#/components/schemas/CupsOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "description": "Maximum items returned per page.",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "Offset of this page in the result set.",
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of rows matching the **filtered** query (i.e. after `q`, `statuses`, `tag`, etc. are applied) \u2014 NOT the global count of rows in the table. Pagination math: `hasMore = offset + len(items) < total`.",
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[CupsOut]",
+        "type": "object"
+      },
       "Page_LeadOut_": {
         "properties": {
           "items": {
@@ -1630,6 +3162,45 @@
           "offset"
         ],
         "title": "Page[LeadOut]",
+        "type": "object"
+      },
+      "Page_ProductOut_": {
+        "properties": {
+          "items": {
+            "description": "Items on this page. `len(items) <= limit` always. When `offset + limit > total`, `items` is truncated to the rows that still exist past `offset`.",
+            "items": {
+              "$ref": "#/components/schemas/ProductOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "description": "Maximum items returned per page.",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "Offset of this page in the result set.",
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of rows matching the **filtered** query (i.e. after `q`, `statuses`, `tag`, etc. are applied) \u2014 NOT the global count of rows in the table. Pagination math: `hasMore = offset + len(items) < total`.",
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[ProductOut]",
         "type": "object"
       },
       "PipelineCreate": {
@@ -1907,6 +3478,453 @@
         "title": "PipelineUpdate",
         "type": "object"
       },
+      "ProductCreate": {
+        "description": "Payload accepted by ``POST /v1/products``.\n\n``pricing`` is validated against the shape implied by ``tariff_kind`` \u2014\nfixed/multi_period require a non-empty ``periods`` list; indexed_omie\nrequires ``margin_eur_per_kwh``. Mismatch returns 422.",
+        "properties": {
+          "code": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          },
+          "currency": {
+            "default": "EUR",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Currency",
+            "type": "string"
+          },
+          "energy_type": {
+            "$ref": "#/components/schemas/EnergyType",
+            "default": "electricity"
+          },
+          "name": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "pricing": {
+            "additionalProperties": true,
+            "title": "Pricing",
+            "type": "object"
+          },
+          "tariff_kind": {
+            "$ref": "#/components/schemas/TariffKind",
+            "default": "fixed"
+          },
+          "term_months": {
+            "default": 12,
+            "maximum": 120.0,
+            "minimum": 1.0,
+            "title": "Term Months",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "ProductCreate",
+        "type": "object"
+      },
+      "ProductOut": {
+        "description": "Single-product response.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "energy_type": {
+            "$ref": "#/components/schemas/EnergyType"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "pricing": {
+            "additionalProperties": true,
+            "title": "Pricing",
+            "type": "object"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProductStatus"
+          },
+          "tariff_kind": {
+            "$ref": "#/components/schemas/TariffKind"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "term_months": {
+            "title": "Term Months",
+            "type": "integer"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tenant_id",
+          "code",
+          "name",
+          "energy_type",
+          "tariff_kind",
+          "status",
+          "currency",
+          "pricing",
+          "term_months",
+          "notes",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ProductOut",
+        "type": "object"
+      },
+      "ProductStatus": {
+        "description": "Catalog lifecycle of a product.",
+        "enum": [
+          "draft",
+          "active",
+          "retired"
+        ],
+        "title": "ProductStatus",
+        "type": "string"
+      },
+      "ProductUpdate": {
+        "description": "PATCH payload \u2014 only what the operator wants to change.",
+        "properties": {
+          "currency": {
+            "anyOf": [
+              {
+                "maxLength": 3,
+                "minLength": 3,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "energy_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EnergyType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "pricing": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pricing"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tariff_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TariffKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "term_months": {
+            "anyOf": [
+              {
+                "maximum": 120.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Term Months"
+          }
+        },
+        "title": "ProductUpdate",
+        "type": "object"
+      },
+      "QuoteBaselineIn": {
+        "description": "Baseline (current bill) section of a quote request.",
+        "properties": {
+          "annual_energy_kwh": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,9}|(?=[\\d.]{1,13}0*$)\\d{0,9}\\.\\d{0,3}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Annual Energy Kwh"
+          },
+          "annual_total_eur": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,10}|(?=[\\d.]{1,13}0*$)\\d{0,10}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Annual Total Eur"
+          },
+          "contracted_power_kw": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,7}|(?=[\\d.]{1,11}0*$)\\d{0,7}\\.\\d{0,3}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contracted Power Kw"
+          }
+        },
+        "required": [
+          "annual_energy_kwh",
+          "annual_total_eur"
+        ],
+        "title": "QuoteBaselineIn",
+        "type": "object"
+      },
+      "QuoteCalculateRequest": {
+        "description": "Payload accepted by ``POST /v1/quotes/calculate``.\n\n``product_id`` is optional \u2014 when supplied we pull the per-period rates\nfrom the catalog and collapse them to the simple shape the calculator\nexpects. Otherwise the caller passes explicit ``rate`` values.",
+        "properties": {
+          "baseline": {
+            "$ref": "#/components/schemas/QuoteBaselineIn"
+          },
+          "cups_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cups Id"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuoteRateIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "baseline"
+        ],
+        "title": "QuoteCalculateRequest",
+        "type": "object"
+      },
+      "QuoteCalculateResponse": {
+        "description": "Calculator output.",
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "baseline_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Baseline Eur",
+            "type": "string"
+          },
+          "projected_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Projected Eur",
+            "type": "string"
+          },
+          "savings_eur": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Savings Eur",
+            "type": "string"
+          },
+          "savings_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Savings Pct",
+            "type": "string"
+          }
+        },
+        "required": [
+          "baseline_eur",
+          "projected_eur",
+          "savings_eur",
+          "savings_pct",
+          "assumptions"
+        ],
+        "title": "QuoteCalculateResponse",
+        "type": "object"
+      },
+      "QuoteRateIn": {
+        "description": "Average rates to apply to the projection.",
+        "properties": {
+          "energy_eur_per_kwh": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,4}|(?=[\\d.]{1,11}0*$)\\d{0,4}\\.\\d{0,6}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Energy Eur Per Kwh"
+          },
+          "fixed_monthly_eur": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,8}|(?=[\\d.]{1,11}0*$)\\d{0,8}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Fixed Monthly Eur"
+          },
+          "power_eur_per_kw_day": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,4}|(?=[\\d.]{1,11}0*$)\\d{0,4}\\.\\d{0,6}0*$)",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Power Eur Per Kw Day"
+          }
+        },
+        "required": [
+          "energy_eur_per_kwh"
+        ],
+        "title": "QuoteRateIn",
+        "type": "object"
+      },
       "ReadinessStatus": {
         "description": "Response payload for the readiness endpoint.",
         "properties": {
@@ -2047,6 +4065,142 @@
           }
         },
         "title": "RestoredPayload",
+        "type": "object"
+      },
+      "SipsResponse": {
+        "description": "Payload returned by ``GET /v1/cups/{code}/sips``.",
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "cached": {
+            "description": "True when the response came from the local 7d cache.",
+            "title": "Cached",
+            "type": "boolean"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "consumption_12m_kwh": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consumption 12M Kwh"
+          },
+          "contracted_power_kw": {
+            "additionalProperties": {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            "title": "Contracted Power Kw",
+            "type": "object"
+          },
+          "distributor_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distributor Code"
+          },
+          "distributor_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distributor Name"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the payload was first fetched from upstream.",
+            "title": "Fetched At"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          },
+          "province": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Province"
+          },
+          "raw": {
+            "additionalProperties": true,
+            "description": "Full provider payload, kept for forensic inspection.",
+            "title": "Raw",
+            "type": "object"
+          },
+          "tariff_access_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tariff Access Code"
+          }
+        },
+        "required": [
+          "code",
+          "cached"
+        ],
+        "title": "SipsResponse",
         "type": "object"
       },
       "SortDirection": {
@@ -2353,6 +4507,16 @@
         "properties": {},
         "title": "SystemPayload",
         "type": "object"
+      },
+      "TariffKind": {
+        "description": "High-level tariff structure.",
+        "enum": [
+          "fixed",
+          "indexed_omie",
+          "multi_period"
+        ],
+        "title": "TariffKind",
+        "type": "string"
       },
       "UnknownActivityOut": {
         "description": "Backward-compat variant for activity types not in the current vocabulary.\n\nThe frontend should treat `type == \"unknown\"` as \"render generic timeline\nentry\" \u2014 the raw row payload is preserved untouched for forward inspection.",
@@ -3099,6 +5263,796 @@
         ]
       }
     },
+    "/v1/contracts": {
+      "get": {
+        "description": "Return the tenant's contracts, newest first.",
+        "operationId": "list_contracts_v1_contracts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ContractOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List contracts",
+        "tags": [
+          "contracts"
+        ]
+      },
+      "post": {
+        "description": "Create a draft contract linking one lead + one CUPS + one product. The contract `number` is auto-generated per tenant + year. The contract is created in `draft`; transition to `signed` via the `/sign` endpoint added in B-3.6.",
+        "operationId": "create_contract_v1_contracts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractOut"
+                }
+              }
+            },
+            "description": "Contract created in draft."
+          },
+          "404": {
+            "description": "Lead / CUPS / product not found in this tenant."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create a contract (draft)",
+        "tags": [
+          "contracts"
+        ]
+      }
+    },
+    "/v1/contracts/{contract_id}": {
+      "get": {
+        "operationId": "get_contract_v1_contracts__contract_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contract_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Contract Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get contract by ID",
+        "tags": [
+          "contracts"
+        ]
+      },
+      "patch": {
+        "description": "Partial update of customer / billing fields. Status changes are **not** allowed here; use the dedicated transition endpoints.",
+        "operationId": "update_contract_v1_contracts__contract_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contract_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Contract Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update contract metadata",
+        "tags": [
+          "contracts"
+        ]
+      }
+    },
+    "/v1/contracts/{contract_id}/cancel": {
+      "post": {
+        "description": "Cancel a contract regardless of its current state (except already cancelled). Stores an optional `reason` for the audit trail.",
+        "operationId": "cancel_contract_v1_contracts__contract_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contract_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Contract Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractCancel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractOut"
+                }
+              }
+            },
+            "description": "Contract cancelled."
+          },
+          "404": {
+            "description": "Contract not found."
+          },
+          "409": {
+            "description": "Contract is already cancelled."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel a contract",
+        "tags": [
+          "contracts"
+        ]
+      }
+    },
+    "/v1/contracts/{contract_id}/pdf": {
+      "get": {
+        "description": "Returns the persisted contract PDF. Renders the PDF on the fly when the contract has not been rendered yet (still in draft) and no PDF is on file. Returns 404 when the contract does not exist; 503 when storage cannot be read.",
+        "operationId": "download_contract_pdf_v1_contracts__contract_id__pdf_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contract_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Contract Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/pdf": {}
+            },
+            "description": "PDF body."
+          },
+          "404": {
+            "description": "Contract not found."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download the contract PDF",
+        "tags": [
+          "contracts"
+        ]
+      },
+      "post": {
+        "description": "Renders the contract PDF from the in-house HTML/CSS template via weasyprint and stores it through the configured Storage backend (Cloudflare R2 in production, local filesystem in dev/tests). The contract row is updated with the storage pointer, SHA-256 digest and timestamp. Available while the contract is still in `draft` or `rejected` \u2014 once signed, the PDF on file is the legal artifact and must not be regenerated.",
+        "operationId": "render_contract_pdf_endpoint_v1_contracts__contract_id__pdf_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contract_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Contract Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractOut"
+                }
+              }
+            },
+            "description": "PDF rendered and persisted."
+          },
+          "404": {
+            "description": "Contract not found."
+          },
+          "409": {
+            "description": "Contract is not in draft/rejected status."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Render and store the contract PDF",
+        "tags": [
+          "contracts"
+        ]
+      }
+    },
+    "/v1/contracts/{contract_id}/sign": {
+      "post": {
+        "description": "Pushes the contract PDF to the configured e-signature provider (Signaturit in Sprint 3) and stores a `signature_requests` audit row. The contract stays in `draft` until the webhook (`B-3.7`) delivers the `completed` event, at which point it transitions to `signed`.\n\nThe `Idempotency-Key` header is required: a retry with the same key + body returns the original 202 envelope; a retry with a different body returns 409. Returns 503 when Signaturit credentials are not provisioned.",
+        "operationId": "sign_contract_v1_contracts__contract_id__sign_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contract_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Contract Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Caller-generated UUID/string scoped to this endpoint. Required. Re-sending the same key with the same body returns the original response without re-firing the send.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractSignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractSignResponse"
+                }
+              }
+            },
+            "description": "Cached response (idempotency replay)."
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractSignResponse"
+                }
+              }
+            },
+            "description": "Signature request accepted by the provider."
+          },
+          "400": {
+            "description": "Missing Idempotency-Key or PDF cannot be rendered."
+          },
+          "404": {
+            "description": "Contract not found."
+          },
+          "409": {
+            "description": "Contract is not in draft, or the same Idempotency-Key was reused with a different request body."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "502": {
+            "description": "Provider error."
+          },
+          "503": {
+            "description": "Signaturit credentials not configured."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Send the contract for e-signature",
+        "tags": [
+          "contracts"
+        ]
+      }
+    },
+    "/v1/cups": {
+      "get": {
+        "description": "Return CUPS rows scoped to the caller's tenant, newest first.",
+        "operationId": "list_cups_v1_cups_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_CupsOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List CUPS",
+        "tags": [
+          "cups"
+        ]
+      },
+      "post": {
+        "description": "Create a CUPS row inside the caller's tenant. The `code` must match the ES 20/22 or PT 20 format; invalid codes return 422. Re-using the same code inside the tenant returns 409 (the row already exists).",
+        "operationId": "create_cups_v1_cups_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CupsCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CupsOut"
+                }
+              }
+            },
+            "description": "CUPS registered."
+          },
+          "409": {
+            "description": "A CUPS with this code already exists in the tenant."
+          },
+          "422": {
+            "description": "CUPS validation failed."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Register a CUPS",
+        "tags": [
+          "cups"
+        ]
+      }
+    },
+    "/v1/cups/{code}/sips": {
+      "get": {
+        "description": "Returns the SIPS (regulator) snapshot for the given CUPS literal. The CUPS must already be registered inside the tenant. Results are cached locally on the row for 7 days (configurable via `SIPS_CACHE_TTL_DAYS`); pass `?refresh=true` to bypass the cache.\n\nReturns 503 when the SIPS provider is enabled but credentials are not configured. Returns 422 when the path parameter is not a valid CUPS, 404 when the CUPS does not exist or the upstream has no record, and 502 on upstream transport errors.",
+        "operationId": "get_sips_v1_cups__code__sips_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "title": "Code",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Bypass the local 7d cache.",
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Bypass the local 7d cache.",
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SipsResponse"
+                }
+              }
+            },
+            "description": "SIPS payload (live or cached)."
+          },
+          "404": {
+            "description": "CUPS not found locally or in the upstream."
+          },
+          "422": {
+            "description": "Invalid CUPS literal."
+          },
+          "502": {
+            "description": "Upstream transport / decoding error."
+          },
+          "503": {
+            "description": "SIPS provider credentials are not configured."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Fetch SIPS data for a CUPS",
+        "tags": [
+          "cups"
+        ]
+      }
+    },
+    "/v1/cups/{cups_id}": {
+      "delete": {
+        "operationId": "delete_cups_v1_cups__cups_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cups_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Cups Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Soft-delete a CUPS",
+        "tags": [
+          "cups"
+        ]
+      },
+      "get": {
+        "operationId": "get_cups_v1_cups__cups_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cups_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Cups Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CupsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get CUPS by ID",
+        "tags": [
+          "cups"
+        ]
+      },
+      "patch": {
+        "description": "Partial update; omitted fields stay unchanged.",
+        "operationId": "update_cups_v1_cups__cups_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cups_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Cups Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CupsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CupsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update a CUPS",
+        "tags": [
+          "cups"
+        ]
+      }
+    },
     "/v1/leads": {
       "get": {
         "description": "Returns a paginated list of leads scoped to the caller's tenant. Filters are AND-ed; the `q` parameter performs a case-insensitive match against name, email, phone and company.",
@@ -3807,6 +6761,94 @@
         ]
       }
     },
+    "/v1/leads/{lead_id}/invoices/ocr": {
+      "post": {
+        "description": "Accepts a multipart PDF upload, routes it through the ModelRouter (Anthropic Claude in production, mock in tests) and returns the extracted CUPS / consumption / power / tariff / supplier so the frontend can pre-fill the savings calculator and the CUPS form.\n\nRequires `Idempotency-Key` (the hash includes the PDF bytes so a retry with the same file + key returns the cached extraction). Returns 503 when Anthropic credentials are not configured.",
+        "operationId": "extract_invoice_pdf_v1_leads__lead_id__invoices_ocr_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Caller-generated UUID/string scoped to this endpoint.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_extract_invoice_pdf_v1_leads__lead_id__invoices_ocr_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceOcrResponse"
+                }
+              }
+            },
+            "description": "Extraction complete (live or cached replay)."
+          },
+          "400": {
+            "description": "Missing Idempotency-Key or invalid file."
+          },
+          "404": {
+            "description": "Lead not found."
+          },
+          "409": {
+            "description": "Idempotency-Key reused with a different PDF."
+          },
+          "413": {
+            "description": "PDF exceeds 8 MiB."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "502": {
+            "description": "Model returned malformed output."
+          },
+          "503": {
+            "description": "Anthropic credentials not configured."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Extract structured fields from a lead's invoice PDF",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
     "/v1/leads/{lead_id}/move": {
       "post": {
         "description": "Moves the lead to a stage inside its current pipeline. The transition is recorded as a `stage_changed` activity (and an additional `status_changed` activity when the coarse status flips). 4xx if the target stage belongs to another pipeline.",
@@ -4289,6 +7331,316 @@
         ]
       }
     },
+    "/v1/products": {
+      "get": {
+        "description": "Returns the tenant's tariff catalog, newest first.",
+        "operationId": "list_products_v1_products_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ProductOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List products",
+        "tags": [
+          "products"
+        ]
+      },
+      "post": {
+        "description": "Add a new tariff to the catalog. `pricing` is validated against `tariff_kind`: `fixed` / `multi_period` require a non-empty `periods` array; `indexed_omie` requires `margin_eur_per_kwh`. Mismatched bodies return 422. Code uniqueness is per tenant.",
+        "operationId": "create_product_v1_products_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductOut"
+                }
+              }
+            },
+            "description": "Product registered."
+          },
+          "409": {
+            "description": "A product with this code already exists in the tenant."
+          },
+          "422": {
+            "description": "Pricing block does not match the declared tariff kind."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create a product (tariff)",
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/v1/products/{product_id}": {
+      "delete": {
+        "operationId": "delete_product_v1_products__product_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "product_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Product Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Soft-delete a product",
+        "tags": [
+          "products"
+        ]
+      },
+      "get": {
+        "operationId": "get_product_v1_products__product_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "product_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Product Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get product by ID",
+        "tags": [
+          "products"
+        ]
+      },
+      "patch": {
+        "description": "Partial update; omitted fields stay unchanged.",
+        "operationId": "update_product_v1_products__product_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "product_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Product Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update product",
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/v1/quotes/calculate": {
+      "post": {
+        "description": "Calculates 12-month savings of moving a CUPS from the supplied baseline (current bill) to either an explicit `rate` or to one of the tenant's products (collapsed to a single average per period). Requires `Idempotency-Key`; replays return the cached envelope.\n\nReturns 422 when neither `rate` nor a resolvable `product_id` is given; 404 when the `product_id` is unknown in the tenant.",
+        "operationId": "calculate_quote_v1_quotes_calculate_post",
+        "parameters": [
+          {
+            "description": "Caller-generated UUID/string scoped to this endpoint.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteCalculateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteCalculateResponse"
+                }
+              }
+            },
+            "description": "Quote (live or cached idempotency replay)."
+          },
+          "400": {
+            "description": "Missing Idempotency-Key header."
+          },
+          "404": {
+            "description": "Product not found in this tenant."
+          },
+          "409": {
+            "description": "Idempotency-Key reused with a different body."
+          },
+          "422": {
+            "description": "Pricing inputs incomplete."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Estimate 12-month savings",
+        "tags": [
+          "quotes"
+        ]
+      }
+    },
     "/v1/users": {
       "get": {
         "description": "Returns a paginated list of active users in the caller's tenant. Use to populate owner pickers and assignment dropdowns. `q` performs case-insensitive partial match against email and the composed first/last name. `role` filters by application role.",
@@ -4468,6 +7820,63 @@
         ]
       }
     },
+    "/webhooks/signaturit": {
+      "post": {
+        "description": "Signaturit posts signature lifecycle events here. Body is HMAC-SHA1 signed with `SIGNATURIT_WEBHOOK_SECRET`; mismatched or missing signatures return 401. Unknown signature ids return 204 (idempotent \u2014 the provider retries). Configured-but-completed events advance the linked contract to `signed` and stamp `signed_at`.",
+        "operationId": "signaturit_webhook_webhooks_signaturit_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-signaturit-signature",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Signaturit-Signature"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "204": {
+            "description": "Event accepted (signed or no-op)."
+          },
+          "401": {
+            "description": "Signature missing / mismatched."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "description": "Webhook secret not configured."
+          }
+        },
+        "summary": "Signaturit webhook",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
     "/webhooks/whatsapp": {
       "get": {
         "description": "Meta's subscription handshake. Returns `hub.challenge` verbatim when the verify token matches the configured `WHATSAPP_VERIFY_TOKEN`.",
@@ -4623,6 +8032,22 @@
     {
       "description": "Manage tenant-defined sales funnels and their stages. A 'Default' pipeline with 5 stages is seeded automatically when a tenant is provisioned.",
       "name": "pipelines"
+    },
+    {
+      "description": "Supply-point registry. CUPS are the regulator-issued universal identifiers for electricity / gas points; `/v1/cups` registers them and `/v1/cups/{code}/sips` hydrates them from the CNMC SIPS database (cached 7 days).",
+      "name": "cups"
+    },
+    {
+      "description": "Commercial supply agreements. A contract joins one lead + one CUPS + one product and walks the regulator-aware state machine `draft \u2192 signed \u2192 sent_to_dso \u2192 active` with `rejected` and `cancelled` side-paths. Signing happens via `/v1/contracts/{id}/sign` (B-3.6); ATR send and activation come in Sprint 4.",
+      "name": "contracts"
+    },
+    {
+      "description": "Tariff catalog. Each tenant maintains its own list of sellable products (fixed, OMIE-indexed or multi-period) that are quoted to leads and later attached to a signed contract.",
+      "name": "products"
+    },
+    {
+      "description": "Savings calculator. `POST /v1/quotes/calculate` returns 12-month savings of moving a CUPS from a supplied baseline to a product or explicit rate. Requires `Idempotency-Key`.",
+      "name": "quotes"
     },
     {
       "description": "Signed inbound webhooks from external services (Clerk, WhatsApp).",
