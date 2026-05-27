@@ -26,11 +26,18 @@ import { CupsDetailSheet } from "./cups-detail-sheet";
 
 const DEFAULT_LIMIT = 25;
 
-export function CupsPageClient() {
+export interface CupsPageClientProps {
+  /** If set, opens the detail sheet automatically (from /cups/[id]). */
+  detailCupsId?: string;
+}
+
+export function CupsPageClient({ detailCupsId }: CupsPageClientProps) {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [selectedCupsId, setSelectedCupsId] = useState<string | null>(null);
+  const [selectedCupsId, setSelectedCupsId] = useState<string | null>(
+    detailCupsId ?? null,
+  );
   const [offset, setOffset] = useState(0);
 
   const queryClient = useQueryClient();
