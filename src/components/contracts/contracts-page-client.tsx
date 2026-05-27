@@ -25,6 +25,7 @@ import {
 import { toast } from "@/lib/ui/toast";
 import { ContractsTable } from "./contracts-table";
 import { ContractDetailSheet } from "./contract-detail-sheet";
+import { InPersonSignDialog } from "./in-person-sign-dialog";
 import { SignContractDialog } from "./sign-contract-dialog";
 
 /**
@@ -41,6 +42,7 @@ export function ContractsPageClient() {
   const [offset, setOffset] = useState(0);
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [signContractId, setSignContractId] = useState<string | null>(null);
+  const [inPersonSignContractId, setInPersonSignContractId] = useState<string | null>(null);
   const [cancelConfirm, setCancelConfirm] = useState<{
     id: string;
     number: string;
@@ -84,6 +86,13 @@ export function ContractsPageClient() {
   const handleSign = useCallback(
     (contractId: string) => {
       setSignContractId(contractId);
+    },
+    [],
+  );
+
+  const handleInPersonSign = useCallback(
+    (contractId: string) => {
+      setInPersonSignContractId(contractId);
     },
     [],
   );
@@ -207,6 +216,7 @@ export function ContractsPageClient() {
           contractId={selectedContractId}
           onClose={() => setSelectedContractId(null)}
           onSign={handleSign}
+          onInPersonSign={handleInPersonSign}
         />
       )}
 
@@ -215,6 +225,14 @@ export function ContractsPageClient() {
         <SignContractDialog
           contractId={signContractId}
           onClose={() => setSignContractId(null)}
+        />
+      )}
+
+      {/* In-person sign dialog */}
+      {inPersonSignContractId && (
+        <InPersonSignDialog
+          contractId={inPersonSignContractId}
+          onClose={() => setInPersonSignContractId(null)}
         />
       )}
 

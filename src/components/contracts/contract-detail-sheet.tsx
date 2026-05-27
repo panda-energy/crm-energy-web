@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, FileText, RefreshCw, Send } from "lucide-react";
+import { Download, FileText, PenLine, RefreshCw, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -25,12 +25,14 @@ interface ContractDetailSheetProps {
   contractId: string;
   onClose: () => void;
   onSign: (contractId: string) => void;
+  onInPersonSign?: (contractId: string) => void;
 }
 
 export function ContractDetailSheet({
   contractId,
   onClose,
   onSign,
+  onInPersonSign,
 }: ContractDetailSheetProps) {
   const contractQuery = useContract(contractId);
   const generatePdf = useGeneratePdf(contractId);
@@ -191,10 +193,21 @@ export function ContractDetailSheet({
                       : "Genera el PDF primero para poder enviarlo a firma."}
                   </p>
                   {contract.pdf_storage_key && contract.status === "draft" && (
-                    <Button onClick={() => onSign(contract.id)}>
-                      <Send className="mr-1.5 size-4" aria-hidden />
-                      Enviar a firma
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button onClick={() => onSign(contract.id)}>
+                        <Send className="mr-1.5 size-4" aria-hidden />
+                        Enviar a firma (remoto)
+                      </Button>
+                      {onInPersonSign && (
+                        <Button
+                          variant="outline"
+                          onClick={() => onInPersonSign(contract.id)}
+                        >
+                          <PenLine className="mr-1.5 size-4" aria-hidden />
+                          Firma presencial
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
