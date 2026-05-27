@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import type { ValueType, NameType } from "recharts/types/component/DefaultTooltipContent";
 import type { Commission } from "@/lib/api/types-sprint5";
 
 /**
@@ -77,8 +78,8 @@ export function CommissionChart({ commissions }: CommissionChartProps) {
             tickFormatter={(v: number) => `${v}e`}
           />
           <Tooltip
-            formatter={(value: number) => [
-              `${value.toFixed(2)} EUR`,
+            formatter={(value: ValueType | undefined, _name: NameType | undefined) => [
+              `${Number(value ?? 0).toFixed(2)} EUR`,
             ]}
             contentStyle={{
               backgroundColor: "hsl(var(--surface))",

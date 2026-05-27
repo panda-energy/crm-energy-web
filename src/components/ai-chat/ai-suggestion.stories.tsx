@@ -43,11 +43,9 @@ export const Warning: Story = {
 };
 
 export const Applied: Story = {
-  render: () => (
-    <AiSuggestion
-      suggestion="Tarifa Fija Hogar 2.0TD"
-      explanation="Mejor relacion calidad-precio para este perfil"
-      onApply={() => undefined}
-    />
-  ),
+  args: {
+    suggestion: "Tarifa Fija Hogar 2.0TD",
+    explanation: "Mejor relacion calidad-precio para este perfil",
+    onApply: () => undefined,
+  },
 };

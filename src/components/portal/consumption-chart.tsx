@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import type { ValueType, NameType } from "recharts/types/component/DefaultTooltipContent";
 import type { CustomerConsumption } from "@/lib/api/types-sprint5";
 
 /**
@@ -88,9 +89,10 @@ export function ConsumptionChart({ data }: ConsumptionChartProps) {
               borderRadius: "0.5rem",
               fontSize: "12px",
             }}
-            formatter={(value: number, name: string) => {
-              if (name === "kwh") return [`${value} kWh`, "Consumo"];
-              return [`${value.toFixed(2)} EUR`, "Importe"];
+            formatter={(value: ValueType | undefined, name: NameType | undefined) => {
+              const v = Number(value ?? 0);
+              if (name === "kwh") return [`${v} kWh`, "Consumo"];
+              return [`${v.toFixed(2)} EUR`, "Importe"];
             }}
           />
           <Legend
