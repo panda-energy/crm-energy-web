@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Bot, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,9 @@ import { useChatStore } from "@/lib/ui/chat-store";
 import { useChatSession, useSendMessage } from "@/lib/api/hooks/use-chat";
 import { ChatBubble } from "./chat-bubble";
 import { ChatInput } from "./chat-input";
+import { StreamingMessage } from "./streaming-message";
+import { ThinkingIndicator } from "./thinking-indicator";
+import { MarkdownContent } from "./markdown-content";
 
 /**
  * AiChatPanel -- global side drawer for conversational AI.
@@ -19,6 +22,10 @@ import { ChatInput } from "./chat-input";
  *
  * Messages are fetched via TanStack Query (useChatSession).
  * Sending via useSendMessage with idempotency key.
+ *
+ * Assistant messages render markdown via react-markdown + remark-gfm.
+ * The latest assistant message (after a user send) uses StreamingMessage
+ * for a typing effect.
  */
 
 function getContextualPlaceholder(pathname: string): string {
@@ -60,6 +67,8 @@ export function AiChatPanel() {
   const setPendingCount = useChatStore((s) => s.setPendingCount);
   const pathname = usePathname();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Track the ID of the last message that should be animated (streaming)
+  const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
 
   const { data: session, isLoading } = useChatSession();
   const sendMessage = useSendMessage();
@@ -103,21 +112,49 @@ export function AiChatPanel() {
   const handleSend = useCallback(
     (content: string) => {
       const entity = extractEntityFromPath(pathname);
-      sendMessage.mutate({
-        content,
-        context: {
-          page: pathname,
-          ...entity,
+      sendMessage.mutate(
+        {
+          content,
+          context: {
+            page: pathname,
+            ...entity,
+          },
         },
-      });
+        {
+          onSuccess: (assistantMsg) => {
+            // Mark the new assistant message for streaming animation
+            setStreamingMsgId(assistantMsg.id);
+          },
+        },
+      );
     },
     [pathname, sendMessage],
   );
 
   const handleNewConversation = useCallback(() => {
     // In production this would POST /v1/ai/chat/new
-    // For MSW demo, just a no-op toast
+    // For MSW demo, no-op
   }, []);
+
+  const renderMessageContent = useCallback(
+    (msg: { id: string; role: string; content: string }) => {
+      if (msg.role === "assistant") {
+        const shouldAnimate = msg.id === streamingMsgId;
+        if (shouldAnimate) {
+          return (
+            <StreamingMessage
+              content={msg.content}
+              animate
+              onComplete={() => setStreamingMsgId(null)}
+            />
+          );
+        }
+        return <MarkdownContent content={msg.content} />;
+      }
+      return msg.content;
+    },
+    [streamingMsgId],
+  );
 
   return (
     <>
@@ -189,9 +226,10 @@ export function AiChatPanel() {
                   role={msg.role}
                   timestamp={msg.created_at}
                 >
-                  {msg.content}
+                  {renderMessageContent(msg)}
                 </ChatBubble>
               ))}
+              {sendMessage.isPending ? <ThinkingIndicator /> : null}
               <div ref={messagesEndRef} />
             </div>
           )}
