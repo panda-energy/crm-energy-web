@@ -77,6 +77,32 @@ jobs:
           flags: web
           fail_ci_if_error: false
 
+  audit:
+    name: ci/pnpm-audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true # Alert, don't block (D-4.7)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Run pnpm audit
+        run: |
+          pnpm audit --audit-level=high --json > pnpm-audit-report.json 2>&1 || echo "Vulnerabilities found (non-blocking)"
+          pnpm audit --audit-level=high || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pnpm-audit-report
+          path: pnpm-audit-report.json
+          retention-days: 30
+
   build:
     name: ci/build
     runs-on: ubuntu-latest
