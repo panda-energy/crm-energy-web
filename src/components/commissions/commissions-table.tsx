@@ -84,7 +84,10 @@ export function CommissionsTable() {
     [channelMap],
   );
 
-  const data = commissionsQuery.data?.items ?? [];
+  const data = useMemo(
+    () => commissionsQuery.data?.items ?? [],
+    [commissionsQuery.data?.items],
+  );
 
   const table = useReactTable({
     data,

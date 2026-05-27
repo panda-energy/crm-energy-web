@@ -22,8 +22,6 @@ import {
   INVOICE_FIXTURES,
   POWER_REQUEST_FIXTURES,
 } from "./fixtures/sprint5";
-import { TENANT_ID } from "./fixtures/pipelines";
-import { USER_IDS } from "./fixtures/users";
 import { CONTRACT_IDS } from "./fixtures/contracts";
 
 /**
