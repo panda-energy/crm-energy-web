@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "dashboard": "Painel",
+    "leads": "Leads",
+    "pipeline": "Pipeline",
+    "cups": "CUPS",
+    "contracts": "Contratos",
+    "atr": "ATR",
+    "tickets": "Tickets",
+    "commissions": "Comissoes",
+    "settings": "Configuracao"
+  },
+  "topbar": {
+    "search": "Pesquisar",
+    "demoMode": "Modo demo",
+    "demoBanner": "Estas em modo demonstracao — os dados sao ficticios",
+    "live": "Online",
+    "offline": "Offline",
+    "connecting": "Conectando",
+    "openMenu": "Abrir menu de navegacao",
+    "collapseMenu": "Recolher menu",
+    "expandMenu": "Expandir menu",
+    "collapse": "Recolher"
+  },
+  "actions": {
+    "create": "Criar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "close": "Fechar",
+    "filter": "Filtrar",
+    "search": "Pesquisar",
+    "retry": "Tentar novamente",
+    "edit": "Editar",
+    "next": "Seguinte",
+    "previous": "Anterior",
+    "skip": "Saltar",
+    "done": "Concluido",
+    "confirm": "Confirmar",
+    "apply": "Aplicar",
+    "reset": "Repor",
+    "export": "Exportar",
+    "import": "Importar",
+    "download": "Descarregar",
+    "upload": "Carregar"
+  },
+  "statuses": {
+    "new": "Novo",
+    "contacted": "Contactado",
+    "qualified": "Qualificado",
+    "won": "Ganho",
+    "lost": "Perdido",
+    "pending": "Pendente",
+    "sent": "Enviado",
+    "processed": "Processado",
+    "rejected": "Rejeitado",
+    "open": "Aberto",
+    "in_progress": "Em andamento",
+    "resolved": "Resolvido",
+    "closed": "Fechado",
+    "draft": "Rascunho",
+    "active": "Ativo",
+    "cancelled": "Cancelado",
+    "signed": "Assinado",
+    "approved": "Aprovado",
+    "paid": "Pago"
+  },
+  "empty": {
+    "leads": "Nao ha leads",
+    "contracts": "Nao ha contratos",
+    "cups": "Nao ha CUPS registados",
+    "tickets": "Nao ha tickets",
+    "atr": "Nao ha mensagens ATR",
+    "commissions": "Nao ha comissoes",
+    "products": "Nao ha produtos",
+    "results": "Nenhum resultado encontrado",
+    "activity": "Nao ha atividade registada"
+  },
+  "errors": {
+    "generic": "Ocorreu um erro inesperado",
+    "network": "Erro de ligacao. Verifica a tua ligacao a internet.",
+    "notFound": "O recurso solicitado nao existe",
+    "unauthorized": "Nao tens permissoes para esta acao",
+    "validation": "Existem erros no formulario",
+    "loadFailed": "Nao foi possivel carregar os dados"
+  },
+  "language": {
+    "label": "Idioma",
+    "es": "Espanhol",
+    "ca": "Catalao",
+    "pt": "Portugues"
+  }
+}

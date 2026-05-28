@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "dashboard": "Tauler",
+    "leads": "Leads",
+    "pipeline": "Pipeline",
+    "cups": "CUPS",
+    "contracts": "Contractes",
+    "atr": "ATR",
+    "tickets": "Tiquets",
+    "commissions": "Comissions",
+    "settings": "Configuracio"
+  },
+  "topbar": {
+    "search": "Cercar",
+    "demoMode": "Mode demo",
+    "demoBanner": "Estas en mode demostracio — les dades son ficticies",
+    "live": "En viu",
+    "offline": "Fora de linia",
+    "connecting": "Connectant",
+    "openMenu": "Obrir menu de navegacio",
+    "collapseMenu": "Replegar menu",
+    "expandMenu": "Desplegar menu",
+    "collapse": "Replegar"
+  },
+  "actions": {
+    "create": "Crear",
+    "save": "Desar",
+    "cancel": "Cancel-lar",
+    "delete": "Eliminar",
+    "close": "Tancar",
+    "filter": "Filtrar",
+    "search": "Cercar",
+    "retry": "Reintentar",
+    "edit": "Editar",
+    "next": "Seguent",
+    "previous": "Anterior",
+    "skip": "Saltar",
+    "done": "Fet",
+    "confirm": "Confirmar",
+    "apply": "Aplicar",
+    "reset": "Restablir",
+    "export": "Exportar",
+    "import": "Importar",
+    "download": "Descarregar",
+    "upload": "Pujar"
+  },
+  "statuses": {
+    "new": "Nou",
+    "contacted": "Contactat",
+    "qualified": "Qualificat",
+    "won": "Guanyat",
+    "lost": "Perdut",
+    "pending": "Pendent",
+    "sent": "Enviat",
+    "processed": "Processat",
+    "rejected": "Rebutjat",
+    "open": "Obert",
+    "in_progress": "En progres",
+    "resolved": "Resolt",
+    "closed": "Tancat",
+    "draft": "Esborrany",
+    "active": "Actiu",
+    "cancelled": "Cancel-lat",
+    "signed": "Signat",
+    "approved": "Aprovat",
+    "paid": "Pagat"
+  },
+  "empty": {
+    "leads": "No hi ha leads",
+    "contracts": "No hi ha contractes",
+    "cups": "No hi ha CUPS registrats",
+    "tickets": "No hi ha tiquets",
+    "atr": "No hi ha missatges ATR",
+    "commissions": "No hi ha comissions",
+    "products": "No hi ha productes",
+    "results": "No s'han trobat resultats",
+    "activity": "No hi ha activitat registrada"
+  },
+  "errors": {
+    "generic": "S'ha produit un error inesperat",
+    "network": "Error de connexio. Verifica la teva connexio a internet.",
+    "notFound": "El recurs sol-licitat no existeix",
+    "unauthorized": "No tens permisos per a aquesta accio",
+    "validation": "Hi ha errors al formulari",
+    "loadFailed": "No s'han pogut carregar les dades"
+  },
+  "language": {
+    "label": "Idioma",
+    "es": "Espanol",
+    "ca": "Catala",
+    "pt": "Portugues"
+  }
+}

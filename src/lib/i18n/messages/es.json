@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "leads": "Leads",
+    "pipeline": "Pipeline",
+    "cups": "CUPS",
+    "contracts": "Contratos",
+    "atr": "ATR",
+    "tickets": "Tickets",
+    "commissions": "Comisiones",
+    "settings": "Configuracion"
+  },
+  "topbar": {
+    "search": "Buscar",
+    "demoMode": "Modo demo",
+    "demoBanner": "Estas en modo demostracion — los datos son ficticios",
+    "live": "Live",
+    "offline": "Offline",
+    "connecting": "Conectando",
+    "openMenu": "Abrir menu de navegacion",
+    "collapseMenu": "Colapsar menu",
+    "expandMenu": "Expandir menu",
+    "collapse": "Colapsar"
+  },
+  "actions": {
+    "create": "Crear",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "close": "Cerrar",
+    "filter": "Filtrar",
+    "search": "Buscar",
+    "retry": "Reintentar",
+    "edit": "Editar",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "skip": "Saltar",
+    "done": "Hecho",
+    "confirm": "Confirmar",
+    "apply": "Aplicar",
+    "reset": "Restablecer",
+    "export": "Exportar",
+    "import": "Importar",
+    "download": "Descargar",
+    "upload": "Subir"
+  },
+  "statuses": {
+    "new": "Nuevo",
+    "contacted": "Contactado",
+    "qualified": "Calificado",
+    "won": "Ganado",
+    "lost": "Perdido",
+    "pending": "Pendiente",
+    "sent": "Enviado",
+    "processed": "Procesado",
+    "rejected": "Rechazado",
+    "open": "Abierto",
+    "in_progress": "En progreso",
+    "resolved": "Resuelto",
+    "closed": "Cerrado",
+    "draft": "Borrador",
+    "active": "Activo",
+    "cancelled": "Cancelado",
+    "signed": "Firmado",
+    "approved": "Aprobado",
+    "paid": "Pagado"
+  },
+  "empty": {
+    "leads": "No hay leads",
+    "contracts": "No hay contratos",
+    "cups": "No hay CUPS registrados",
+    "tickets": "No hay tickets",
+    "atr": "No hay mensajes ATR",
+    "commissions": "No hay comisiones",
+    "products": "No hay productos",
+    "results": "No se encontraron resultados",
+    "activity": "No hay actividad registrada"
+  },
+  "errors": {
+    "generic": "Ha ocurrido un error inesperado",
+    "network": "Error de conexion. Verifica tu conexion a internet.",
+    "notFound": "El recurso solicitado no existe",
+    "unauthorized": "No tienes permisos para esta accion",
+    "validation": "Hay errores en el formulario",
+    "loadFailed": "No se pudieron cargar los datos"
+  },
+  "language": {
+    "label": "Idioma",
+    "es": "Espanol",
+    "ca": "Catala",
+    "pt": "Portugues"
+  }
+}

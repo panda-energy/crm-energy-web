@@ -25,18 +25,20 @@ export interface NavItem {
   href: string;
   /** Icono Lucide para sidebar. */
   icon: LucideIcon;
+  /** i18n key for translation (e.g. "nav.dashboard"). */
+  i18nKey: string;
 }
 
 export const navItems: ReadonlyArray<NavItem> = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Leads", href: "/leads", icon: Users },
-  { label: "Pipeline", href: "/pipeline", icon: BarChart3 },
-  { label: "CUPS", href: "/cups", icon: Building2 },
-  { label: "Contratos", href: "/contracts", icon: FileText },
-  { label: "ATR", href: "/atr", icon: Tag },
-  { label: "Tickets", href: "/tickets", icon: Inbox },
-  { label: "Comisiones", href: "/commissions", icon: Wallet },
-  { label: "Configuración", href: "/settings", icon: Settings },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, i18nKey: "nav.dashboard" },
+  { label: "Leads", href: "/leads", icon: Users, i18nKey: "nav.leads" },
+  { label: "Pipeline", href: "/pipeline", icon: BarChart3, i18nKey: "nav.pipeline" },
+  { label: "CUPS", href: "/cups", icon: Building2, i18nKey: "nav.cups" },
+  { label: "Contratos", href: "/contracts", icon: FileText, i18nKey: "nav.contracts" },
+  { label: "ATR", href: "/atr", icon: Tag, i18nKey: "nav.atr" },
+  { label: "Tickets", href: "/tickets", icon: Inbox, i18nKey: "nav.tickets" },
+  { label: "Comisiones", href: "/commissions", icon: Wallet, i18nKey: "nav.commissions" },
+  { label: "Configuracion", href: "/settings", icon: Settings, i18nKey: "nav.settings" },
 ];
 
 /**

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import { useSidebarStore } from "@/lib/ui/sidebar-store";
 import { navItems } from "@/lib/ui/nav-config";
+import { useTranslations } from "@/lib/i18n";
 
 /**
  * Sidebar desktop colapsable.
@@ -88,6 +89,7 @@ interface SidebarNavProps {
  */
 export function SidebarNav({ collapsed, onNavigate }: SidebarNavProps) {
   const pathname = usePathname();
+  const { t } = useTranslations();
 
   return (
     <nav className="flex-1 overflow-y-auto px-2 py-3">
@@ -96,13 +98,16 @@ export function SidebarNav({ collapsed, onNavigate }: SidebarNavProps) {
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
+          // reason: i18nKey is a valid MessageKey at runtime, cast is safe
+          // because nav-config keys match the es.json nav.* structure exactly.
+          const label = t(item.i18nKey as Parameters<typeof t>[0]);
           return (
             <li key={item.href}>
               <Link
                 href={item.href}
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
-                title={collapsed ? item.label : undefined}
+                title={collapsed ? label : undefined}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
                   "text-muted-foreground transition-colors",
@@ -112,8 +117,8 @@ export function SidebarNav({ collapsed, onNavigate }: SidebarNavProps) {
                   collapsed && "justify-center px-0",
                 )}
               >
-                <Icon className="size-4 shrink-0" aria-hidden />
-                {!collapsed ? <span className="truncate">{item.label}</span> : null}
+                <Icon className="size-4 shrink-0" aria-hidden="true" />
+                {!collapsed ? <span className="truncate">{label}</span> : null}
               </Link>
             </li>
           );

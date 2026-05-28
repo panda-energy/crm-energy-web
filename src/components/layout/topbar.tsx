@@ -17,6 +17,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { CommandPaletteTrigger } from "@/components/command-palette/command-palette-trigger";
 import { AiChatTrigger } from "@/components/ai-chat/ai-chat-trigger";
 import { LiveIndicator } from "./live-indicator";
+import { LanguageSelector } from "./language-selector";
 
 const isClerkConfigured = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
@@ -81,6 +82,7 @@ export function Topbar() {
             }}
           />
         ) : null}
+        <LanguageSelector />
         <ThemeToggle />
         {isClerkConfigured ? (
           <UserButton
