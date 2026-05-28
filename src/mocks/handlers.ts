@@ -724,6 +724,8 @@ import { sprint3Handlers } from "./handlers-sprint3";
 import { sprint4Handlers } from "./handlers-sprint4";
 // Sprint 5 handlers (AI Chat, Channels/Commissions, Portal)
 import { sprint5Handlers } from "./handlers-sprint5";
+// Sprint 6 handlers (Tenant settings)
+import { sprint6Handlers } from "./handlers-sprint6";
 
 export const handlers = [
   // Auth
@@ -751,4 +753,6 @@ export const handlers = [
   ...sprint4Handlers,
   // Sprint 5
   ...sprint5Handlers,
+  // Sprint 6
+  ...sprint6Handlers,
 ];
