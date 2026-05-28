@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,7 @@ export function GeneralTab() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<TenantGeneralForm>({
+    resolver: zodResolver(TenantGeneralSchema),
     defaultValues: {
       company_name: "Panda Energy Demo S.L.",
       tax_id: "B12345678",
