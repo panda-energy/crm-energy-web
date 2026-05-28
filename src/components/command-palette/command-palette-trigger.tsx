@@ -22,6 +22,7 @@ export function CommandPaletteTrigger({ className }: CommandPaletteTriggerProps)
       type="button"
       onClick={() => setOpen(true)}
       aria-label="Buscar y ejecutar acciones (Cmd+K)"
+      data-testid="cmdk-trigger"
       className={cn(
         "inline-flex items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-1.5",
         "text-xs text-muted-foreground transition-colors",

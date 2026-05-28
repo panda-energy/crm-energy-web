@@ -1,7 +1,9 @@
 "use client";
 
-import { Settings } from "lucide-react";
+import { RotateCcw, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useOnboardingStore } from "@/lib/ui/onboarding-store";
 import { GeneralTab } from "./general-tab";
 import { BrandTab } from "./brand-tab";
 import { ProductsTab } from "./products-tab";
@@ -15,20 +17,28 @@ import { IntegrationsTab } from "./integrations-tab";
  * Replaces the ComingSoonPlaceholder stub.
  */
 export function SettingsPageClient() {
+  const resetTour = useOnboardingStore((s) => s.resetTour);
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-lg bg-brand/10">
-          <Settings className="size-5 text-brand" aria-hidden="true" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-brand/10">
+            <Settings className="size-5 text-brand" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              Configuracion
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Gestiona la identidad, productos, equipo e integraciones de tu cuenta
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Configuracion
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Gestiona la identidad, productos, equipo e integraciones de tu cuenta
-          </p>
-        </div>
+        <Button variant="outline" size="sm" onClick={resetTour}>
+          <RotateCcw className="mr-1.5 size-4" aria-hidden="true" />
+          Repetir tour
+        </Button>
       </div>
 
       <Tabs defaultValue="general">

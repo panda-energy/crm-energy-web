@@ -6,6 +6,7 @@ import { DemoBanner } from "@/components/layout/demo-banner";
 import { SkipLink } from "@/components/layout/skip-link";
 import { CommandPaletteBoundary } from "@/components/command-palette/command-palette-boundary";
 import { AiChatBoundary } from "@/components/ai-chat/ai-chat-boundary";
+import { OnboardingTour } from "@/components/onboarding/onboarding-tour";
 
 const isClerkConfigured = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
@@ -59,6 +60,7 @@ export default async function AuthenticatedLayout({
       {/* AI Chat panel global con boundary lazy: hasta el primer Cmd+J
           o click en trigger del topbar, solo monta un listener ligero. */}
       <AiChatBoundary />
+      <OnboardingTour />
     </div>
   );
 }

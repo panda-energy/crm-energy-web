@@ -20,6 +20,7 @@ export function AiChatTrigger() {
       onClick={toggle}
       aria-label={`Asistente Panda AI${pendingCount > 0 ? ` (${pendingCount} pendiente${pendingCount > 1 ? "s" : ""})` : ""}`}
       className="relative"
+      data-testid="ai-chat-trigger"
     >
       <Bot className="size-4" aria-hidden />
       {pendingCount > 0 ? (
