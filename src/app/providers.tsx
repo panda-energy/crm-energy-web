@@ -3,7 +3,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { esES } from "@clerk/localizations";
 import { ThemeProvider } from "next-themes";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { clerkAppearance } from "@/lib/auth/clerk-appearance";
 import { MswProvider } from "@/mocks/MswProvider";
 import { Toaster } from "@/components/ui/toaster";
@@ -36,6 +36,13 @@ const isClerkConfigured = Boolean(
  *  y la app sirve MSW abierta.
  */
 export function Providers({ children }: { children: ReactNode }) {
+  // Mount axe-core a11y auditor in development only
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      void import("@/lib/a11y/axe-dev").then((mod) => mod.initAxeDev());
+    }
+  }, []);
+
   const inner = (
     <ThemeProvider
       attribute="class"

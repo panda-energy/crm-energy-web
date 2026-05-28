@@ -133,7 +133,7 @@ export function CupsTable({
         isRefetching && "opacity-70 transition-opacity",
       )}
     >
-      <table className="w-full">
+      <table className="w-full" aria-label="Puntos de suministro CUPS">
         <thead>
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id} className="border-b border-border bg-muted/40">

@@ -110,7 +110,7 @@ export function AtrTable({ data, onRowClick }: AtrTableProps) {
 
   return (
     <div className="overflow-x-auto rounded-lg border border-border bg-surface">
-      <table className="w-full text-sm">
+      <table className="w-full text-sm" aria-label="Mensajes ATR">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr

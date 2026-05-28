@@ -115,7 +115,7 @@ export function InvoicesPageClient() {
         />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label="Facturas">
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">

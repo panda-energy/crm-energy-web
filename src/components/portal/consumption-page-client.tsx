@@ -98,7 +98,7 @@ export function ConsumptionPageClient() {
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm" aria-label="Datos de consumo">
                   <thead>
                     <tr className="border-b border-border">
                       <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">

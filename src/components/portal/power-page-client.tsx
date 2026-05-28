@@ -76,7 +76,7 @@ export function PowerPageClient() {
             </p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" aria-label="Solicitudes de modificacion de potencia">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground">

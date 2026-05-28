@@ -126,7 +126,7 @@ export function ContractsTable({
         isRefetching && "opacity-70 transition-opacity",
       )}
     >
-      <table className="w-full">
+      <table className="w-full" aria-label="Contratos">
         <thead>
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id} className="border-b border-border bg-muted/40">
