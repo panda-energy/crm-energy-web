@@ -1,16 +1,27 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // Imágenes: el backend en Railway servirá uploads desde su dominio (TBD).
-  // Cloudflare R2 servirá las imágenes públicas/PDFs — DevOps proveerá el host.
+  // Images: backend on Railway will serve uploads from its domain (TBD).
+  // Cloudflare R2 will serve public images/PDFs -- DevOps will provide the host.
   images: {
     remotePatterns: [],
   },
   experimental: {
-    // Reservado para flags futuros (typedRoutes, optimizePackageImports, …).
+    // Optimize imports for heavy libraries to avoid bundling unused modules.
+    optimizePackageImports: [
+      "lucide-react",
+      "recharts",
+      "react-markdown",
+      "date-fns",
+    ],
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);
