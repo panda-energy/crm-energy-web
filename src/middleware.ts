@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 /**
  * Middleware Clerk para Next.js App Router.
@@ -39,6 +40,11 @@ const isClerkConfigured = Boolean(
 
 export default isClerkConfigured
   ? clerkMiddleware(async (auth, req) => {
+      // app.kuro.energy: redirigir "/" a "/dashboard"
+      const hostname = req.headers.get("host") ?? "";
+      if (hostname.startsWith("app.") && req.nextUrl.pathname === "/") {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
       if (!isPublicRoute(req)) {
         await auth.protect();
       }
