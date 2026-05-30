@@ -1,3 +1,6 @@
+"use client";
+
+import { LandingI18nProvider } from "@/components/landing/i18n";
 import { Navbar } from "@/components/landing/navbar";
 import { Hero } from "@/components/landing/hero";
 import { PainPoints } from "@/components/landing/pain-points";
@@ -14,22 +17,24 @@ import { Footer } from "@/components/landing/footer";
 
 export default function LandingPage() {
   return (
-    <div className="dark bg-[#09090B]">
-      <Navbar />
-      <main>
-        <Hero />
-        <PainPoints />
-        <SolutionFlow />
-        <Modules />
-        <AISection />
-        <Integrations />
-        <Security />
-        <Metrics />
-        <Pricing />
-        <FAQ />
-        <FinalCTA />
-      </main>
-      <Footer />
-    </div>
+    <LandingI18nProvider>
+      <div className="dark bg-[#09090B]">
+        <Navbar />
+        <main>
+          <Hero />
+          <PainPoints />
+          <SolutionFlow />
+          <Modules />
+          <AISection />
+          <Integrations />
+          <Security />
+          <Metrics />
+          <Pricing />
+          <FAQ />
+          <FinalCTA />
+        </main>
+        <Footer />
+      </div>
+    </LandingI18nProvider>
   );
 }

@@ -6,74 +6,25 @@ import {
   Brain, Headphones, Network, Globe, Smartphone,
 } from "lucide-react";
 import { useInView } from "./use-in-view";
+import { useLandingT } from "./i18n";
 
-const MODULES = [
-  {
-    icon: Users,
-    name: "Leads y captacion",
-    desc: "WhatsApp, formulario, CSV. Enrichment automatico, acciones en lote, barra de comandos rapida.",
-    span: "md:col-span-2 md:row-span-2",
-    featured: true,
-  },
-  {
-    icon: Columns3,
-    name: "Pipeline visual",
-    desc: "Kanban drag & drop. Etapas configurables por comercializadora.",
-    span: "md:col-span-1",
-  },
-  {
-    icon: MapPin,
-    name: "CUPS y SIPS",
-    desc: "Consulta oficial con un clic. Distribuidora, potencia, tarifa, consumo.",
-    span: "md:col-span-1",
-  },
-  {
-    icon: FileSignature,
-    name: "Contratos y firma",
-    desc: "Wizard guiado. PDF auto-generado. Firma remota eIDAS o presencial en pantalla.",
-    span: "md:col-span-1",
-  },
-  {
-    icon: RefreshCw,
-    name: "ATR y switching",
-    desc: "XML CNMC automatico. Envio SFTP a 5 distribuidoras. Tracking y reintentos.",
-    span: "md:col-span-1",
-  },
-  {
-    icon: Brain,
-    name: "Agentes IA",
-    desc: "Lead Concierge + ATR Back-office. Supervision humana. Trazabilidad completa.",
-    span: "md:col-span-2",
-    ai: true,
-  },
-  {
-    icon: Headphones,
-    name: "Atencion al cliente",
-    desc: "Bandeja unificada. SLA visual. Historial 360.",
-    span: "md:col-span-1",
-  },
-  {
-    icon: Network,
-    name: "Canales y comisiones",
-    desc: "Brokers, marca blanca. Calculo y liquidacion automatica.",
-    span: "md:col-span-1",
-  },
-  {
-    icon: Globe,
-    name: "Portal cliente",
-    desc: "Consumo, facturas, potencia. Personalizable con tu marca.",
-    span: "md:col-span-1",
-  },
-  {
-    icon: Smartphone,
-    name: "App movil",
-    desc: "Escanear factura, simular, firmar. Flujo completo en campo.",
-    span: "md:col-span-1",
-  },
-] as const;
+const ICONS = [Users, Columns3, MapPin, FileSignature, RefreshCw, Brain, Headphones, Network, Globe, Smartphone];
+const SPANS = [
+  "md:col-span-2 md:row-span-2",
+  "md:col-span-1",
+  "md:col-span-1",
+  "md:col-span-1",
+  "md:col-span-1",
+  "md:col-span-2",
+  "md:col-span-1",
+  "md:col-span-1",
+  "md:col-span-1",
+  "md:col-span-1",
+];
 
 export function Modules() {
   const { ref, inView } = useInView();
+  const { t, dict } = useLandingT();
 
   return (
     <section id="modulos" className="relative bg-[#09090B] py-32" ref={ref}>
@@ -84,27 +35,27 @@ export function Modules() {
           transition={{ duration: 0.6 }}
         >
           <span className="text-sm font-medium tracking-wider text-emerald-400/80 uppercase">
-            Modulos
+            {t(dict.modules.label)}
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
-            10 modulos.{" "}
-            <span className="text-zinc-500">Cero integraciones que mantener.</span>
+            {t(dict.modules.title)}{" "}
+            <span className="text-zinc-500">{t(dict.modules.titleFaded)}</span>
           </h2>
         </motion.div>
 
         {/* Bento grid */}
         <div className="mt-14 grid gap-3 md:grid-cols-4">
-          {MODULES.map((mod, i) => {
-            const Icon = mod.icon;
-            const isAi = "ai" in mod && mod.ai;
-            const isFeatured = "featured" in mod && mod.featured;
+          {dict.modules.items.map((mod, i) => {
+            const Icon = ICONS[i]!;
+            const isAi = i === 5;
+            const isFeatured = i === 0;
             return (
             <motion.div
-              key={mod.name}
+              key={i}
               initial={{ opacity: 0, y: 30, scale: 0.97 }}
               animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
               transition={{ duration: 0.45, delay: 0.1 + i * 0.06 }}
-              className={`group relative overflow-hidden rounded-2xl border border-zinc-800/60 bg-zinc-900/30 p-6 transition-all hover:border-zinc-700/60 ${mod.span}`}
+              className={`group relative overflow-hidden rounded-2xl border border-zinc-800/60 bg-zinc-900/30 p-6 transition-all hover:border-zinc-700/60 ${SPANS[i]}`}
               style={{ perspective: "800px" }}
             >
               {/* Hover glow */}
@@ -126,8 +77,8 @@ export function Modules() {
                     </span>
                   )}
                 </div>
-                <h3 className="mb-1.5 text-base font-semibold text-white">{mod.name}</h3>
-                <p className="text-sm leading-relaxed text-zinc-500">{mod.desc}</p>
+                <h3 className="mb-1.5 text-base font-semibold text-white">{t(mod.name)}</h3>
+                <p className="text-sm leading-relaxed text-zinc-500">{t(mod.desc)}</p>
 
                 {isFeatured && (
                   <div className="mt-auto pt-6">

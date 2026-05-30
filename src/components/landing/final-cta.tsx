@@ -3,9 +3,11 @@
 import { motion } from "framer-motion";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { useInView } from "./use-in-view";
+import { useLandingT } from "./i18n";
 
 export function FinalCTA() {
   const { ref, inView } = useInView(0.3);
+  const { t, dict } = useLandingT();
 
   return (
     <section id="demo" className="relative overflow-hidden bg-[#09090B] py-32" ref={ref}>
@@ -22,16 +24,15 @@ export function FinalCTA() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-3xl font-bold tracking-tight text-white md:text-5xl">
-            Deja de pelear con Excel{" "}
+            {t(dict.cta.title1)}{" "}
             <br className="hidden md:block" />
-            y empieza a{" "}
+            {t(dict.cta.title2)}{" "}
             <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              vender energia
+              {t(dict.cta.titleHighlight)}
             </span>
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg text-zinc-400">
-            Solicita tu demo personalizada y descubre como Kuro Energy
-            transforma tus operaciones en semanas, no meses.
+            {t(dict.cta.sub)}
           </p>
         </motion.div>
 
@@ -45,7 +46,7 @@ export function FinalCTA() {
             href="mailto:hola@kuro.energy"
             className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-white px-8 py-4 text-sm font-semibold text-zinc-900 transition-all hover:shadow-[0_0_40px_rgba(16,185,129,0.3)]"
           >
-            <span className="relative z-10">Solicitar demo</span>
+            <span className="relative z-10">{t(dict.cta.btn1)}</span>
             <ArrowRight className="relative z-10 size-4 transition-transform group-hover:translate-x-0.5" />
             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-emerald-200/40 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
           </a>
@@ -54,7 +55,7 @@ export function FinalCTA() {
             className="inline-flex items-center gap-2 rounded-full border border-zinc-800 px-8 py-4 text-sm font-medium text-zinc-300 transition-all hover:border-emerald-500/30 hover:text-white"
           >
             <MessageCircle className="size-4" />
-            Escribenos por WhatsApp
+            {t(dict.cta.btn2)}
           </a>
         </motion.div>
 
@@ -64,7 +65,7 @@ export function FinalCTA() {
           transition={{ delay: 0.8, duration: 0.6 }}
           className="mt-8 text-xs text-zinc-600"
         >
-          Sin compromiso. Sin permanencia. Respuesta en menos de 24h.
+          {t(dict.cta.footnote)}
         </motion.p>
       </div>
     </section>

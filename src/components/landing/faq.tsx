@@ -4,41 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useInView } from "./use-in-view";
-
-const FAQS = [
-  {
-    q: "Que tipo de comercializadoras pueden usar Kuro?",
-    a: "Comercializadoras pequenas y medianas (5.000 a 200.000 CUPS), cooperativas energeticas, brokers, asesores energeticos y agregadores de comunidades energeticas.",
-  },
-  {
-    q: "Necesito instalar algo?",
-    a: "No. Solo necesitas un navegador y conexion a internet. La app movil se descarga desde App Store o Google Play.",
-  },
-  {
-    q: "Cuanto tarda la implementacion?",
-    a: "Entre 2 y 4 semanas, incluyendo migracion de datos, configuracion y formacion del equipo.",
-  },
-  {
-    q: "Puedo personalizar con mi marca?",
-    a: "Si. El portal del cliente, documentos (presupuestos, contratos) y canales de comunicacion pueden llevar tu logo y colores.",
-  },
-  {
-    q: "Mis datos estan seguros?",
-    a: "Datos almacenados en la UE, aislamiento total entre comercializadoras (Row-Level Security), cifrado en transito y reposo, cumplimiento RGPD completo.",
-  },
-  {
-    q: "La IA toma decisiones sola?",
-    a: "No. Los agentes IA operan con supervision humana obligatoria para acciones criticas. Cada accion queda registrada con trazabilidad completa.",
-  },
-  {
-    q: "Que distribuidoras estan soportadas?",
-    a: "e-distribucion, i-DE, UFD, Viesgo y Begasa. Cobertura de mas del 80% del mercado espanol. Portugal en roadmap.",
-  },
-  {
-    q: "Puedo probar antes de comprar?",
-    a: "Si. Ofrecemos demo personalizada y piloto con grupo reducido antes de comprometer presupuesto. Sin permanencia.",
-  },
-] as const;
+import { useLandingT } from "./i18n";
 
 function FaqItem({ q, a, open, onToggle }: {
   q: string; a: string; open: boolean; onToggle: () => void;
@@ -79,6 +45,7 @@ function FaqItem({ q, a, open, onToggle }: {
 export function FAQ() {
   const { ref, inView } = useInView();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const { t, dict } = useLandingT();
 
   return (
     <section id="faq" className="relative bg-[#09090B] py-32" ref={ref}>
@@ -90,7 +57,7 @@ export function FAQ() {
           className="text-center"
         >
           <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
-            Preguntas frecuentes
+            {t(dict.faq.title)}
           </h2>
         </motion.div>
 
@@ -100,11 +67,11 @@ export function FAQ() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="mt-12"
         >
-          {FAQS.map(({ q, a }, i) => (
+          {dict.faq.items.map((item, i) => (
             <FaqItem
-              key={q}
-              q={q}
-              a={a}
+              key={i}
+              q={t(item.q)}
+              a={t(item.a)}
               open={openIndex === i}
               onToggle={() => setOpenIndex(openIndex === i ? null : i)}
             />

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
 import { useReducedMotion } from "./use-reduced-motion";
+import { useLandingT } from "./i18n";
 
 function GradientMesh() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -26,9 +27,9 @@ function GradientMesh() {
     window.addEventListener("resize", resize);
 
     const blobs = [
-      { x: 0.3, y: 0.3, r: 0.35, color: [16, 185, 129] },  // emerald
-      { x: 0.7, y: 0.6, r: 0.3, color: [6, 182, 212] },     // cyan
-      { x: 0.5, y: 0.8, r: 0.25, color: [139, 92, 246] },    // violet
+      { x: 0.3, y: 0.3, r: 0.35, color: [16, 185, 129] },
+      { x: 0.7, y: 0.6, r: 0.3, color: [6, 182, 212] },
+      { x: 0.5, y: 0.8, r: 0.25, color: [139, 92, 246] },
     ];
 
     const draw = () => {
@@ -85,15 +86,17 @@ function GridPattern() {
   );
 }
 
-const headlineWords = "El CRM con IA que las comercializadoras de energia estaban esperando".split(" ");
-
 export function Hero() {
+  const { t, dict } = useLandingT();
+  const headline = t(dict.hero.headline);
+  const aiWord = t(dict.hero.aiWord);
+  const words = headline.split(" ");
+
   return (
     <section className="relative flex min-h-[100dvh] items-center overflow-hidden bg-[#09090B]">
       <GradientMesh />
       <GridPattern />
 
-      {/* Noise texture */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.015]"
         style={{
@@ -104,7 +107,6 @@ export function Hero() {
 
       <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-20 pt-32">
         <div className="max-w-4xl">
-          {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -115,15 +117,14 @@ export function Hero() {
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
               </span>
-              Mercado iberico — Espana y Portugal
+              {t(dict.hero.badge)}
             </span>
           </motion.div>
 
-          {/* Headline — word by word stagger */}
           <h1 className="mt-8 text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.08] tracking-tight text-white">
-            {headlineWords.map((word, i) => (
+            {words.map((word, i) => (
               <motion.span
-                key={i}
+                key={`${word}-${i}`}
                 initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 transition={{
@@ -133,7 +134,7 @@ export function Hero() {
                 }}
                 className="mr-[0.3em] inline-block"
               >
-                {word === "IA" ? (
+                {word === aiWord || word === "IA" || word === "AI-powered" ? (
                   <span className="bg-gradient-to-r from-emerald-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent">
                     {word}
                   </span>
@@ -144,19 +145,15 @@ export function Hero() {
             ))}
           </h1>
 
-          {/* Subheadline */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.2 }}
             className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-400 md:text-xl"
           >
-            Automatiza procesos ATR, captura leads por WhatsApp, firma contratos
-            digitalmente y gestiona toda tu cartera desde una unica plataforma
-            inteligente.
+            {t(dict.hero.sub)}
           </motion.p>
 
-          {/* CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -167,7 +164,7 @@ export function Hero() {
               href="#demo"
               className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-zinc-900 transition-all hover:shadow-[0_0_32px_rgba(16,185,129,0.3)]"
             >
-              <span className="relative z-10">Solicitar demo</span>
+              <span className="relative z-10">{t(dict.hero.cta1)}</span>
               <ArrowRight className="relative z-10 size-4 transition-transform group-hover:translate-x-0.5" />
               <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-emerald-200/40 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
             </a>
@@ -176,11 +173,10 @@ export function Hero() {
               className="group inline-flex items-center gap-2 rounded-full border border-zinc-800 px-7 py-3.5 text-sm font-medium text-zinc-300 transition-all hover:border-zinc-700 hover:text-white"
             >
               <Play className="size-3.5 fill-current" />
-              Ver producto
+              {t(dict.hero.cta2)}
             </a>
           </motion.div>
 
-          {/* Stats bar */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -188,10 +184,10 @@ export function Hero() {
             className="mt-16 flex flex-wrap gap-x-10 gap-y-4 border-t border-zinc-800/60 pt-8"
           >
             {[
-              { value: "5", label: "distribuidoras conectadas" },
-              { value: "<1s", label: "latencia p95" },
-              { value: "99.5%", label: "uptime SLO" },
-              { value: "RGPD", label: "compliant" },
+              { value: "5", label: t(dict.hero.stats.distributors) },
+              { value: "<1s", label: t(dict.hero.stats.latency) },
+              { value: "99.5%", label: t(dict.hero.stats.uptime) },
+              { value: "RGPD", label: t(dict.hero.stats.rgpd) },
             ].map(({ value, label }) => (
               <div key={label} className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-white">{value}</span>
@@ -201,7 +197,6 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* Floating mockup — right side on large screens */}
         <motion.div
           initial={{ opacity: 0, x: 60, rotateY: -12 }}
           animate={{ opacity: 1, x: 0, rotateY: 0 }}
@@ -217,7 +212,6 @@ export function Hero() {
               <span className="ml-3 text-xs text-zinc-600">kuro.energy/dashboard</span>
             </div>
             <div className="rounded-xl bg-zinc-950 p-4">
-              {/* Fake dashboard */}
               <div className="mb-3 flex items-center justify-between">
                 <div className="h-3 w-24 rounded bg-zinc-800" />
                 <div className="flex gap-2">
@@ -233,7 +227,6 @@ export function Hero() {
                   </div>
                 ))}
               </div>
-              {/* Fake kanban */}
               <div className="mt-3 grid grid-cols-4 gap-2">
                 {["emerald", "cyan", "violet", "amber"].map((c, col) => (
                   <div key={c} className="space-y-2">
@@ -253,13 +246,11 @@ export function Hero() {
                 ))}
               </div>
             </div>
-            {/* Glow */}
             <div className="absolute -inset-px -z-10 rounded-2xl bg-gradient-to-b from-emerald-500/10 via-transparent to-cyan-500/10 blur-xl" />
           </div>
         </motion.div>
       </div>
 
-      {/* Bottom fade */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#09090B] to-transparent" />
     </section>
   );
