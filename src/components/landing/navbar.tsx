@@ -62,9 +62,9 @@ export function Navbar() {
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
-            <Link href="/sign-in" className="rounded-lg px-4 py-2 text-sm text-zinc-400 transition-colors hover:text-white">
+            <a href="https://app.kuro.energy/sign-in" className="rounded-lg px-4 py-2 text-sm text-zinc-400 transition-colors hover:text-white">
               {t(dict.nav.signIn)}
-            </Link>
+            </a>
             <a href="#demo" className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-white transition-all hover:bg-emerald-400">
               <span className="relative z-10">{t(dict.nav.requestDemo)}</span>
               <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
@@ -94,7 +94,7 @@ export function Navbar() {
                 </motion.a>
               ))}
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} className="mt-8 flex flex-col gap-3">
-                <Link href="/sign-in" className="rounded-xl border border-zinc-800 px-6 py-3 text-center text-sm font-medium text-white">{t(dict.nav.signIn)}</Link>
+                <a href="https://app.kuro.energy/sign-in" className="rounded-xl border border-zinc-800 px-6 py-3 text-center text-sm font-medium text-white">{t(dict.nav.signIn)}</a>
                 <a href="#demo" onClick={() => setMobileOpen(false)} className="rounded-xl bg-emerald-500 px-6 py-3 text-center text-sm font-medium text-white">{t(dict.nav.requestDemo)}</a>
               </motion.div>
             </nav>
