@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { MapPin, Plus, Search } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
@@ -62,7 +62,7 @@ export function CupsPageClient({ detailCupsId }: CupsPageClientProps) {
   });
 
   // Configure keepPreviousData for smooth filter transitions
-  useMemo(() => {
+  useEffect(() => {
     queryClient.setQueryDefaults(cupsQueryKeys.all, {
       placeholderData: keepPreviousData,
       staleTime: 30_000,

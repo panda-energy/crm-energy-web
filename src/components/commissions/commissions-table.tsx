@@ -118,6 +118,16 @@ export function CommissionsTable() {
     );
   }
 
+  if (commissionsQuery.isError) {
+    return (
+      <EmptyState
+        icon={<Wallet />}
+        title="Error al cargar liquidaciones"
+        description={commissionsQuery.error?.message ?? "Intenta de nuevo mas tarde."}
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Filters */}

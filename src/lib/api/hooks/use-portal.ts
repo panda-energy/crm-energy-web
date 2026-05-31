@@ -82,11 +82,31 @@ export function useCustomerInvoices(params: UsePortalInvoicesParams = {}) {
   });
 }
 
-/** URL de descarga del PDF de una factura. */
-export function getInvoicePdfUrl(invoiceId: string): string {
+/**
+ * Descarga el PDF de una factura con autenticacion.
+ * No se puede usar <a href> porque el backend requiere Bearer token.
+ */
+export async function downloadInvoicePdf(
+  invoiceId: string,
+  getToken: () => Promise<string | null>,
+): Promise<void> {
   const base =
     process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-  return `${base}/v1/portal/invoices/${encodeURIComponent(invoiceId)}/pdf`;
+  const url = `${base}/v1/portal/invoices/${encodeURIComponent(invoiceId)}/pdf`;
+  const token = await getToken();
+  const res = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new Error("Error al descargar PDF");
+  const blob = await res.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = blobUrl;
+  a.download = `factura-${invoiceId}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(blobUrl);
 }
 
 /** Lista de solicitudes de modificacion de potencia. */

@@ -5,7 +5,6 @@ import {
   BarChart3,
   FileText,
   Zap,
-  MessageCircle,
 } from "lucide-react";
 import {
   Card,
@@ -37,12 +36,6 @@ const SECTIONS = [
     description: "Solicita cambios de potencia contratada.",
     href: "/portal/power",
     icon: Zap,
-  },
-  {
-    title: "Contacto",
-    description: "Contacta con tu comercializadora.",
-    href: "/portal/contact",
-    icon: MessageCircle,
   },
 ] as const;
 

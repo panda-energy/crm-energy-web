@@ -45,7 +45,7 @@ export function TicketConversationHeader({
   const isClosed = ticket.status === "closed";
 
   function handleAssigneeChange(userId: string) {
-    updateMutation.mutate({ assigned_to: userId || null });
+    updateMutation.mutate({ assigned_to: userId === "unassigned" ? null : userId || null });
   }
 
   function handleClose() {

@@ -6,8 +6,6 @@ import {
   FileSignature,
   Headphones,
   RefreshCw,
-  TrendingUp,
-  TrendingDown,
   ArrowRight,
   Zap,
 } from "lucide-react";
@@ -44,33 +42,18 @@ import { useAtrMessages } from "@/lib/api/hooks/use-atr";
 interface KpiCardProps {
   title: string;
   value: string | number;
-  change?: number;
   icon: React.ElementType;
   href: string;
   loading?: boolean;
 }
 
-function KpiCard({ title, value, change, icon: Icon, href, loading }: KpiCardProps) {
+function KpiCard({ title, value, icon: Icon, href, loading }: KpiCardProps) {
   return (
     <Link href={href}>
       <Card className="transition-colors hover:border-brand/30">
         <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-brand/10">
-              <Icon className="size-5 text-brand" />
-            </div>
-            {typeof change === "number" && (
-              <Badge
-                className={`text-xs border-0 ${
-                  change >= 0
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : "bg-red-500/10 text-red-600 dark:text-red-400"
-                }`}
-              >
-                {change >= 0 ? <TrendingUp className="mr-1 size-3" /> : <TrendingDown className="mr-1 size-3" />}
-                {change >= 0 ? "+" : ""}{change}%
-              </Badge>
-            )}
+          <div className="flex size-10 items-center justify-center rounded-lg bg-brand/10">
+            <Icon className="size-5 text-brand" />
           </div>
           <div className="mt-4">
             {loading ? (
@@ -123,10 +106,10 @@ export function DashboardClient({ greetingName }: DashboardClientProps) {
   const { data: ticketsData, isLoading: ticketsLoading } = useTickets({ limit: 200 });
   const { data: atrData, isLoading: atrLoading } = useAtrMessages({ limit: 200 });
 
-  const leads = leadsData?.items ?? [];
-  const contracts = contractsData?.items ?? [];
-  const tickets = ticketsData?.items ?? [];
-  const atrMessages = atrData?.items ?? [];
+  const leads = useMemo(() => leadsData?.items ?? [], [leadsData]);
+  const contracts = useMemo(() => contractsData?.items ?? [], [contractsData]);
+  const tickets = useMemo(() => ticketsData?.items ?? [], [ticketsData]);
+  const atrMessages = useMemo(() => atrData?.items ?? [], [atrData]);
 
   // -- Computed metrics -------------------------------------------------------
 
@@ -165,16 +148,19 @@ export function DashboardClient({ greetingName }: DashboardClientProps) {
     }));
   }, [contracts]);
 
-  // Simulated weekly trend (last 7 days)
+  // Weekly trend from actual created_at dates
   const weeklyTrend = useMemo(() => {
-    const days = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
-    const total = leads.length;
+    const days = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
+    const leadCounts = new Array(7).fill(0) as number[];
+    const contractCounts = new Array(7).fill(0) as number[];
+    leads.forEach((l) => { const d = new Date(l.created_at).getDay(); leadCounts[d] = (leadCounts[d] ?? 0) + 1; });
+    contracts.forEach((c) => { const d = new Date(c.created_at).getDay(); contractCounts[d] = (contractCounts[d] ?? 0) + 1; });
     return days.map((day, i) => ({
       day,
-      leads: Math.max(1, Math.round((total / 7) * (0.6 + Math.sin(i * 0.8) * 0.4 + Math.random() * 0.3))),
-      contratos: Math.max(0, Math.round((contracts.length / 7) * (0.5 + Math.cos(i * 0.6) * 0.3 + Math.random() * 0.2))),
+      leads: leadCounts[i] ?? 0,
+      contratos: contractCounts[i] ?? 0,
     }));
-  }, [leads.length, contracts.length]);
+  }, [leads, contracts]);
 
   const openTickets = tickets.filter((t) => t.status === "open" || t.status === "in_progress").length;
   const pendingAtr = atrMessages.filter((a) => a.status === "pending" || a.status === "sent").length;
@@ -215,7 +201,6 @@ export function DashboardClient({ greetingName }: DashboardClientProps) {
         <KpiCard
           title="Leads totales"
           value={leadsData?.total ?? 0}
-          change={12}
           icon={Users}
           href="/leads"
           loading={leadsLoading}
@@ -223,7 +208,6 @@ export function DashboardClient({ greetingName }: DashboardClientProps) {
         <KpiCard
           title="Contratos activos"
           value={contracts.filter((c) => c.status === "active" || c.status === "signed").length}
-          change={8}
           icon={FileSignature}
           href="/contracts"
           loading={contractsLoading}
@@ -231,7 +215,6 @@ export function DashboardClient({ greetingName }: DashboardClientProps) {
         <KpiCard
           title="Tickets abiertos"
           value={openTickets}
-          change={openTickets > 3 ? -5 : 15}
           icon={Headphones}
           href="/tickets"
           loading={ticketsLoading}

@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils/cn";
-import { Users, ToggleRight, ToggleLeft } from "lucide-react";
+import { Users } from "lucide-react";
 import type { Channel, ChannelType } from "@/lib/api/types-sprint5";
 
 const TYPE_LABELS: Record<ChannelType, string> = {
@@ -65,13 +65,9 @@ export function ChannelCard({
             </span>
           </div>
         </div>
-        <div className="shrink-0 text-muted-foreground" title={channel.active ? "Activo" : "Inactivo"}>
-          {channel.active ? (
-            <ToggleRight className="size-5 text-success" aria-label="Activo" />
-          ) : (
-            <ToggleLeft className="size-5" aria-label="Inactivo" />
-          )}
-        </div>
+        <Badge variant={channel.active ? "success" : "secondary"} className="shrink-0 text-xs">
+          {channel.active ? "Activo" : "Inactivo"}
+        </Badge>
       </CardContent>
     </Card>
   );

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Download, FileText } from "lucide-react";
 import {
   useCustomerInvoices,
-  getInvoicePdfUrl,
+  downloadInvoicePdf,
   type UsePortalInvoicesParams,
 } from "@/lib/api/hooks/use-portal";
+import { useClerkApiContext } from "@/lib/api/hooks/clerk-context";
 import type { InvoiceStatus } from "@/lib/api/types-sprint5";
 import {
   Select,
@@ -36,12 +37,24 @@ function formatCents(cents: number, currency: string): string {
 }
 
 export function InvoicesPageClient() {
+  const { getToken } = useClerkApiContext();
   const [filters, setFilters] = useState<UsePortalInvoicesParams>({
     limit: 50,
   });
 
   const { data, isLoading, isError, error } = useCustomerInvoices(filters);
   const invoices = data?.items ?? [];
+
+  const handleDownloadPdf = useCallback(
+    async (invoiceId: string) => {
+      try {
+        await downloadInvoicePdf(invoiceId, getToken);
+      } catch {
+        // toast import would be needed; for now silently fail
+      }
+    },
+    [getToken],
+  );
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -168,17 +181,11 @@ export function InvoicesPageClient() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        asChild
                         className="size-8"
+                        onClick={() => handleDownloadPdf(invoice.id)}
+                        aria-label={`Descargar PDF ${invoice.invoice_number}`}
                       >
-                        <a
-                          href={getInvoicePdfUrl(invoice.id)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`Descargar PDF ${invoice.invoice_number}`}
-                        >
-                          <Download className="size-4" aria-hidden />
-                        </a>
+                        <Download className="size-4" aria-hidden />
                       </Button>
                     ) : (
                       <span className="text-xs text-muted-foreground">

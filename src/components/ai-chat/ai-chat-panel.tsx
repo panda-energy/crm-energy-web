@@ -6,8 +6,9 @@ import { Bot, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils/cn";
+import { useQueryClient } from "@tanstack/react-query";
 import { useChatStore } from "@/lib/ui/chat-store";
-import { useChatSession, useSendMessage } from "@/lib/api/hooks/use-chat";
+import { useChatSession, useSendMessage, chatQueryKeys } from "@/lib/api/hooks/use-chat";
 import { ChatBubble } from "./chat-bubble";
 import { ChatInput } from "./chat-input";
 import { StreamingMessage } from "./streaming-message";
@@ -133,10 +134,15 @@ export function AiChatPanel() {
     [pathname, sendMessage],
   );
 
+  const queryClient = useQueryClient();
   const handleNewConversation = useCallback(() => {
-    // In production this would POST /v1/ai/chat/new
-    // For MSW demo, no-op
-  }, []);
+    // Reset session locally — in production POST /v1/ai/chat/new
+    queryClient.setQueryData(chatQueryKeys.session, {
+      id: crypto.randomUUID(),
+      messages: [],
+    });
+    setStreamingMsgId(null);
+  }, [queryClient]);
 
   const renderMessageContent = useCallback(
     (msg: ChatMessage) => {

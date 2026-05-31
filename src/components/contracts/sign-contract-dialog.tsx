@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Send } from "lucide-react";
@@ -55,19 +56,25 @@ export function SignContractDialog({
     },
   });
 
-  // Update defaults when contract loads
-  if (contract && !form.formState.isDirty) {
+  // Update defaults when contract loads (must be in useEffect, not during render)
+  const contractNumber = contract?.number;
+  const customerName = contract?.customer_name;
+  const customerEmail = contract?.customer_email;
+  const isDirty = form.formState.isDirty;
+
+  useEffect(() => {
+    if (!contractNumber || isDirty) return;
     const vals = form.getValues();
-    if (!vals.recipient_name && contract.customer_name) {
-      form.setValue("recipient_name", contract.customer_name);
+    if (!vals.recipient_name && customerName) {
+      form.setValue("recipient_name", customerName);
     }
-    if (!vals.recipient_email && contract.customer_email) {
-      form.setValue("recipient_email", contract.customer_email);
+    if (!vals.recipient_email && customerEmail) {
+      form.setValue("recipient_email", customerEmail);
     }
     if (!vals.subject) {
-      form.setValue("subject", `Contrato ${contract.number} - Panda Energy`);
+      form.setValue("subject", `Contrato ${contractNumber} - Panda Energy`);
     }
-  }
+  }, [contractNumber, customerName, customerEmail, isDirty, form]);
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {

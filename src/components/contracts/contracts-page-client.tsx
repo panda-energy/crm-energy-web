@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { FileText, Plus, Search } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,7 +69,7 @@ export function ContractsPageClient() {
     offset,
   });
 
-  useMemo(() => {
+  useEffect(() => {
     queryClient.setQueryDefaults(contractsQueryKeys.all, {
       placeholderData: keepPreviousData,
       staleTime: 30_000,

@@ -382,7 +382,7 @@ export function PipelinePageClient() {
           title="Pipeline sin etapas"
           description="Configura al menos una etapa para empezar a usar el Kanban."
           action={
-            <Button disabled title="Próximamente — requiere useReplacePipelineStages">
+            <Button disabled title="Proximamente">
               Configurar stages
             </Button>
           }

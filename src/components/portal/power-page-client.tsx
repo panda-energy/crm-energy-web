@@ -39,7 +39,12 @@ export function PowerPageClient() {
         Modificar potencia
       </h1>
 
-      {/* Form -- using fixture data for demo contract */}
+      {/* Form -- demo contract data (replace with real user contract in production) */}
+      <Card className="border-amber-500/30 bg-amber-500/5">
+        <CardContent className="py-3 text-xs text-amber-700 dark:text-amber-400">
+          Datos de contrato de demostración. En producción se cargarán desde tu contrato activo.
+        </CardContent>
+      </Card>
       <PowerForm
         contractId="77777777-7777-7777-7777-770000000001"
         cupsCode="ES0021000000350832AJ"
