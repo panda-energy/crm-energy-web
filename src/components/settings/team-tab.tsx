@@ -128,19 +128,37 @@ export function TeamTab() {
   const allMembers = [...apiMembers, ...invitedMembers];
 
   const onInvite = async (formData: InviteForm) => {
-    await new Promise((r) => setTimeout(r, 500));
-    const newMember: TeamMember = {
-      id: crypto.randomUUID(),
-      name: formData.name,
-      email: formData.email,
-      role: inviteRole,
-      status: "invited",
-    };
-    setInvitedMembers((prev) => [...prev, newMember]);
-    toast.success(`Invitacion enviada a ${formData.email}`);
-    reset();
-    setInviteRole("sales");
-    setInviteOpen(false);
+    try {
+      const res = await fetch("/api/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          name: formData.name,
+          role: inviteRole,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Error al enviar invitacion");
+      }
+
+      const newMember: TeamMember = {
+        id: crypto.randomUUID(),
+        name: formData.name,
+        email: formData.email,
+        role: inviteRole,
+        status: "invited",
+      };
+      setInvitedMembers((prev) => [...prev, newMember]);
+      toast.success(`Invitacion enviada a ${formData.email}`);
+      reset();
+      setInviteRole("sales");
+      setInviteOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al enviar invitacion");
+    }
   };
 
   const onEditSave = () => {
