@@ -4,7 +4,7 @@ import { InviteEmail } from "@/lib/email/invite-template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Kuro Energy <onboarding@resend.dev>";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Kuro Energy <equipo@kuro.energy>";
 
 export async function POST(req: NextRequest) {
   try {
