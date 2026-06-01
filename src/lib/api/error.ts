@@ -101,3 +101,59 @@ export async function apiErrorFromResponse(response: Response): Promise<ApiError
     correlationId,
   );
 }
+
+// ---------------------------------------------------------------------------
+// NetworkError — errores de red clasificados para UX diferenciada
+// ---------------------------------------------------------------------------
+
+/**
+ * Tipos de error de red para UX diferenciada.
+ */
+export type NetworkErrorKind = "offline" | "timeout" | "dns" | "cors" | "unknown";
+
+export class NetworkError extends Error {
+  public readonly kind: NetworkErrorKind;
+
+  constructor(kind: NetworkErrorKind, cause?: unknown) {
+    const messages: Record<NetworkErrorKind, string> = {
+      offline: "Sin conexión a Internet",
+      timeout: "La solicitud tardó demasiado — inténtalo de nuevo",
+      dns: "No se pudo contactar con el servidor",
+      cors: "El servidor rechazó la solicitud (CORS)",
+      unknown: "Error de conexión — inténtalo de nuevo",
+    };
+    super(messages[kind], { cause });
+    this.name = "NetworkError";
+    this.kind = kind;
+  }
+}
+
+export function isNetworkError(value: unknown): value is NetworkError {
+  return value instanceof NetworkError;
+}
+
+/**
+ * Clasifica un error de fetch nativo en un NetworkError con kind específico.
+ */
+export function classifyNetworkError(err: unknown): NetworkError {
+  if (err instanceof DOMException && err.name === "AbortError") {
+    return new NetworkError("timeout", err);
+  }
+  if (err instanceof DOMException && err.name === "TimeoutError") {
+    return new NetworkError("timeout", err);
+  }
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    return new NetworkError("offline", err);
+  }
+  if (err instanceof TypeError) {
+    const msg = err.message.toLowerCase();
+    if (msg.includes("cors") || msg.includes("cross-origin")) {
+      return new NetworkError("cors", err);
+    }
+    if (msg.includes("failed to fetch") || msg.includes("network")) {
+      // Could be DNS, firewall, or general network
+      return new NetworkError("dns", err);
+    }
+  }
+  return new NetworkError("unknown", err);
+}

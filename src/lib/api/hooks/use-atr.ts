@@ -12,7 +12,7 @@ import {
   AtrMessagePageSchema,
   AtrMessageSchema,
 } from "../zod-schemas-sprint4";
-import { apiGet, apiPost, type ApiRequestOptions } from "../client";
+import { apiGet, apiGetText, apiPost, type ApiRequestOptions } from "../client";
 import { useClerkApiContext } from "./clerk-context";
 import { toast } from "@/lib/ui/toast";
 
@@ -125,23 +125,11 @@ export function useAtrMessageXml(id: string | undefined) {
   return useQuery<string, Error>({
     queryKey: ["/v1/atr/messages", tenantId, id, "xml"],
     queryFn: async ({ signal }) => {
-      const base =
-        process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-      const url = `${base}/v1/atr/messages/${id}/xml`;
-      const headers: Record<string, string> = {
-        Accept: "text/xml",
-        "X-Correlation-Id": crypto.randomUUID(),
-      };
-      if (tenantId) headers["X-Tenant-Id"] = tenantId;
-      if (getToken) {
-        const token = await getToken();
-        if (token) headers["Authorization"] = `Bearer ${token}`;
-      }
-      const response = await fetch(url, { headers, signal });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch XML: ${response.status}`);
-      }
-      return response.text();
+      return apiGetText(`/v1/atr/messages/${id}/xml`, {
+        getToken,
+        tenantId,
+        signal,
+      });
     },
     enabled: Boolean(id),
   });

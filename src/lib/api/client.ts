@@ -22,7 +22,7 @@
  * se usa `useAuth().getToken()` de `@clerk/nextjs`). Los hooks de
  * `src/lib/api/hooks/` se encargan de cablear `getToken` apropiadamente.
  */
-import { apiErrorFromResponse } from "./error";
+import { apiErrorFromResponse, classifyNetworkError } from "./error";
 
 export type HttpMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
@@ -140,16 +140,28 @@ async function request<TResponse>(
   const url = buildUrl(path, opts);
   const headers = await buildHeaders(method, opts);
 
+  // Timeout: 15s por defecto. Si el caller pasa signal (TanStack Query abort
+  // en unmount), ambos cancelan la request.
+  const timeout = AbortSignal.timeout(15_000);
+  const combinedSignal = opts.signal
+    ? AbortSignal.any([opts.signal, timeout])
+    : timeout;
+
   const init: RequestInit = {
     method,
     headers,
-    signal: opts.signal,
+    signal: combinedSignal,
   };
   if (body !== undefined && method !== "GET") {
     init.body = JSON.stringify(body);
   }
 
-  const response = await fetch(url, init);
+  let response: Response;
+  try {
+    response = await fetch(url, init);
+  } catch (err) {
+    throw classifyNetworkError(err);
+  }
 
   if (!response.ok) {
     throw await apiErrorFromResponse(response);
@@ -201,6 +213,34 @@ export function apiDelete<TResponse = void>(
   return request<TResponse>("DELETE", path, undefined, opts);
 }
 
+/** GET que devuelve el body como text (para XML, CSV, etc.). */
+export async function apiGetText(
+  path: string,
+  opts: ApiRequestOptions = {},
+): Promise<string> {
+  const url = buildUrl(path, opts);
+  const headers = await buildHeaders("GET", opts);
+  headers.set("Accept", "text/xml");
+  headers.delete("Content-Type");
+
+  const timeout = AbortSignal.timeout(15_000);
+  const combinedSignal = opts.signal
+    ? AbortSignal.any([opts.signal, timeout])
+    : timeout;
+
+  let response: Response;
+  try {
+    response = await fetch(url, { method: "GET", headers, signal: combinedSignal });
+  } catch (err) {
+    throw classifyNetworkError(err);
+  }
+
+  if (!response.ok) {
+    throw await apiErrorFromResponse(response);
+  }
+  return response.text();
+}
+
 /**
  * POST con `multipart/form-data` (para OCR upload, etc.).
  *
@@ -219,12 +259,22 @@ export async function apiPostFormData<TResponse>(
   // el que buildHeaders inyecta.
   headers.delete("Content-Type");
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers,
-    body: formData,
-    signal: opts.signal,
-  });
+  const timeout = AbortSignal.timeout(15_000);
+  const combinedSignal = opts.signal
+    ? AbortSignal.any([opts.signal, timeout])
+    : timeout;
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: formData,
+      signal: combinedSignal,
+    });
+  } catch (err) {
+    throw classifyNetworkError(err);
+  }
 
   if (!response.ok) {
     throw await apiErrorFromResponse(response);

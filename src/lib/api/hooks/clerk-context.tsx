@@ -58,11 +58,7 @@ export function ClerkApiBridge({ children }: { children: ReactNode }) {
 
   const getToken = useCallback<GetTokenFn>(async () => {
     if (!auth.isSignedIn) return null;
-    try {
-      return await auth.getToken();
-    } catch {
-      return null;
-    }
+    return auth.getToken();
   }, [auth]);
 
   const value = useMemo<ClerkApiContext>(

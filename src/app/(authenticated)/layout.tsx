@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { DemoBanner } from "@/components/layout/demo-banner";
+import { OfflineBanner } from "@/components/layout/offline-banner";
 import { SkipLink } from "@/components/layout/skip-link";
 import { CommandPaletteBoundary } from "@/components/command-palette/command-palette-boundary";
 import { AiChatBoundary } from "@/components/ai-chat/ai-chat-boundary";
@@ -43,6 +44,7 @@ export default async function AuthenticatedLayout({
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <DemoBanner />
+        <OfflineBanner />
         <Topbar />
         <main
           id="main-content"

@@ -1,9 +1,10 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState, type ReactNode } from "react";
-import { isApiError } from "./error";
+import { isApiError, isNetworkError } from "./error";
+import { toast } from "@/lib/ui/toast";
 
 /**
  * Provider de TanStack Query con defaults curados para Panda.
@@ -26,18 +27,41 @@ export function QueryProvider({ children }: { children: ReactNode }) {
   const [client] = useState(
     () =>
       new QueryClient({
+        queryCache: new QueryCache({
+          onError: (error) => {
+            // Only toast for network errors and 5xx — component handles the rest
+            if (isNetworkError(error)) {
+              toast.error(error.message, { id: "network-error" });
+            } else if (isApiError(error) && error.status >= 500) {
+              toast.error("Error del servidor", {
+                description: error.detail ?? error.title,
+                id: `server-${error.status}`,
+              });
+            }
+          },
+        }),
         defaultOptions: {
           queries: {
             staleTime: 30_000,
             refetchOnWindowFocus: false,
+            refetchOnReconnect: "always",
             retry: (failureCount, error) => {
               if (isApiError(error)) {
+                // Never retry client errors (4xx)
                 if (error.status < 500) return false;
+                // Retry server errors up to 2 times
                 return failureCount < 2;
               }
-              // Errores genéricos (network, abort): un retry máximo.
+              if (isNetworkError(error)) {
+                // Don't retry if offline — wait for reconnect
+                if (error.kind === "offline") return false;
+                // Retry timeout/dns/unknown up to 3 times
+                return failureCount < 3;
+              }
+              // Unknown errors: 1 retry
               return failureCount < 1;
             },
+            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000),
           },
           mutations: {
             // Las mutaciones NO reintentan automáticamente: pueden duplicar
